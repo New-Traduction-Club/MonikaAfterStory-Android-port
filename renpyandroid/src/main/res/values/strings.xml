@@ -11,6 +11,36 @@
     <string name="installing_language_data">Installing game data for %1$s...</string>
     <string name="install_error">Error installing data: %1$s</string>
 
+    <!-- Setup Screen Strings -->
+    <string name="setup_title">Welcome to Monika After Story</string>
+    <string name="setup_description">To use this launcher, you need to provide the original Doki Doki Literature Club game files and the Monika After Story mod files. We respect copyright and cannot distribute these files.</string>
+    <string name="setup_step_1_title">Step 1: Doki Doki Literature Club</string>
+    <string name="setup_step_1_desc">Download the official DDLC release for Windows.</string>
+    <string name="setup_step_1_url">https://ddlc.moe/</string>
+    <string name="setup_ddlc_sha256">SHA256: 2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e</string>
+    <string name="setup_step_2_title">Step 2: Monika After Story</string>
+    <string name="setup_step_2_desc">Download the MAS 0.12.15 Dlx version.</string>
+    <string name="setup_step_2_url">https://github.com/Monika-After-Story/MonikaModDev/releases/tag/v0.12.15</string>
+    <string name="setup_mas_filename">Target: Monika_After_Story-0.12.15-Mod-Dlx.zip</string>
+    <string name="setup_mas_sha256">SHA256: 80925bccce56cc83f5a95fd2a196d1b26c755c771a7b5f853dd65b6c23caf1a1</string>
+    <string name="setup_btn_download">Download</string>
+    <string name="setup_btn_select_file">Select File</string>
+    <string name="setup_btn_continue">Install &amp; Continue</string>
+    <string name="setup_file_selected">Selected: %1$s</string>
+    <string name="setup_error_missing_files">Please select both the DDLC zip and the MAS zip to continue.</string>
+    <string name="setup_language_label">Language:</string>
+    
+    <!-- Setup Progress -->
+    <string name="setup_progress_verifying">Verifying files...</string>
+    <string name="setup_progress_extracting_ddlc">Extracting DDLC...</string>
+    <string name="setup_progress_extracting_rpa">Unpacking game assets (RPA)...</string>
+    <string name="setup_progress_extracting_mas">Installing Monika After Story...</string>
+    <string name="setup_progress_finalizing">Finalizing setup...</string>
+    <string name="setup_complete">Setup Completed! Launching...</string>
+    <string name="setup_error">Error: %1$s</string>
+    <string name="setup_error_checksum">Checksum verification failed for %1$s. Please download the correct file.</string>
+
+
     <!-- File Explorer Strings -->
     <string name="import_title">Import</string>
     <string name="import_files">Import files</string>

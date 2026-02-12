@@ -36,11 +36,22 @@ class LauncherActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        
+        // Check if Setup is completed
+        val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
+        if (!isSetupCompleted) {
+            startActivity(Intent(this, SetupActivity::class.java))
+            finish()
+            return
+        }
+
         WorkManager.getInstance(applicationContext).cancelAllWork()
         currentLanguage = prefs.getString("language", "English") ?: "English"
 
         val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
-        if (isFirstLaunch) {
+        val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
+        
+        if (isFirstLaunch && !setupConfirmed) {
             showLanguageSelectionDialog()
         } else {
             checkAndInstallLanguageScripts()

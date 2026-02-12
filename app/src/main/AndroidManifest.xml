@@ -21,6 +21,11 @@
     </activity>
     
     <activity
+        android:name="org.renpy.android.SetupActivity"
+        android:exported="false"
+        android:screenOrientation="sensorPortrait" />
+    
+    <activity
       android:name="org.renpy.android.FileExplorerActivity"
       android:exported="false"/>
 
