@@ -4,7 +4,7 @@
 
     <!-- Setup Screen Strings -->
     <string name="setup_title">Bienvenido a Monika After Story</string>
-    <string name="setup_description">Para usar este launcher, necesitas proporcionar los archivos originales de Doki Doki Literature Club y los archivos del mod Monika After Story. Respetamos los derechos de autor y no podemos distribuir estos archivos.</string>
+    <string name="setup_description">Para usar este launcher, necesitas proporcionar los archivos originales de Doki Doki Literature Club y los archivos del mod Monika After Story. Respetamos las IP Guidelines y no podemos distribuir estos archivos.</string>
     <string name="setup_step_1_title">Paso 1: Doki Doki Literature Club</string>
     <string name="setup_step_1_desc">Descarga la versión oficial de DDLC para Windows.</string>
     <string name="setup_step_1_url">https://ddlc.moe/</string>
