@@ -118,4 +118,12 @@
     <string name="settings_category_network">Network</string>
     <string name="settings_wifi_only_title">Wi-Fi Only Updates</string>
     <string name="settings_wifi_only_desc">Only download translations when connected to Wi-Fi</string>
+
+    <!-- RPA Extraction -->
+    <string name="action_extract">Extract</string>
+    <string name="extract_rpa_title">Extract RPA</string>
+    <string name="confirm_extract_message">Do you want to extract %1$s? This might take a while.</string>
+    <string name="extracting">Extracting…</string>
+    <string name="extraction_completed">Extraction completed</string>
+    <string name="extraction_error">Extraction error: %1$s</string>
 </resources>

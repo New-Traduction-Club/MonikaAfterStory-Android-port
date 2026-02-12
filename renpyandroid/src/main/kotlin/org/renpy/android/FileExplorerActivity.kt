@@ -13,6 +13,11 @@ import org.renpy.android.databinding.FileExplorerActivityBinding
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileInputStream
+import android.app.ProgressDialog
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class FileExplorerActivity : BaseActivity() {
 
@@ -69,6 +74,7 @@ class FileExplorerActivity : BaseActivity() {
         binding.btnCopy.setOnClickListener { copyToClipboard(false) }
         binding.btnCut.setOnClickListener { copyToClipboard(true) }
         binding.btnExport.setOnClickListener { exportSelection() }
+        binding.btnExtract.setOnClickListener { extractRpaSelection() }
         
         binding.fabPaste.setOnClickListener { 
             if (viewModel.hasClipboard.value == true) {
@@ -113,6 +119,15 @@ class FileExplorerActivity : BaseActivity() {
             binding.fabPaste.setImageResource(android.R.drawable.ic_menu_add)
             binding.fabPaste.visibility = View.VISIBLE
         }
+        
+        var showExtract = false
+        if (selectionCount == 1) {
+            val file = fileAdapter.selectedFiles.first()
+            if (file.isFile && (file.name.endsWith(".rpa") || file.name.endsWith(".rpi"))) {
+                showExtract = true
+            }
+        }
+        binding.btnExtract.visibility = if (showExtract) View.VISIBLE else View.GONE
     }
 
     private fun copyToClipboard(isCut: Boolean) {
@@ -157,6 +172,58 @@ class FileExplorerActivity : BaseActivity() {
                 putExtra(Intent.EXTRA_TITLE, "export.zip")
             }
             startActivityForResult(intent, REQUEST_CODE_EXPORT_SELECTION)
+        }
+    }
+
+    private fun extractRpaSelection() {
+        val selected = fileAdapter.selectedFiles.toList()
+        if (selected.size != 1) return
+        val rpaFile = selected.first()
+        
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.extract_rpa_title))
+            .setMessage(getString(R.string.confirm_extract_message, rpaFile.name))
+            .setPositiveButton(getString(R.string.action_extract)) { _, _ ->
+                performExtraction(rpaFile)
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun performExtraction(rpaFile: File) {
+        val destDir = rpaFile.parentFile ?: filesDir // Fallback to filesDir
+        val progressDialog = ProgressDialog(this).apply {
+            setMessage(getString(R.string.extracting))
+            setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+            setCancelable(false)
+            show()
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                RpaUtils.extractGameAssets(
+                    rpaPath = rpaFile.absolutePath,
+                    outputDir = destDir,
+                    onProgress = { fileName, current, total ->
+                        val progress = ((current.toFloat() / total.toFloat()) * 100).toInt()
+                        runOnUiThread {
+                            progressDialog.progress = progress
+                            progressDialog.secondaryProgress = current
+                            progressDialog.max = 100 
+                        }
+                    }
+                )
+                withContext(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(this@FileExplorerActivity, getString(R.string.extraction_completed), Toast.LENGTH_SHORT).show()
+                    viewModel.loadDirectory(viewModel.currentDir.value?.absolutePath ?: rootDir.absolutePath)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(this@FileExplorerActivity, getString(R.string.extraction_error, e.message), Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
     

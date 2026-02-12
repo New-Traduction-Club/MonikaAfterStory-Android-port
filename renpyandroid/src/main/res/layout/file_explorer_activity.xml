@@ -71,13 +71,22 @@
                 style="@style/Widget.Material3.Button.IconButton"
                 android:contentDescription="@string/action_cut"/>
                 
-             <com.google.android.material.button.MaterialButton
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExport"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:icon="@drawable/ic_save"
                 style="@style/Widget.Material3.Button.IconButton"
                 android:contentDescription="@string/label_export"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExtract"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_extract"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:contentDescription="@string/action_extract"
+                android:visibility="gone"/>
 
         </LinearLayout>
 
