@@ -1,7 +1,7 @@
 <resources>
-    <string name="appName" translatable="false">Monika After Story</string>
-    <string name="app_name">Monika After Story</string>
-    <string name="iconName" translatable="false">Monika After Story</string>
+    <string name="appName" translatable="false">MASL - An After Story launcher</string>
+    <string name="app_name">MASL - An After Story launcher</string>
+    <string name="iconName" translatable="false">MASL - An After Story launcher</string>
     
     <string name="private_version" translatable="false">1797885c5794ccae80ef4ea500ed1e6e</string>
     

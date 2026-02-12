@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Monika After Story</string>
+    <string name="app_name">MASL - An After Story launcher</string>
 
     <string-array name="languages">
         <item>English</item>

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Monika After Story</string>
+    <string name="app_name">MASL - An After Story launcher</string>
 
     <!-- Setup Screen Strings -->
-    <string name="setup_title">Bem-vindo ao Monika After Story</string>
+    <string name="setup_title">Bem-vindo ao MASL - An After Story launcher</string>
     <string name="setup_description">Para usar este launcher, você precisa fornecer os arquivos originais do jogo Doki Doki Literature Club e os arquivos do mod Monika After Story. Respeitamos os IP Guidelines e não podemos distribuir esses arquivos.</string>
     <string name="setup_step_1_title">Passo 1: Doki Doki Literature Club</string>
     <string name="setup_step_1_desc">Baixe a versão oficial do DDLC para Windows.</string>
     <string name="setup_step_1_url">https://ddlc.moe/</string>
     <string name="setup_ddlc_sha256">SHA256: 2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e</string>
-    <string name="setup_step_2_title">Passo 2: Monika After Story</string>
+    <string name="setup_step_2_title">Passo 2: MASL - An After Story launcher</string>
     <string name="setup_step_2_desc">Baixe a 0.12.15 Dlx versão do MAS.</string>
     <string name="setup_step_2_url">https://github.com/Monika-After-Story/MonikaModDev/releases/tag/v0.12.15</string>
     <string name="setup_mas_filename">Alvo: Monika_After_Story-0.12.15-Mod-Dlx.zip</string>
