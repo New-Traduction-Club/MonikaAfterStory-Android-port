@@ -152,12 +152,6 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
      */
     public void unpackData(final String resource, File target) {
 
-        /**
-         * Delete main.pyo unconditionally. This fixes a problem where we have
-         * a main.py newer than main.pyo, but start.c won't run it.
-         */
-        new File(target, "main.pyo").delete();
-
         boolean shouldUnpack = false;
 
         // The version of data in memory and on disk.
@@ -190,6 +184,12 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
         // version file.
         if (shouldUnpack) {
             Log.v("python", "Extracting " + resource + " assets.");
+
+            /**
+             * Delete main.pyo unconditionally. This fixes a problem where we have
+             * a main.py newer than main.pyo, but start.c won't run it.
+             */
+            new File(target, "main.pyo").delete();
 
             // Delete old libraries & renpy files.
             recursiveDelete(new File(target, "lib"));
@@ -423,6 +423,20 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
                 }
             }
         });
+    }
+
+    @Override
+    public void finish() {
+        // Return to Launcher
+        try {
+            Intent intent = new Intent(this, LauncherActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e) {
+            Log.e("PythonSDLActivity", "Failed to return to launcher", e);
+        }
+        
+        super.finish();
     }
 
     @Override
