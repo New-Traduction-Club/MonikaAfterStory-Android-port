@@ -1,0 +1,121 @@
+<resources>
+    <string name="app_name">Monika After Story</string>
+
+    <string-array name="languages">
+        <item>English</item>
+        <item>Español</item>
+        <item>Português</item>
+    </string-array>
+
+    <!-- Installation Strings -->
+    <string name="installing_language_data">Installing game data for %1$s...</string>
+    <string name="install_error">Error installing data: %1$s</string>
+
+    <!-- File Explorer Strings -->
+    <string name="import_title">Import</string>
+    <string name="import_files">Import files</string>
+    <string name="import_zip">Import ZIP</string>
+    <string name="create_folder">Create folder</string>
+    <string name="cancel">Cancel</string>
+    <string name="folder_name_hint">Folder name</string>
+    <string name="create">Create</string>
+    <string name="folder_already_exists">The folder already exists.</string>
+    <string name="folder_created">Folder created.</string>
+    <string name="failed_to_create_folder">Failed to create folder.</string>
+    <string name="delete_files">Delete files</string>
+    <string name="confirm_delete_message">Are you sure you want to delete the selected files?</string>
+    <string name="delete">Delete</string>
+    <string name="export_selection_title">Export selected files</string>
+    <string name="export_selection_message">You are about to compress %1$d items into a ZIP file. Continue?</string>
+    <string name="export">Export</string>
+    <string name="export_completed">Export completed.</string>
+    <string name="export_error">Export error: %1$s</string>
+    <string name="unzipping">Unzipping…</string>
+    <string name="zip_imported_and_unzipped">ZIP imported and unzipped</string>
+    <string name="error_importing_zip">Error importing ZIP: %1$s</string>
+    <string name="existing_file">Existing file</string>
+    <string name="existing_file_message">The file \'%1$s\' already exists. What do you want to do?</string>
+    <string name="overwrite">Overwrite</string>
+    <string name="rename">Rename</string>
+    <string name="parent_directory">..</string>
+    <string name="directory_format">[%s]</string>
+    <string name="failed_to_delete_some_files">Failed to delete some files.</string>
+    <string name="export_completed_toast">Export completed!</string>
+    <string name="export_failed_toast">Export failed: %s</string>
+    <string name="import_zip_default_name">import.zip</string>
+    <string name="export_zip_default_name">export.zip</string>
+    <string name="imported_successfully">Imported successfully</string>
+    <string name="error_importing_folder">Error importing folder: %s</string>
+    <string name="file_imported">File imported: %s</string>
+    <string name="failed_import_ignore">Failed import. If you see your file so ignore this message.</string>
+
+    <!-- LauncherActivity Strings -->
+    <string name="launcher_export_title">Export persistent</string>
+    <string name="launcher_export_message">This will create a ZIP file with all your save data (persistent and other files) from the external saves folder. You will be asked to choose a destination. Proceed?</string>
+    <string name="launcher_import_title">Import persistent</string>
+    <string name="launcher_import_message">This will let you import your persistent and save files from a ZIP archive.\n\nIMPORTANT: The ZIP must contain the files (like \'persistent\') at the root level, not inside a folder. For example: file.zip/persistent\n\nYou will be asked to select a ZIP file. Proceed?</string>
+    <string name="launcher_proceed">Proceed</string>
+    <string name="launcher_import_completed">Import completed!</string>
+    <string name="launcher_import_failed">Import failed: %s</string>
+
+    <!-- Launcher Strings -->
+    <string name="launcher_start_game">Start game</string>
+    <string name="launcher_export_button">Export persistent</string>
+    <string name="launcher_import_button">Import persistent</string>
+    <string name="launcher_browse_internal">Browse internal files</string>
+    <string name="launcher_browse_external">Browse external files</string>
+    <string name="launcher_settings">Settings</string>
+
+    <!-- SettingsActivity Strings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="select_language_title">Select Language</string>
+    <string name="title_tools">Tools</string>
+    <string name="label_internal_files">Browse Internal Files</string>
+    <string name="label_external_files">Browse External Files</string>
+    <string name="title_file_explorer">File Explorer</string>
+    <string name="label_import">Import</string>
+    <string name="label_export">Export</string>
+
+    <!-- Translation Sync Strings -->
+    <string name="title_translation_sync">Github Sync (Spanish TL)</string>
+    <string name="translation_checking">Checking on remote server...</string>
+    <string name="translation_uptodate">Translation is up to date.</string>
+    <string name="translation_update_available">New translation available!</string>
+    <string name="translation_updating">Updating translation...</string>
+    <string name="translation_updated">Translation updated successfully.</string>
+    <string name="translation_error">Error checking/updating translation.</string>
+    <string name="translation_sync_button">Check for updates</string>
+    <string name="translation_commit_info">Ver: %1$s</string>
+
+    <!-- File Operations -->
+    <string name="action_copy">Copy</string>
+    <string name="action_cut">Cut</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_delete">Delete</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="clipboard_copy">Copied to clipboard</string>
+    <string name="clipboard_cut">Cut to clipboard</string>
+    <string name="paste_success">Files pasted</string>
+    <string name="paste_error">Error pasting files</string>
+
+    <string name="status_checking_network">Checking network...</string>
+    <string name="status_checking_updates">Checking for updates...</string>
+    <string name="status_launching_game">Launching game...</string>
+    <string name="status_export_ready">Export ready</string>
+    <string name="status_import_completed">Import completed successfully</string>
+    <string name="error_check_updates">Failed to check updates</string>
+    <string name="error_update_failed">Update failed</string>
+    <string name="error_update_failed_launching_outdated">Update failed. Launching outdated version.</string>
+
+    <string name="dialog_update_available_title">Update Available</string>
+    <string name="dialog_update_available_wifi_message">An update is available. Download now?</string>
+    <string name="dialog_update_available_mobile_message">An update is available. You are on mobile data. Do you want to download it now?</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_update">Update</string>
+
+    <string name="settings_category_general">General</string>
+    <string name="settings_category_network">Network</string>
+    <string name="settings_wifi_only_title">Wi-Fi Only Updates</string>
+    <string name="settings_wifi_only_desc">Only download translations when connected to Wi-Fi</string>
+</resources>

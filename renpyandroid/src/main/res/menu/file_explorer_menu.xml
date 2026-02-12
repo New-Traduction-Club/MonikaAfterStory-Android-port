@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Search"
+        app:showAsAction="ifRoom"
+        android:visible="false" /> <!-- Hidden for now until implemented -->
+
+    <item
+        android:id="@+id/action_create_folder"
+        android:icon="@android:drawable/ic_input_add"
+        android:title="@string/create_folder"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import"
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="@string/label_import"
+        app:showAsAction="never" />
+
+</menu>

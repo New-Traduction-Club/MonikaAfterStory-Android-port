@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'org.renpy.renpyiap'
+
+    compileSdkVersion 35
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 35
+        versionCode 1
+        versionName "1.0"
+    }
+
+}
+
+dependencies {
+    implementation 'com.google.android.play:review:2.0.1'
+
+    implementation files('libs/in-app-purchasing-2.0.76.jar')
+    implementation 'com.android.billingclient:billing:7.0.0'
+
+    implementation project (':renpyandroid')
+}

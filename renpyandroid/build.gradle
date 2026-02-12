@@ -1,0 +1,66 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'org.renpy.android'
+
+    compileSdkVersion 35
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 35
+        versionCode 1
+        versionName "1.0"
+
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            packaging {
+                jniLibs {
+                    keepDebugSymbols = [ "**/*.so" ]
+                }
+            }
+        }
+
+        release {
+            minifyEnabled false
+            packaging {
+                jniLibs {
+                    keepDebugSymbols = [ "**/*.so" ]
+                }
+            }
+        }
+    }
+    
+    buildFeatures {
+        viewBinding true
+    }
+    
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+
+dependencies {
+    api 'com.google.android.play:asset-delivery:2.2.2'
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.10"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10"
+    implementation "androidx.activity:activity-ktx:1.8.0"
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'uk.uuid.slf4j:slf4j-android:1.7.25-1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.10"
+    implementation "androidx.work:work-runtime:2.9.0"
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.12.0'
+    
+    // Coroutines & Lifecycle
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.2"
+}

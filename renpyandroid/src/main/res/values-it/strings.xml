@@ -1,0 +1,68 @@
+<resources>
+    <string name="app_name">Monika After Story</string>
+
+    <string-array name="languages">
+        <item>English</item>
+        <item>Español</item>
+    </string-array>
+
+    <!-- File Explorer Strings -->
+    <string name="import_title">Importa</string>
+    <string name="import_files">Importa file</string>
+    <string name="import_zip">Importa ZIP</string>
+    <string name="create_folder">Crea cartella</string>
+    <string name="cancel">Annulla</string>
+    <string name="folder_name_hint">Nome cartella</string>
+    <string name="create">Crea</string>
+    <string name="folder_already_exists">La cartella esiste già.</string>
+    <string name="folder_created">Cartella creata.</string>
+    <string name="failed_to_create_folder">Impossibile creare la cartella.</string>
+    <string name="delete_files">Elimina file</string>
+    <string name="confirm_delete_message">Sei sicuro di voler eliminare i file selezionati?</string>
+    <string name="delete">Elimina</string>
+    <string name="export_selection_title">Esporta file selezionati</string>
+    <string name="export_selection_message">Stai per comprimere %1$d elementi in un file ZIP. Continuare?</string>
+    <string name="export">Esporta</string>
+    <string name="export_completed">Esportazione completata.</string>
+    <string name="export_error">Errore di esportazione: %1$s</string>
+    <string name="unzipping">Estrazione in corso…</string>
+    <string name="zip_imported_and_unzipped">ZIP importato ed estratto</string>
+    <string name="error_importing_zip">Errore durante l\'importazione dello ZIP: %1$s</string>
+    <string name="existing_file">File esistente</string>
+    <string name="existing_file_message">Il file \'%1$s\' esiste già. Cosa vuoi fare?</string>
+    <string name="overwrite">Sovrascrivi</string>
+    <string name="rename">Rinomina</string>
+    <string name="parent_directory">..</string>
+    <string name="directory_format">[%s]</string>
+    <string name="failed_to_delete_some_files">Impossibile eliminare alcuni file.</string>
+    <string name="export_completed_toast">Esportazione completata!</string>
+    <string name="export_failed_toast">Esportazione fallita: %s</string>
+    <string name="import_zip_default_name">importa.zip</string>
+    <string name="export_zip_default_name">esporta.zip</string>
+    <string name="imported_successfully">Importazione riuscita</string>
+    <string name="error_importing_folder">Errore durante l\'importazione della cartella: %s</string>
+    <string name="file_imported">File importato: %s</string>
+    <string name="failed_import_ignore">Importazione fallita. Se vedi il tuo file, ignora questo messaggio.</string>
+
+    <!-- LauncherActivity Strings -->
+    <string name="launcher_export_title">Esporta persistente</string>
+    <string name="launcher_export_message">Questo creerà un file ZIP con tutti i tuoi dati di salvataggio (persistenti e altri file) dalla cartella dei salvataggi esterna. Ti verrà chiesto di scegliere una destinazione. Procedere?</string>
+    <string name="launcher_import_title">Importa persistente</string>
+    <string name="launcher_import_message">Questo ti permetterà di importare i tuoi file persistenti e di salvataggio da un archivio ZIP.\n\nIMPORTANTE: Lo ZIP deve contenere i file (come \'persistent\') al livello principale, non all\'interno di una cartella. Ad esempio: file.zip/persistent\n\nTi verrà chiesto di selezionare un file ZIP. Procedere?</string>
+    <string name="launcher_proceed">Procedi</string>
+    <string name="launcher_import_completed">Importazione completata!</string>
+    <string name="launcher_import_failed">Importazione fallita: %s</string>
+
+    <!-- Launcher Strings -->
+    <string name="launcher_start_game">Gioca</string>
+    <string name="launcher_export_button">Esporta persistente</string>
+    <string name="launcher_import_button">Importa persistente</string>
+    <string name="launcher_browse_internal">Sfoglia file interni</string>
+    <string name="launcher_browse_external">Sfoglia file esterni</string>
+    <string name="launcher_settings">Impostazioni</string>
+
+    <!-- SettingsActivity Strings -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_language">Lingua</string>
+    <string name="select_language_title">Seleziona Lingua</string>
+</resources>

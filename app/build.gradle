@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.application'
+}
+
+
+def localPropertiesFile = rootProject.file("local.properties")
+
+
+def localProperties = new Properties()
+localProperties.load(new FileInputStream(localPropertiesFile))
+
+android {
+    compileSdkVersion 35
+
+    namespace "com.z.mas.portby.just6889"
+
+    defaultConfig {
+        applicationId "com.z.mas.portby.just6889"
+        minSdkVersion 21
+        targetSdkVersion 35
+        versionCode 1757713303
+        versionName "1.0"
+    }
+
+    dynamicFeatures = [":ff1"]
+
+    signingConfigs {
+        release {
+            storeFile file(localProperties["key.store"])
+            storePassword localProperties["key.store.password"]
+            keyAlias localProperties['key.alias']
+            keyPassword localProperties["key.alias.password"]
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            packaging {
+                jniLibs {
+                    keepDebugSymbols = [ "**/*.so" ]
+                }
+            }
+        }
+
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            packaging {
+                jniLibs {
+                    keepDebugSymbols = [ "**/*.so" ]
+                }
+            }
+        }
+    }
+
+
+
+    androidResources {
+        noCompress = [ 'ogv', 'avi', 'mpg', 'webm', 'mkv', 'mp4', 'mp3', 'mp2', 'ogg', 'opus', 'flac', 'png', 'jpg', 'jpeg', 'webp', 'avif', 'rpyc', 'rpymc', 'rpyb', ]
+    }
+}
+
+dependencies {
+    implementation project(':renpyandroid')
+    implementation "androidx.work:work-runtime:2.9.0"
+    implementation 'com.google.android.material:material:1.12.0'
+}

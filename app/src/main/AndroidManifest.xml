@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+
+  <application
+      android:allowBackup="true"
+      android:fullBackupContent="@xml/backup"
+      android:fullBackupOnly="true"
+      android:icon="@mipmap/ic_launcher"
+      android:label="@string/appName"
+      android:isGame="true"
+      android:theme="@style/AppTheme"
+      android:hardwareAccelerated="true">
+    
+    <activity
+        android:name="org.renpy.android.LauncherActivity"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
+    
+    <activity
+      android:name="org.renpy.android.FileExplorerActivity"
+      android:exported="false"/>
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity"
+      android:exported="true"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:screenOrientation="sensorLandscape"
+      android:supportsPictureInPicture="true" />
+
+
+
+    <activity android:name="org.renpy.android.SettingsActivity" android:exported="false"/>
+
+
+  </application>
+
+  <uses-feature android:glEsVersion="0x00030000" android:required="true"/>
+
+  <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+  
+
+  
+  
+  <uses-permission android:name="android.permission.VIBRATE" />
+  
+  
+  
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  
+  
+  
+  <uses-permission android:name="android.permission.INTERNET" />
+  
+  
+
+
+</manifest>

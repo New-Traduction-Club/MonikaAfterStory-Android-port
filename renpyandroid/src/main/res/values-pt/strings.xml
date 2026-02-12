@@ -1,0 +1,121 @@
+<resources>
+    <string name="app_name">Monika After Story</string>
+
+    <string-array name="languages">
+        <item>English</item>
+        <item>Español</item>
+        <item>Português</item>
+    </string-array>
+
+    <!-- Installation Strings -->
+    <string name="installing_language_data">Instalando dados do jogo para %1$s...</string>
+    <string name="install_error">Erro ao instalar dados: %1$s</string>
+
+    <!-- File Explorer Strings -->
+    <string name="import_title">Importar</string>
+    <string name="import_files">Importar arquivos</string>
+    <string name="import_zip">Importar ZIP</string>
+    <string name="create_folder">Criar pasta</string>
+    <string name="cancel">Cancelar</string>
+    <string name="folder_name_hint">Nome da pasta</string>
+    <string name="create">Criar</string>
+    <string name="folder_already_exists">A pasta já existe.</string>
+    <string name="folder_created">Pasta criada.</string>
+    <string name="failed_to_create_folder">Falha ao criar a pasta.</string>
+    <string name="delete_files">Excluir arquivos</string>
+    <string name="confirm_delete_message">Tem certeza de que deseja excluir os arquivos selecionados?</string>
+    <string name="delete">Excluir</string>
+    <string name="export_selection_title">Exportar arquivos selecionados</string>
+    <string name="export_selection_message">Você está prestes a compactar %1$d itens em um arquivo ZIP. Continuar?</string>
+    <string name="export">Exportar</string>
+    <string name="export_completed">Exportação concluída.</string>
+    <string name="export_error">Erro na exportação: %1$s</string>
+    <string name="unzipping">Descompactando…</string>
+    <string name="zip_imported_and_unzipped">ZIP importado e descompactado</string>
+    <string name="error_importing_zip">Erro ao importar ZIP: %1$s</string>
+    <string name="existing_file">Arquivo existente</string>
+    <string name="existing_file_message">O arquivo \'%1$s\' já existe. O que deseja fazer?</string>
+    <string name="overwrite">Sobrescrever</string>
+    <string name="rename">Renomear</string>
+    <string name="parent_directory">..</string>
+    <string name="directory_format">[%s]</string>
+    <string name="failed_to_delete_some_files">Falha ao excluir alguns arquivos.</string>
+    <string name="export_completed_toast">Exportação concluída!</string>
+    <string name="export_failed_toast">Falha na exportação: %s</string>
+    <string name="import_zip_default_name">import.zip</string>
+    <string name="export_zip_default_name">export.zip</string>
+    <string name="imported_successfully">Importado com sucesso</string>
+    <string name="error_importing_folder">Erro ao importar pasta: %s</string>
+    <string name="file_imported">Arquivo importado: %s</string>
+    <string name="failed_import_ignore">Falha na importação. Se você ver seu arquivo, ignore esta mensagem.</string>
+
+    <!-- LauncherActivity Strings -->
+    <string name="launcher_export_title">Exportar persistente</string>
+    <string name="launcher_export_message">Isso criará um arquivo ZIP com todos os seus dados de salvamento (persistente e outros arquivos) da pasta de salvamentos externa. Você será solicitado a escolher um destino. Prosseguir?</string>
+    <string name="launcher_import_title">Importar persistente</string>
+    <string name="launcher_import_message">Isso permitirá que você importe seus arquivos persistentes e de salvamento de um arquivo ZIP.\n\nIMPORTANTE: O ZIP deve conter os arquivos (como \'persistent\') no nível raiz, não dentro de uma pasta. Por exemplo: arquivo.zip/persistent\n\nVocê será solicitado a selecionar um arquivo ZIP. Prosseguir?</string>
+    <string name="launcher_proceed">Prosseguir</string>
+    <string name="launcher_import_completed">Importação concluída!</string>
+    <string name="launcher_import_failed">Falha na importação: %s</string>
+
+    <!-- Launcher Strings -->
+    <string name="launcher_start_game">Jogar</string>
+    <string name="launcher_export_button">Exportar persistente</string>
+    <string name="launcher_import_button">Importar persistente</string>
+    <string name="launcher_browse_internal">Procurar arquivos internos</string>
+    <string name="launcher_browse_external">Procurar arquivos externos</string>
+    <string name="launcher_settings">Configurações</string>
+
+    <!-- SettingsActivity Strings -->
+    <string name="settings_title">Configurações</string>
+    <string name="settings_language">Idioma</string>
+    <string name="select_language_title">Selecionar Idioma</string>
+    <string name="title_tools">Ferramentas</string>
+    <string name="label_internal_files">Explorar Arquivos Internos</string>
+    <string name="label_external_files">Explorar Arquivos Externos</string>
+    <string name="title_file_explorer">Explorador de Arquivos</string>
+    <string name="label_import">Importar</string>
+    <string name="label_export">Exportar</string>
+
+    <!-- Translation Sync Strings -->
+    <string name="title_translation_sync">Sincronização com Github</string>
+    <string name="translation_checking">Verificando no servidor remoto...</string>
+    <string name="translation_uptodate">A tradução está atualizada.</string>
+    <string name="translation_update_available">Nova tradução disponível!</string>
+    <string name="translation_updating">Atualizando tradução...</string>
+    <string name="translation_updated">Tradução atualizada com sucesso.</string>
+    <string name="translation_error">Erro ao verificar/atualizar tradução.</string>
+    <string name="translation_sync_button">Verificar atualizações</string>
+    <string name="translation_commit_info">Ver: %1$s</string>
+
+    <!-- File Operations -->
+    <string name="action_copy">Copiar</string>
+    <string name="action_cut">Recortar</string>
+    <string name="action_paste">Colar</string>
+    <string name="action_delete">Excluir</string>
+    <string name="selected_count">%1$d selecionados</string>
+    <string name="clipboard_copy">Copiado para a área de transferência</string>
+    <string name="clipboard_cut">Recortado para a área de transferência</string>
+    <string name="paste_success">Arquivos colados</string>
+    <string name="paste_error">Erro ao colar arquivos</string>
+
+    <string name="status_checking_network">Verificando rede...</string>
+    <string name="status_checking_updates">Verificando atualizações...</string>
+    <string name="status_launching_game">Iniciando jogo...</string>
+    <string name="status_export_ready">Exportação pronta</string>
+    <string name="status_import_completed">Importação concluída com sucesso</string>
+    <string name="error_check_updates">Falha ao verificar atualizações</string>
+    <string name="error_update_failed">Falha na atualização</string>
+    <string name="error_update_failed_launching_outdated">Falha na atualização. Iniciando versão desatualizada.</string>
+
+    <string name="dialog_update_available_title">Atualização disponível</string>
+    <string name="dialog_update_available_wifi_message">Uma atualização está disponível. Baixar agora?</string>
+    <string name="dialog_update_available_mobile_message">Uma atualização está disponível. Você está em dados móveis. Deseja baixar agora?</string>
+    <string name="action_skip">Pular</string>
+    <string name="action_update">Atualizar</string>
+
+    <string name="settings_category_general">Geral</string>
+    <string name="settings_category_network">Rede</string>
+    <string name="settings_wifi_only_title">Atualizações apenas por Wi-Fi</string>
+    <string name="settings_wifi_only_desc">Baixar traduções apenas quando conectado ao Wi-Fi</string>
+</resources>
