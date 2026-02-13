@@ -37,8 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        app:fabAlignmentMode="end"
-        app:hideOnScroll="true">
+        app:fabAlignmentMode="end">
 
         <LinearLayout
             android:id="@+id/actionContainer"
