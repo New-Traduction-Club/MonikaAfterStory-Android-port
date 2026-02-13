@@ -21,11 +21,28 @@ import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class SetupActivity : BaseActivity() {
 
     private var ddlcUri: Uri? = null
     private var masUri: Uri? = null
+    
+    private var deleteDdlcAfterInstall = false
+    private var deleteMasAfterInstall = false
+
+    // Download State
+    private var isMasDownloadInProgress = false
+    private var masDownloadTotalBytes = 0L
+    private var masDownloadBytesRead = 0L
+    private var masDownloadStartTime = 0L
+
 
     private lateinit var tvSelectedDDLC: TextView
     private lateinit var tvSelectedMAS: TextView
@@ -39,15 +56,28 @@ class SetupActivity : BaseActivity() {
 
     private val CHECKSUM_DDLC = "2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e"
     private val CHECKSUM_MAS = "80925bccce56cc83f5a95fd2a196d1b26c755c771a7b5f853dd65b6c23caf1a1"
+    private val MAS_DOWNLOAD_URL = "https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.15/Monika_After_Story-0.12.15-Mod-Dlx.zip"
 
     companion object {
         private const val REQUEST_CODE_DDLC = 1001
         private const val REQUEST_CODE_MAS = 1002
+        private const val REQUEST_PERMISSION_NOTIFICATIONS = 1003
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setup)
+
+        setContentView(R.layout.activity_setup)
+
+        if (savedInstanceState != null) {
+            ddlcUri = savedInstanceState.getParcelable("ddlcUri")
+            masUri = savedInstanceState.getParcelable("masUri")
+            deleteDdlcAfterInstall = savedInstanceState.getBoolean("deleteDdlcAfterInstall")
+            deleteMasAfterInstall = savedInstanceState.getBoolean("deleteMasAfterInstall")
+            isMasDownloadInProgress = savedInstanceState.getBoolean("isMasDownloadInProgress")
+        }
+
 
         // Bind Views
         val btnDownloadDDLC = findViewById<Button>(R.id.btnDownloadDDLC)
@@ -56,6 +86,7 @@ class SetupActivity : BaseActivity() {
 
         val btnDownloadMAS = findViewById<Button>(R.id.btnDownloadMAS)
         val btnSelectMAS = findViewById<Button>(R.id.btnSelectMAS)
+        val btnAutoDownloadMAS = findViewById<Button>(R.id.btnAutoDownloadMAS)
         tvSelectedMAS = findViewById(R.id.tvSelectedMAS)
 
         btnInstall = findViewById(R.id.btnInstall)
@@ -85,6 +116,10 @@ class SetupActivity : BaseActivity() {
         btnSelectMAS.setOnClickListener {
             selectFile(REQUEST_CODE_MAS)
         }
+        
+        btnAutoDownloadMAS.setOnClickListener {
+            checkAndStartDownload()
+        }
 
         // Install
         btnInstall.setOnClickListener {
@@ -95,6 +130,99 @@ class SetupActivity : BaseActivity() {
             }
         }
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable("ddlcUri", ddlcUri)
+        outState.putParcelable("masUri", masUri)
+        outState.putBoolean("deleteDdlcAfterInstall", deleteDdlcAfterInstall)
+        outState.putBoolean("deleteMasAfterInstall", deleteMasAfterInstall)
+        outState.putBoolean("isMasDownloadInProgress", isMasDownloadInProgress)
+    }
+
+    private val downloadReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent == null) return
+            
+            when (intent.action) {
+                DownloadService.ACTION_DOWNLOAD_PROGRESS -> {
+                    val progress = intent.getIntExtra(DownloadService.EXTRA_PROGRESS, 0)
+                    val speed = intent.getStringExtra(DownloadService.EXTRA_SPEED) ?: ""
+                    val eta = intent.getStringExtra(DownloadService.EXTRA_ETA) ?: ""
+                    
+                    updateDownloadProgressUI(progress, speed, eta)
+                }
+                DownloadService.ACTION_DOWNLOAD_COMPLETE -> {
+                    val success = intent.getBooleanExtra(DownloadService.EXTRA_SUCCESS, false)
+                    val error = intent.getStringExtra(DownloadService.EXTRA_ERROR)
+                    
+                    if (success) {
+                        onDownloadComplete()
+                    } else {
+                        onDownloadError(error)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val filter = IntentFilter().apply {
+            addAction(DownloadService.ACTION_DOWNLOAD_PROGRESS)
+            addAction(DownloadService.ACTION_DOWNLOAD_COMPLETE)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(downloadReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(downloadReceiver, filter)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(downloadReceiver)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isMasDownloadInProgress) {
+            if (!isServiceRunning(DownloadService::class.java)) {
+                // Service finished while we were backgrounded/stopped
+                val destFile = File(filesDir, "mas_temp.zip")
+                if (destFile.exists() && destFile.length() > 0) {
+                    onDownloadComplete()
+                } else {
+                    onDownloadError("Download interrupted or failed")
+                }
+            } else {
+                layoutProgress.visibility = View.VISIBLE
+                setUiEnabled(false)
+                // Receiver will update
+            }
+        } else {
+            // If download finished while we were away, ensure ui reflects it
+            if (masUri != null) {
+                val fileName = getFileName(masUri!!)
+                tvSelectedMAS.text = getString(R.string.setup_file_selected, fileName)
+                tvSelectedMAS.visibility = View.VISIBLE
+                layoutProgress.visibility = View.GONE
+                setUiEnabled(true)
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun isServiceRunning(serviceClass: Class<*>): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
 
     private fun setupLanguageUI() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
@@ -158,11 +286,15 @@ class SetupActivity : BaseActivity() {
                 ddlcUri = uri
                 tvSelectedDDLC.text = getString(R.string.setup_file_selected, fileName)
                 tvSelectedDDLC.visibility = View.VISIBLE
+                confirmDeleteZip(REQUEST_CODE_DDLC)
             } else if (requestCode == REQUEST_CODE_MAS) {
                 masUri = uri
                 tvSelectedMAS.text = getString(R.string.setup_file_selected, fileName)
                 tvSelectedMAS.visibility = View.VISIBLE
+                confirmDeleteZip(REQUEST_CODE_MAS)
             }
+            if (requestCode == REQUEST_CODE_MAS) deleteMasAfterInstall = false 
+            if (requestCode == REQUEST_CODE_DDLC) deleteDdlcAfterInstall = false
         }
     }
 
@@ -239,12 +371,14 @@ class SetupActivity : BaseActivity() {
         findViewById<View>(R.id.btnSelectDDLC).isEnabled = enabled
         findViewById<View>(R.id.btnDownloadMAS).isEnabled = enabled
         findViewById<View>(R.id.btnSelectMAS).isEnabled = enabled
+        findViewById<View>(R.id.btnAutoDownloadMAS).isEnabled = enabled
         findViewById<View>(R.id.btnLanguage).isEnabled = enabled
         
         findViewById<View>(R.id.btnDownloadDDLC).alpha = alpha
         findViewById<View>(R.id.btnSelectDDLC).alpha = alpha
         findViewById<View>(R.id.btnDownloadMAS).alpha = alpha
         findViewById<View>(R.id.btnSelectMAS).alpha = alpha
+        findViewById<View>(R.id.btnAutoDownloadMAS).alpha = alpha
         findViewById<View>(R.id.btnLanguage).alpha = alpha
     }
 
@@ -296,6 +430,10 @@ class SetupActivity : BaseActivity() {
             }
         }
 
+        if (deleteDdlcAfterInstall && ddlcUri != null) {
+            deleteFile(ddlcUri!!)
+        }
+
         // Extract MAS
         updateStatus(getString(R.string.setup_progress_extracting_mas))
         val masZipStream = contentResolver.openInputStream(masUri!!) ?: throw Exception("Cannot open MAS zip")
@@ -327,6 +465,10 @@ class SetupActivity : BaseActivity() {
                 entry = zip.nextEntry
             }
         }
+
+        if (deleteMasAfterInstall && masUri != null) {
+            deleteFile(masUri!!)
+        }
         
         // Extract py_scripts_and_other_stuff.zip
         updateStatus(getString(R.string.setup_progress_finalizing))
@@ -346,6 +488,117 @@ class SetupActivity : BaseActivity() {
             }
         } catch (e: Exception) {
             android.util.Log.w("Setup", "py_scripts zip missing or error: ${e.message}")
+        }
+    }
+
+    private fun confirmDeleteZip(requestCode: Int) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.setup_confirm_delete_zip_title))
+            .setMessage(getString(R.string.setup_confirm_delete_zip_message))
+            .setPositiveButton(getString(R.string.yes)) { _, _ ->
+                if (requestCode == REQUEST_CODE_DDLC) deleteDdlcAfterInstall = true
+                else if (requestCode == REQUEST_CODE_MAS) deleteMasAfterInstall = true
+            }
+            .setNegativeButton(getString(R.string.no)) { _, _ ->
+                if (requestCode == REQUEST_CODE_DDLC) deleteDdlcAfterInstall = false
+                else if (requestCode == REQUEST_CODE_MAS) deleteMasAfterInstall = false
+            }
+            .show()
+    }
+
+    private fun checkAndStartDownload() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.permission_notification_title))
+                    .setMessage(getString(R.string.permission_notification_message))
+                    .setPositiveButton(getString(R.string.yes)) { _, _ ->
+                        ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_PERMISSION_NOTIFICATIONS)
+                    }
+                    .setNegativeButton(getString(R.string.no)) { _, _ ->
+                        downloadMAS() // Proceed without notifications
+                    }
+                    .show()
+                return
+            }
+        }
+        downloadMAS()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_PERMISSION_NOTIFICATIONS) {
+            downloadMAS()
+        }
+    }
+
+    private fun updateDownloadProgressUI(progress: Int, speed: String, eta: String) {
+        layoutProgress.visibility = View.VISIBLE
+        setUiEnabled(false)
+        progressBar.isIndeterminate = false
+        progressBar.progress = progress
+        tvProgress.text = getString(R.string.notification_download_progress, speed, eta)
+    }
+
+    private fun onDownloadComplete() {
+        isMasDownloadInProgress = false
+        val destFile = File(filesDir, "mas_temp.zip")
+        masUri = Uri.fromFile(destFile)
+        tvSelectedMAS.text = getString(R.string.setup_file_selected, destFile.name)
+        tvSelectedMAS.visibility = View.VISIBLE
+        deleteMasAfterInstall = true
+        
+        layoutProgress.visibility = View.GONE
+        setUiEnabled(true)
+        
+        Toast.makeText(this, getString(R.string.notification_download_complete), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onDownloadError(error: String?) {
+        isMasDownloadInProgress = false
+        layoutProgress.visibility = View.GONE
+        setUiEnabled(true)
+        Toast.makeText(this, getString(R.string.setup_download_error, error ?: "Unknown"), Toast.LENGTH_LONG).show()
+    }
+
+    private fun downloadMAS() {
+        if (isMasDownloadInProgress) return
+        
+        isMasDownloadInProgress = true
+        layoutProgress.visibility = View.VISIBLE
+        setUiEnabled(false)
+        tvProgress.text = getString(R.string.setup_downloading_mas)
+        progressBar.progress = 0
+        progressBar.isIndeterminate = true
+        
+        val destFile = File(filesDir, "mas_temp.zip")
+        val intent = Intent(this, DownloadService::class.java).apply {
+            action = DownloadService.ACTION_START_DOWNLOAD
+            putExtra(DownloadService.EXTRA_URL, MAS_DOWNLOAD_URL)
+            putExtra(DownloadService.EXTRA_DEST_PATH, destFile.absolutePath)
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    private fun deleteFile(uri: Uri) {
+        try {
+            if (uri.scheme == "file") {
+                val file = File(uri.path!!)
+                if (file.exists()) file.delete()
+            } else if (uri.scheme == "content") {
+                try {
+                    android.provider.DocumentsContract.deleteDocument(contentResolver, uri)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

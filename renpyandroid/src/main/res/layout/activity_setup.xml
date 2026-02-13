@@ -201,23 +201,32 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <Button
-                        android:id="@+id/btnDownloadMAS"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/setup_btn_download"
-                        android:layout_marginEnd="8dp"/>
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
 
                     <Button
                         android:id="@+id/btnSelectMAS"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/setup_btn_select_file"/>
+                        android:text="@string/setup_btn_select_file"
+                        android:layout_marginEnd="8dp"/>
+
+                    <Button
+                        android:id="@+id/btnDownloadMAS"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/setup_btn_download_manual"/>
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnAutoDownloadMAS"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/setup_btn_download_auto"
+                    android:layout_marginBottom="8dp"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
 
                 <TextView
                     android:id="@+id/tvSelectedMAS"

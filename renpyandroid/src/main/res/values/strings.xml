@@ -24,7 +24,15 @@
     <string name="setup_mas_filename">Target: Monika_After_Story-0.12.15-Mod-Dlx.zip</string>
     <string name="setup_mas_sha256">SHA256: 80925bccce56cc83f5a95fd2a196d1b26c755c771a7b5f853dd65b6c23caf1a1</string>
     <string name="setup_btn_download">Download</string>
+    <string name="setup_btn_download_manual">Download Manually</string>
+    <string name="setup_btn_download_auto">Download Automatically</string>
     <string name="setup_btn_select_file">Select File</string>
+    <string name="setup_confirm_delete_zip_title">Delete ZIP?</string>
+    <string name="setup_confirm_delete_zip_message">Do you want to delete the ZIP file after installation to save space?</string>
+    <string name="setup_downloading_mas">Downloading MAS...</string>
+    <string name="setup_download_error">Download error: %1$s</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     <string name="setup_btn_continue">Install &amp; Continue</string>
     <string name="setup_file_selected">Selected: %1$s</string>
     <string name="setup_error_missing_files">Please select both the DDLC zip and the MAS zip to continue.</string>
@@ -148,6 +156,16 @@
     <string name="settings_category_network">Network</string>
     <string name="settings_wifi_only_title">Wi-Fi Only Updates</string>
     <string name="settings_wifi_only_desc">Only download translations when connected to Wi-Fi</string>
+
+    <!-- Notification Strings -->
+    <string name="notification_channel_name">Downloads</string>
+    <string name="notification_channel_description">Notifications for file downloads</string>
+    <string name="notification_download_title">Downloading MAS</string>
+    <string name="notification_download_complete">Download Complete</string>
+    <string name="notification_download_failed">Download Failed</string>
+    <string name="notification_download_progress">Speed: %1$s/s • ETA: %2$s</string>
+    <string name="permission_notification_title">Enable Notifications?</string>
+    <string name="permission_notification_message">Allow the app to send notifications to show download progress and completion?</string>
 
     <!-- RPA Extraction -->
     <string name="action_extract">Extract</string>
