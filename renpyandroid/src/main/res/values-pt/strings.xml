@@ -158,6 +158,8 @@
     <string name="notification_download_complete">Download Concluído</string>
     <string name="notification_download_failed">Falha no Download</string>
     <string name="notification_download_progress">Velocidade: %1$s/s • Estimado: %2$s</string>
+    <string name="setup_download_progress_full">%1$d%% • %2$s / %3$s • %4$s • ETA: %5$s</string>
+    <string name="setup_download_progress_indeterminate">%1$s • %2$s</string>
     <string name="permission_notification_title">Ativar Notificações?</string>
     <string name="permission_notification_message">Permitir que o aplicativo envie notificações para mostrar o progresso do download?</string>
 

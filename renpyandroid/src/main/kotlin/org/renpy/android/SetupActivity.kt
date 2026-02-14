@@ -150,7 +150,10 @@ class SetupActivity : BaseActivity() {
                     val speed = intent.getStringExtra(DownloadService.EXTRA_SPEED) ?: ""
                     val eta = intent.getStringExtra(DownloadService.EXTRA_ETA) ?: ""
                     
-                    updateDownloadProgressUI(progress, speed, eta)
+                    val currentBytes = intent.getLongExtra(DownloadService.EXTRA_CURRENT_BYTES, 0)
+                    val totalBytes = intent.getLongExtra(DownloadService.EXTRA_TOTAL_BYTES, 0)
+                    
+                    updateDownloadProgressUI(progress, speed, eta, currentBytes, totalBytes)
                 }
                 DownloadService.ACTION_DOWNLOAD_COMPLETE -> {
                     val success = intent.getBooleanExtra(DownloadService.EXTRA_SUCCESS, false)
@@ -186,22 +189,23 @@ class SetupActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (isMasDownloadInProgress) {
-            if (!isServiceRunning(DownloadService::class.java)) {
-                // Service finished while we were backgrounded/stopped
-                val destFile = File(filesDir, "mas_temp.zip")
-                if (destFile.exists() && destFile.length() > 0) {
-                    onDownloadComplete()
-                } else {
-                    onDownloadError("Download interrupted or failed")
-                }
-            } else {
-                layoutProgress.visibility = View.VISIBLE
-                setUiEnabled(false)
-                // Receiver will update
-            }
+        
+        // check shared prefs for status
+        val prefs = getSharedPreferences(DownloadService.PREFS_NAME, MODE_PRIVATE)
+        val status = prefs.getInt(DownloadService.KEY_STATUS, DownloadService.STATUS_IDLE)
+        val error = prefs.getString(DownloadService.KEY_ERROR, null)
+        
+        if (status == DownloadService.STATUS_RUNNING) {
+             isMasDownloadInProgress = true
+             layoutProgress.visibility = View.VISIBLE
+             setUiEnabled(false)
+             // Receiver will update ui
+        } else if (status == DownloadService.STATUS_COMPLETE && isMasDownloadInProgress) {
+             onDownloadComplete()
+        } else if (status == DownloadService.STATUS_ERROR && isMasDownloadInProgress) {
+             onDownloadError(error)
         } else {
-            // If download finished while we were away, ensure ui reflects it
+            // Idle or completed previously
             if (masUri != null) {
                 val fileName = getFileName(masUri!!)
                 tvSelectedMAS.text = getString(R.string.setup_file_selected, fileName)
@@ -532,12 +536,30 @@ class SetupActivity : BaseActivity() {
         }
     }
 
-    private fun updateDownloadProgressUI(progress: Int, speed: String, eta: String) {
+    private fun updateDownloadProgressUI(progress: Int, speed: String, eta: String, currentBytes: Long, totalBytes: Long) {
         layoutProgress.visibility = View.VISIBLE
         setUiEnabled(false)
-        progressBar.isIndeterminate = false
-        progressBar.progress = progress
-        tvProgress.text = getString(R.string.notification_download_progress, speed, eta)
+        if (totalBytes > 0) {
+            progressBar.isIndeterminate = false
+            progressBar.progress = progress
+            
+            val currentSize = formatBytes(currentBytes)
+            val totalSize = formatBytes(totalBytes)
+            
+            tvProgress.text = getString(R.string.setup_download_progress_full, progress, currentSize, totalSize, speed, eta)
+        } else {
+             progressBar.isIndeterminate = true
+             val currentSize = formatBytes(currentBytes)
+             tvProgress.text = getString(R.string.setup_download_progress_indeterminate, currentSize, speed)
+        }
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        return if (bytes > 1024 * 1024) {
+             String.format("%.1f MB", bytes / (1024f * 1024f))
+        } else {
+             String.format("%.1f KB", bytes / 1024f)
+        }
     }
 
     private fun onDownloadComplete() {
@@ -572,6 +594,11 @@ class SetupActivity : BaseActivity() {
         progressBar.isIndeterminate = true
         
         val destFile = File(filesDir, "mas_temp.zip")
+        
+        // Reset status
+        val prefs = getSharedPreferences(DownloadService.PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putInt(DownloadService.KEY_STATUS, DownloadService.STATUS_IDLE).apply()
+        
         val intent = Intent(this, DownloadService::class.java).apply {
             action = DownloadService.ACTION_START_DOWNLOAD
             putExtra(DownloadService.EXTRA_URL, MAS_DOWNLOAD_URL)

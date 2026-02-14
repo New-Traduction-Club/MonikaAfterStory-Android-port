@@ -27,11 +27,22 @@ class DownloadService : Service() {
         const val EXTRA_PROGRESS = "extra_progress"
         const val EXTRA_SPEED = "extra_speed"
         const val EXTRA_ETA = "extra_eta"
+        const val EXTRA_CURRENT_BYTES = "extra_current_bytes"
+        const val EXTRA_TOTAL_BYTES = "extra_total_bytes"
         const val EXTRA_SUCCESS = "extra_success"
         const val EXTRA_ERROR = "extra_error"
 
-        private const val NOTIFICATION_CHANNEL_ID = "download_channel"
-        private const val NOTIFICATION_ID = 1
+        const val NOTIFICATION_CHANNEL_ID = "download_channel"
+        const val NOTIFICATION_ID = 1
+
+        const val PREFS_NAME = "download_prefs"
+        const val KEY_STATUS = "status"
+        const val KEY_ERROR = "error_message"
+        
+        const val STATUS_IDLE = 0
+        const val STATUS_RUNNING = 1
+        const val STATUS_COMPLETE = 2
+        const val STATUS_ERROR = 3
     }
 
     private var isDownloading = false
@@ -46,6 +57,7 @@ class DownloadService : Service() {
             val destPath = intent.getStringExtra(EXTRA_DEST_PATH)
             
             if (url != null && destPath != null && !isDownloading) {
+                updateStatus(STATUS_RUNNING)
                 startForegroundService()
                 startDownload(url, destPath)
             }
@@ -126,9 +138,9 @@ class DownloadService : Service() {
                     output.write(data, 0, count)
 
                     val now = System.currentTimeMillis()
-                    if (now - lastUpdate > 1000 && fileLength > 0) {
+                    if (now - lastUpdate > 200) {
                         lastUpdate = now
-                        val progress = (total * 100 / fileLength).toInt()
+                        val progress = if (fileLength > 0) (total * 100 / fileLength).toInt() else 0
                         
                         val elapsedMs = now - startTime
                         val speedBytesPerSec = if (elapsedMs > 0) total * 1000 / elapsedMs else 0
@@ -138,18 +150,20 @@ class DownloadService : Service() {
                         val eta = formatEta(etaSec)
 
                         updateNotification(progress, speed, eta)
-                        sendProgressBroadcast(progress, speed, eta)
+                        sendProgressBroadcast(progress, speed, eta, total, fileLength)
                     }
                 }
 
                 output.close()
                 input.close()
 
+                updateStatus(STATUS_COMPLETE)
                 sendCompleteBroadcast(true)
-                showCompleteNotification(true) 
+                showCompleteNotification(true)  
 
             } catch (e: Exception) {
                 e.printStackTrace()
+                updateStatus(STATUS_ERROR, e.message)
                 sendCompleteBroadcast(false, e.message)
                 showCompleteNotification(false)
             } finally {
@@ -175,11 +189,14 @@ class DownloadService : Service() {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun sendProgressBroadcast(progress: Int, speed: String, eta: String) {
+    private fun sendProgressBroadcast(progress: Int, speed: String, eta: String, currentBytes: Long, totalBytes: Long) {
         val intent = Intent(ACTION_DOWNLOAD_PROGRESS).apply {
             putExtra(EXTRA_PROGRESS, progress)
             putExtra(EXTRA_SPEED, speed)
             putExtra(EXTRA_ETA, eta)
+            putExtra(EXTRA_CURRENT_BYTES, currentBytes)
+            putExtra(EXTRA_TOTAL_BYTES, totalBytes)
+            setPackage(packageName)
         }
         sendBroadcast(intent)
     }
@@ -188,6 +205,7 @@ class DownloadService : Service() {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE).apply {
             putExtra(EXTRA_SUCCESS, success)
             if (errorMessage != null) putExtra(EXTRA_ERROR, errorMessage)
+            setPackage(packageName)
         }
         sendBroadcast(intent)
     }
@@ -206,5 +224,14 @@ class DownloadService : Service() {
         } else {
             String.format("%d s", seconds)
         }
+    }
+    private fun updateStatus(status: Int, errorMessage: String? = null) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.putInt(KEY_STATUS, status)
+        if (errorMessage != null) {
+            editor.putString(KEY_ERROR, errorMessage)
+        }
+        editor.apply()
     }
 }
