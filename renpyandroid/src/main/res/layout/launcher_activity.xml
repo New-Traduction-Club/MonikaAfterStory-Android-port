@@ -227,6 +227,40 @@
                             android:layout_marginTop="8dp"
                             android:textAppearance="?attr/textAppearanceLabelLarge"/>
                     </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Download Center -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    
+                    <LinearLayout
+                        android:id="@+id/btnDownloadCenter"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/stat_sys_download"
+                            app:tint="?attr/colorOnSurfaceVariant"/>
+
+                         <TextView
+                            android:text="@string/launcher_download_center"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                    </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
             </GridLayout>

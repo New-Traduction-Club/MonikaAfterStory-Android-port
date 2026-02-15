@@ -71,7 +71,25 @@ class LauncherActivity : BaseActivity() {
     
     private fun setupListeners() {
         binding.btnStartGame.setOnClickListener {
-            viewModel.handlePlayClick()
+            showProgressDialog(getString(R.string.installing_language_data, currentLanguage))
+            Thread {
+                try {
+                    installLogic(currentLanguage)
+                    runOnUiThread {
+                        dismissProgressDialog()
+                        viewModel.handlePlayClick()
+                    }
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        dismissProgressDialog()
+                        Toast.makeText(this, getString(R.string.install_error, e.message), Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.start()
+        }
+
+        binding.btnDownloadCenter.setOnClickListener {
+            startActivity(Intent(this, DownloadCenterActivity::class.java))
         }
         
         binding.btnExport.setOnClickListener {
@@ -342,7 +360,14 @@ class LauncherActivity : BaseActivity() {
             gameDir.mkdirs()
         }
 
-        assets.open(zipName).use { stream ->
+        val updateFile = File(filesDir, "LauncherUpdates/$zipName")
+        val inputStream = if (updateFile.exists()) {
+            FileInputStream(updateFile)
+        } else {
+            assets.open(zipName)
+        }
+
+        inputStream.use { stream ->
             ZipInputStream(stream).use { zip ->
                 var entry = zip.nextEntry
                 while (entry != null) {

@@ -149,7 +149,7 @@
     <string name="settings_category_general">General</string>
     <string name="settings_category_network">Red</string>
     <string name="settings_wifi_only_title">Actualizaciones solo Wi-Fi</string>
-    <string name="settings_wifi_only_desc">Solo descargar traducciones cuando esté conectado a Wi-Fi</string>
+    <string name="settings_wifi_only_desc">Solo descargar actualizaciones cuando esté conectado a Wi-Fi</string>
 
     <!-- Notification Strings -->
     <string name="notification_channel_name">Descargas</string>
@@ -170,4 +170,22 @@
     <string name="extracting">Extrayendo…</string>
     <string name="extraction_completed">Extracción completada</string>
     <string name="extraction_error">Error de extracción: %1$s</string>
+    <string name="launcher_download_center">Centro de Descargas</string>
+    
+    <!-- Download Center Strings -->
+    <string name="download_center_title">Centro de Descargas</string>
+    <string name="no_updates_found">No se encontraron actualizaciones o error de conexión</string>
+    <string name="download_in_progress">Otra descarga está en curso</string>
+    <string name="update_installed">%1$s instalado exitosamente</string>
+    <string name="installation_failed">Instalación fallida: %1$s</string>
+    <string name="update_current_version">Actual: %1$s -> Nueva: %2$s (%3$s)</string>
+    <string name="btn_update">Actualizar</string>
+    <string name="btn_reinstall">Reinstalar</string>
+    <string name="status_downloading">Descargando...</string>
+    <string name="status_installing">Instalando...</string>
+    <string name="download_failed_error">Descarga fallida: %1$s</string>
+    <string name="wifi_only_label">Descargar solo con Wi-Fi</string>
+    <string name="data_warning_title">Uso de Datos Móviles</string>
+    <string name="data_warning_message">Estás usando datos móviles. Esta descarga (%1$s) puede generar cargos adicionales. ¿Deseas continuar?</string>
+    <string name="calculating_size">Calculando tamaño...</string>
 </resources>

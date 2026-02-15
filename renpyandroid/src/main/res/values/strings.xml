@@ -155,7 +155,7 @@
     <string name="settings_category_general">General</string>
     <string name="settings_category_network">Network</string>
     <string name="settings_wifi_only_title">Wi-Fi Only Updates</string>
-    <string name="settings_wifi_only_desc">Only download translations when connected to Wi-Fi</string>
+    <string name="settings_wifi_only_desc">Only download updates when connected to Wi-Fi</string>
 
     <!-- Notification Strings -->
     <string name="notification_channel_name">Downloads</string>
@@ -176,4 +176,23 @@
     <string name="extracting">Extracting…</string>
     <string name="extraction_completed">Extraction completed</string>
     <string name="extraction_error">Extraction error: %1$s</string>
+    <string name="launcher_download_center">Download Center</string>
+    
+    <!-- Download Center Strings -->
+    <string name="manifest_url">https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-updates/refs/heads/main/launcher_updates.json</string>
+    <string name="download_center_title">Download Center</string>
+    <string name="no_updates_found">No updates found or connection error</string>
+    <string name="download_in_progress">Another download is in progress</string>
+    <string name="update_installed">%1$s installed successfully</string>
+    <string name="installation_failed">Installation failed: %1$s</string>
+    <string name="update_current_version">Current: %1$s -> New: %2$s (%3$s)</string>
+    <string name="btn_update">Update</string>
+    <string name="btn_reinstall">Re-install</string>
+    <string name="status_downloading">Downloading...</string>
+    <string name="status_installing">Installing...</string>
+    <string name="download_failed_error">Download failed: %1$s</string>
+    <string name="wifi_only_label">Download only on Wi-Fi</string>
+    <string name="data_warning_title">Mobile Data Usage</string>
+    <string name="data_warning_message">You are using mobile data. This download (%1$s) may incur additional charges. Do you want to proceed?</string>
+    <string name="calculating_size">Calculating size...</string>
 </resources>
