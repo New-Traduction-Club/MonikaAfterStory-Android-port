@@ -60,10 +60,10 @@ class UpdateManager(private val context: Context) {
 
     companion object {
         private val DEFAULT_VERSIONS = mapOf(
-            "lang_en" to 100,
-            "lang_es" to 100,
-            "lang_pt" to 100,
-            "py_scripts" to 100
+            "lang_en" to 103,
+            "lang_es" to 103,
+            "lang_pt" to 103,
+            "py_scripts" to 103
         )
     }
 
