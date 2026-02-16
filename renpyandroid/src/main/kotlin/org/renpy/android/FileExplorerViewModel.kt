@@ -212,24 +212,27 @@ class FileExplorerViewModel : ViewModel() {
                     }
                 }
                 
-                java.util.zip.ZipInputStream(FileInputStream(tempZipObj)).use { zis ->
-                    var entry = zis.nextEntry
-                    while (entry != null) {
+                java.util.zip.ZipFile(tempZipObj).use { zip ->
+                    val entries = zip.entries()
+                    while (entries.hasMoreElements()) {
+                        val entry = entries.nextElement()
                         val outFile = File(destDir, entry.name)
                         
+                        // Prevent Zip Slip
                         if (!outFile.canonicalPath.startsWith(destDir.canonicalPath)) {
+                             // Skip malicious entry
                         } else {
                             if (entry.isDirectory) {
                                 outFile.mkdirs()
                             } else {
                                 outFile.parentFile?.mkdirs()
-                                FileOutputStream(outFile).use { fos ->
-                                    zis.copyTo(fos)
+                                zip.getInputStream(entry).use { input ->
+                                    FileOutputStream(outFile).use { fos ->
+                                        input.copyTo(fos)
+                                    }
                                 }
                             }
                         }
-                        zis.closeEntry()
-                        entry = zis.nextEntry
                     }
                 }
                 

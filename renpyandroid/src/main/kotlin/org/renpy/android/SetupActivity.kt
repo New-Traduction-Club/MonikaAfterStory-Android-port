@@ -20,7 +20,10 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
-import java.util.zip.ZipInputStream
+import java.util.zip.ZipFile
+import java.io.InputStream
+import java.io.BufferedOutputStream
+import java.io.BufferedInputStream
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
@@ -403,23 +406,35 @@ class SetupActivity : BaseActivity() {
         // Extract DDLC relevant files
         updateStatus(getString(R.string.setup_progress_extracting_ddlc))
         
-        val ddlcZipStream = contentResolver.openInputStream(ddlcUri!!) ?: throw Exception("Cannot open DDLC zip")
-        ZipInputStream(ddlcZipStream).use { zip ->
-            var entry = zip.nextEntry
-            while (entry != null) {
-                val name = entry.name
-                if (!entry.isDirectory && (
-                        name.endsWith("game/audio.rpa") ||
-                        name.endsWith("game/fonts.rpa") ||
-                        name.endsWith("game/images.rpa")
-                    )) {
-                    
-                    val fileName = File(name).name 
-                    val targetFile = File(gameDir, fileName)
-                    FileOutputStream(targetFile).use { out -> zip.copyTo(out) }
+        var ddlcTempFile: File? = null
+        try {
+            ddlcTempFile = File(cacheDir, "ddlc_temp.zip")
+            copyUriToFile(ddlcUri!!, ddlcTempFile)
+            
+            ZipFile(ddlcTempFile).use { zip ->
+                val entries = zip.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    val name = entry.name
+                    if (!entry.isDirectory && (
+                            name.endsWith("game/audio.rpa") ||
+                            name.endsWith("game/fonts.rpa") ||
+                            name.endsWith("game/images.rpa")
+                        )) {
+                        
+                        val fileName = File(name).name 
+                        val targetFile = File(gameDir, fileName)
+                        
+                        zip.getInputStream(entry).use { input ->
+                            FileOutputStream(targetFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
                 }
-                entry = zip.nextEntry
             }
+        } finally {
+            ddlcTempFile?.delete()
         }
 
         // Unrpa files
@@ -440,34 +455,53 @@ class SetupActivity : BaseActivity() {
 
         // Extract MAS
         updateStatus(getString(R.string.setup_progress_extracting_mas))
-        val masZipStream = contentResolver.openInputStream(masUri!!) ?: throw Exception("Cannot open MAS zip")
-        ZipInputStream(masZipStream).use { zip ->
-            var entry = zip.nextEntry
-            while (entry != null) {
-                val name = entry.name
-                
-                var relativePath: String? = null
-                
-                if (name.startsWith("game/")) {
-                    relativePath = name.substring("game/".length)
-                } 
-                else if (name.contains("/game/")) {
-                    val index = name.indexOf("/game/")
-                    relativePath = name.substring(index + "/game/".length)
-                }
-                
-                if (!relativePath.isNullOrEmpty()) {
-                    val targetFile = File(gameDir, relativePath)
+        
+        var masTempFile: File? = null
+        try {
+            // Check if masUri is already a file we created (downloaded)
+            if (masUri!!.scheme == "file") {
+                masTempFile = File(masUri!!.path!!)
+            } else {
+                masTempFile = File(cacheDir, "mas_temp_install.zip")
+                copyUriToFile(masUri!!, masTempFile)
+            }
+
+            ZipFile(masTempFile).use { zip ->
+                val entries = zip.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    val name = entry.name
                     
-                    if (entry.isDirectory) {
-                        targetFile.mkdirs()
-                    } else {
-                        targetFile.parentFile?.mkdirs()
-                        FileOutputStream(targetFile).use { out -> zip.copyTo(out) }
+                    var relativePath: String? = null
+                    
+                    if (name.startsWith("game/")) {
+                        relativePath = name.substring("game/".length)
+                    } 
+                    else if (name.contains("/game/")) {
+                        val index = name.indexOf("/game/")
+                        relativePath = name.substring(index + "/game/".length)
+                    }
+                    
+                    if (!relativePath.isNullOrEmpty()) {
+                        val targetFile = File(gameDir, relativePath)
+                        
+                        if (entry.isDirectory) {
+                            targetFile.mkdirs()
+                        } else {
+                            targetFile.parentFile?.mkdirs()
+                            zip.getInputStream(entry).use { input ->
+                                FileOutputStream(targetFile).use { output ->
+                                    input.copyTo(output)
+                                }
+                            }
+                        }
                     }
                 }
-                entry = zip.nextEntry
             }
+        } finally {
+             if (masUri!!.scheme != "file") {
+                 masTempFile?.delete()
+             }
         }
 
         if (deleteMasAfterInstall && masUri != null) {
@@ -477,19 +511,29 @@ class SetupActivity : BaseActivity() {
         // Extract py_scripts_and_other_stuff.zip
         updateStatus(getString(R.string.setup_progress_finalizing))
         try {
+            val assetTemp = File(cacheDir, "py_scripts_temp.zip")
             assets.open("py_scripts_and_other_stuff.zip").use { ais ->
-                ZipInputStream(ais).use { zip ->
-                    var entry = zip.nextEntry
-                    while (entry != null) {
-                        if (!entry.isDirectory) {
-                            val targetFile = File(gameDir, entry.name)
-                            targetFile.parentFile?.mkdirs()
-                            FileOutputStream(targetFile).use { out -> zip.copyTo(out) }
+                FileOutputStream(assetTemp).use { fos -> ais.copyTo(fos) }
+            }
+            
+            ZipFile(assetTemp).use { zip ->
+                val entries = zip.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    if (!entry.isDirectory) {
+                        val targetFile = File(gameDir, entry.name)
+                        targetFile.parentFile?.mkdirs()
+                        zip.getInputStream(entry).use { input ->
+                             FileOutputStream(targetFile).use { output ->
+                                 input.copyTo(output)
+                             }
                         }
-                        entry = zip.nextEntry
                     }
                 }
             }
+            assetTemp.delete()
+            
+        } catch (e: Exception) {
         } catch (e: Exception) {
             android.util.Log.w("Setup", "py_scripts zip missing or error: ${e.message}")
         }
@@ -627,6 +671,14 @@ class SetupActivity : BaseActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun copyUriToFile(uri: Uri, destFile: File) {
+        contentResolver.openInputStream(uri)?.use { input ->
+             FileOutputStream(destFile).use { output ->
+                 input.copyTo(output)
+             }
+        } ?: throw Exception("Cannot open input stream for URI: $uri")
     }
 
     private suspend fun updateStatus(message: String) {
