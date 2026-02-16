@@ -42,7 +42,7 @@ class AssetExtract {
         
         try {
             assetStream = mAssetManager.open(asset, AssetManager.ACCESS_STREAMING);
-            tis = new TarInputStream(new BufferedInputStream(new GZIPInputStream(new BufferedInputStream(assetStream, 131072)), 131072));
+            tis = new TarInputStream(new BufferedInputStream(new GZIPInputStream(new BufferedInputStream(assetStream, 1048576)), 1048576));
         } catch (IOException e) {
             Log.e("python", "opening up extract tar", e);
             return false;
@@ -77,7 +77,7 @@ class AssetExtract {
             String path = target + "/" + entry.getName();
 
             try {
-                out = new BufferedOutputStream(new FileOutputStream(path), 131072);
+                out = new BufferedOutputStream(new FileOutputStream(path), 1048576);
             } catch ( FileNotFoundException e ) {
             } catch ( SecurityException e ) { };
 

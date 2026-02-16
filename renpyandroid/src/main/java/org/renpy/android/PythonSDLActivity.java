@@ -243,7 +243,8 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
     public native void nativeSetEnv(String variable, String value);
 
     public void preparePython() {
-        Log.v("python", "Starting preparePython.");
+        long startTime = System.currentTimeMillis();
+        Log.v("python", "Starting preparePython. Time: " + startTime);
 
         mActivity = this;
 
@@ -257,7 +258,9 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
             externalStorage = oldExternalStorage;
         }
 
+        long unpackStart = System.currentTimeMillis();
         unpackData("private", getFilesDir());
+        Log.v("python", "unpackData finished. Duration: " + (System.currentTimeMillis() - unpackStart) + "ms");
 
         nativeSetEnv("ANDROID_PRIVATE", getFilesDir().getAbsolutePath());
         nativeSetEnv("ANDROID_PUBLIC",  externalStorage.getAbsolutePath());
@@ -289,7 +292,7 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
             }
         }
 
-        Log.v("python", "Finished preparePython.");
+        Log.v("python", "Finished preparePython. Total Duration: " + (System.currentTimeMillis() - startTime) + "ms");
 
     };
 
@@ -338,7 +341,8 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.v("python", "onCreate()");
+        long startTime = System.currentTimeMillis();
+        Log.v("python", "onCreate() started at " + startTime);
         super.onCreate(savedInstanceState);
 
         if (mLayout == null) {
