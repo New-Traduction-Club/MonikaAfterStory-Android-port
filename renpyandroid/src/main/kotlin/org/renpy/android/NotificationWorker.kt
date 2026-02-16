@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit
 class NotificationWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     companion object {
-        private const val CHANNEL_ID = "mas_game_channel"
+        private const val CHANNEL_ID = "mas_game_channel_high"
         private const val CHANNEL_NAME = "MAS Notifications"
         private const val CHANNEL_DESC = "Notifications from Monika"
         
@@ -123,9 +123,10 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
                 val channel = NotificationChannel(
                     CHANNEL_ID,
                     CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = CHANNEL_DESC
+                    enableVibration(true)
                 }
                 manager.createNotificationChannel(channel)
             }
@@ -149,7 +150,8 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
                 .setSmallIcon(android.R.drawable.sym_def_app_icon)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
 
             // Handle Custom Image (Large Icon)
             if (!imagePath.isNullOrEmpty()) {
