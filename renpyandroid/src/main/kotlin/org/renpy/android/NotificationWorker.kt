@@ -63,6 +63,17 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
         const val KEY_MESSAGE = "message"
         const val KEY_IMAGE_PATH = "image_path"
 
+        private const val WORK_TAG = "renpy_notification"
+
+        /**
+         * Cancels all scheduled notifications tagged with WORK_TAG.
+         * Callable from JNIUS.
+         */
+        @JvmStatic
+        fun cancelAllNotifications(context: Context) {
+            WorkManager.getInstance(context).cancelAllWorkByTag(WORK_TAG)
+        }
+
         /**
          * Schedules a notification to be shown after a delay.
          * Callable from JNIUS.
@@ -92,6 +103,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
             val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
                 .setInitialDelay(delaySeconds, TimeUnit.SECONDS)
                 .setInputData(data.build())
+                .addTag(WORK_TAG)
                 .build()
 
             WorkManager.getInstance(context).enqueue(workRequest)

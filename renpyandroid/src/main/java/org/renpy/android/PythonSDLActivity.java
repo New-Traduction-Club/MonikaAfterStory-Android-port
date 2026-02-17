@@ -685,6 +685,10 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
     @Override
     protected void onResume() {
         super.onResume();
+        
+        // Cancel all scheduled notifications when the user returns to the game
+        NotificationWorker.cancelAllNotifications(this);
+
         long start = System.currentTimeMillis();
         getSharedPreferences("app_prefs", MODE_PRIVATE)
             .edit()
