@@ -156,7 +156,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             folder.walkTopDown().forEach { file ->
                 val relPath = file.relativeTo(folder).path.replace("\\", "/")
-                if (relPath.startsWith("android/") || relPath.startsWith("sync/") || file.name == "persistent.migrated") {
+                if (relPath.startsWith("android/") || relPath.startsWith("sync/") || file.name == "persistent.migrated" || file.name.endsWith(".save")) {
                     return@forEach
                 }
                 if (file.isFile) {
