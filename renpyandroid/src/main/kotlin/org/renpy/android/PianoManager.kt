@@ -10,6 +10,7 @@ import android.util.Log
 import android.widget.SeekBar
 import android.graphics.Rect
 import android.view.ViewGroup
+import android.content.Context
 
 object PianoManager {
 
@@ -60,6 +61,20 @@ object PianoManager {
         val settingsArea = view.findViewById<LinearLayout>(R.id.piano_settings_area)
         val keyboardArea = view.findViewById<View>(R.id.piano_keyboard_area)
         val seekBar = view.findViewById<SeekBar>(R.id.piano_size_seekbar)
+        val opacitySeekBar = view.findViewById<SeekBar>(R.id.piano_opacity_seekbar)
+
+        val prefs = activity.getSharedPreferences("PianoSettings", Context.MODE_PRIVATE)
+        val savedSize = prefs.getInt("size", 50)
+        val savedOpacity = prefs.getInt("opacity", 100)
+
+        // Set initial visual values based on preferences
+        keyboardArea.scaleX = 0.5f + (savedSize / 100f)
+        keyboardArea.scaleY = 0.5f + (savedSize / 100f)
+        // Opacity mapping: progress 0-100 to alpha 0.15f-1.0f
+        keyboardArea.alpha = 0.15f + (savedOpacity / 100f) * 0.85f
+
+        seekBar.progress = savedSize
+        opacitySeekBar.progress = savedOpacity
 
         btnSettings.setOnClickListener {
             // Cancel all active pointers before hiding
@@ -88,12 +103,23 @@ object PianoManager {
         }
 
         // SeekBar scaling (0 to 100) -> scale 0.5 to 1.5
-        seekBar.progress = 50
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val scale = 0.5f + (progress / 100f)
                 keyboardArea.scaleX = scale
                 keyboardArea.scaleY = scale
+                prefs.edit().putInt("size", progress).apply()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // SeekBar opacity (0 to 100) -> alpha 0.15 to 1.0
+        opacitySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val alpha = 0.15f + (progress / 100f) * 0.85f
+                keyboardArea.alpha = alpha
+                prefs.edit().putInt("opacity", progress).apply()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}

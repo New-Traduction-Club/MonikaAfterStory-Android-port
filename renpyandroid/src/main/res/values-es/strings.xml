@@ -193,4 +193,5 @@
     <string name="piano_settings">Ajustes</string>
     <string name="piano_close">Cerrar</string>
     <string name="piano_size">Tamaño del Teclado</string>
+    <string name="piano_opacity">Opacidad del Teclado</string>
 </resources>

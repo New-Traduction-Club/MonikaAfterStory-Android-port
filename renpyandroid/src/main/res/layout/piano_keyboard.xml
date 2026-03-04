@@ -100,12 +100,29 @@
             android:layout_height="wrap_content"
             android:text="@string/piano_size"
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="8dp"/>
             
         <SeekBar
             android:id="@+id/piano_size_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="100"
+            android:layout_marginBottom="16dp"/>
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/piano_opacity"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"/>
+            
+        <SeekBar
+            android:id="@+id/piano_opacity_seekbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="100"
