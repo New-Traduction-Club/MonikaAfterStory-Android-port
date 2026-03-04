@@ -160,7 +160,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                     return@forEach
                 }
                 if (file.isFile) {
-                    zos.putNextEntry(ZipEntry(relPath))
+                    if (file.name == "persistent") {
+                        if (File(file.parentFile, "persistent699").exists()) {
+                            return@forEach
+                        }
+                    }
+                    var entryName = relPath
+                    if (file.name == "persistent699") {
+                        entryName = relPath.substring(0, relPath.length - 3)
+                    }
+                    
+                    zos.putNextEntry(ZipEntry(entryName))
                     FileInputStream(file).use { fis -> fis.copyTo(zos) }
                     zos.closeEntry()
                 }
@@ -183,6 +193,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 }
                 zis.closeEntry()
                 entry = zis.nextEntry
+            }
+        }
+        
+        destDir.walkTopDown().forEach { file ->
+            if (file.isFile && file.name == "persistent.migrated") {
+                file.delete()
             }
         }
     }
