@@ -188,4 +188,9 @@
     <string name="data_warning_title">Uso de Datos Móviles</string>
     <string name="data_warning_message">Estás usando datos móviles. Esta descarga (%1$s) puede generar cargos adicionales. ¿Deseas continuar?</string>
     <string name="calculating_size">Calculando tamaño...</string>
+
+    <!-- Piano Strings -->
+    <string name="piano_settings">Ajustes</string>
+    <string name="piano_close">Cerrar</string>
+    <string name="piano_size">Tamaño del Teclado</string>
 </resources>
