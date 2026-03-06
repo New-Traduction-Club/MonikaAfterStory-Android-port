@@ -95,7 +95,7 @@
     <string name="launcher_export_button">Exportar persistente</string>
     <string name="launcher_import_button">Importar persistente</string>
     <string name="launcher_browse_internal">Explorar archivos internos</string>
-    <string name="launcher_browse_external">Explorar archivos externos</string>
+    <string name="launcher_browse_external">Archivos de Guardado</string>
     <string name="launcher_settings">Ajustes</string>
 
     <!-- SettingsActivity Strings -->
@@ -104,7 +104,7 @@
     <string name="select_language_title">Seleccionar Idioma</string>
     <string name="title_tools">Herramientas</string>
     <string name="label_internal_files">Explorar Archivos Internos</string>
-    <string name="label_external_files">Explorar Archivos Externos</string>
+    <string name="label_external_files">Archivos de Guardado</string>
     <string name="title_file_explorer">Explorador de Archivos</string>
     <string name="label_import">Importar</string>
     <string name="label_export">Exportar</string>
