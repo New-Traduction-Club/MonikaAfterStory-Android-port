@@ -101,6 +101,14 @@
     <string name="launcher_browse_external">Arquivos de Save</string>
     <string name="launcher_settings">Configurações</string>
 
+    <!-- Launcher Button Subtitles -->
+    <string name="launcher_import_desc">Restaurar dados do jogo</string>
+    <string name="launcher_export_desc">Fazer backup do progresso</string>
+    <string name="launcher_internal_desc">Gerenciar arquivos do jogo</string>
+    <string name="launcher_external_desc">Acessar os saves</string>
+    <string name="launcher_settings_desc">Ajustes do launcher</string>
+    <string name="launcher_download_desc">Obter atualizações</string>
+
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Configurações</string>
     <string name="settings_language">Idioma</string>

@@ -106,6 +106,14 @@
     <string name="launcher_browse_internal">Browse internal files</string>
     <string name="launcher_browse_external">Save Files</string>
     <string name="launcher_settings">Settings</string>
+    
+    <!-- Launcher Button Subtitles -->
+    <string name="launcher_import_desc">Import persistent data</string>
+    <string name="launcher_export_desc">Backup your progress</string>
+    <string name="launcher_internal_desc">Manage game files</string>
+    <string name="launcher_external_desc">Access save files</string>
+    <string name="launcher_settings_desc">Launcher config</string>
+    <string name="launcher_download_desc">Get updates</string>
 
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Settings</string>

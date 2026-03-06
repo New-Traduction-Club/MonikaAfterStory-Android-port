@@ -69,6 +69,10 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer"
                     android:clickable="true"
                     android:focusable="true">
                     <!-- Note: width_reference ID used just to mark equal width intent -->
@@ -83,17 +87,29 @@
                         android:background="?attr/selectableItemBackground">
                         
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_upload"
-                            app:tint="?attr/colorOnSurfaceVariant"/>
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_launcher_import"
+                            app:tint="?attr/colorOnSecondaryContainer"/>
 
                         <TextView
                             android:text="@string/launcher_import_button"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textAlignment="center"/>
+                            
+                        <TextView
+                            android:text="@string/launcher_import_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:alpha="0.8"
+                            android:textAlignment="center"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -103,6 +119,10 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -116,17 +136,29 @@
                         android:background="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_save"
-                            app:tint="?attr/colorOnSurfaceVariant"/>
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_launcher_export"
+                            app:tint="?attr/colorOnSecondaryContainer"/>
 
                         <TextView
                             android:text="@string/launcher_export_button"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textAlignment="center"/>
+                            
+                        <TextView
+                            android:text="@string/launcher_export_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:alpha="0.8"
+                            android:textAlignment="center"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -136,6 +168,10 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer"
                     android:clickable="true"
                     android:focusable="true">
                     
@@ -149,26 +185,42 @@
                         android:background="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_agenda"
-                            app:tint="?attr/colorOnSurfaceVariant"/>
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_launcher_internal"
+                            app:tint="?attr/colorOnSecondaryContainer"/>
 
                          <TextView
                             android:text="@string/label_internal_files"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textAlignment="center"/>
+                            
+                        <TextView
+                            android:text="@string/launcher_internal_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:alpha="0.8"
+                            android:textAlignment="center"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                 <!-- Settings -->
+                <!-- Settings -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer"
                     android:clickable="true"
                     android:focusable="true">
                     
@@ -182,17 +234,29 @@
                         android:background="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_preferences"
-                            app:tint="?attr/colorOnSurfaceVariant"/>
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_launcher_settings"
+                            app:tint="?attr/colorOnSecondaryContainer"/>
 
                          <TextView
                             android:text="@string/launcher_settings"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textAlignment="center"/>
+                            
+                        <TextView
+                            android:text="@string/launcher_settings_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:alpha="0.8"
+                            android:textAlignment="center"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -202,6 +266,10 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer"
                     android:clickable="true"
                     android:focusable="true">
                     
@@ -215,19 +283,30 @@
                         android:background="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_gallery"
-                            app:tint="?attr/colorOnSurfaceVariant"/>
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_launcher_external"
+                            app:tint="?attr/colorOnSecondaryContainer"/>
 
                          <TextView
                             android:text="@string/label_external_files"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textAlignment="center"/>
+                            
+                        <TextView
+                            android:text="@string/launcher_external_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:alpha="0.8"
+                            android:textAlignment="center"/>
                     </LinearLayout>
-
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- Download Center -->
@@ -236,6 +315,10 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer"
                     android:clickable="true"
                     android:focusable="true">
                     
@@ -249,17 +332,29 @@
                         android:background="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/stat_sys_download"
-                            app:tint="?attr/colorOnSurfaceVariant"/>
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_launcher_download"
+                            app:tint="?attr/colorOnSecondaryContainer"/>
 
                          <TextView
                             android:text="@string/launcher_download_center"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAppearance="?attr/textAppearanceLabelLarge"/>
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textAlignment="center"/>
+                            
+                        <TextView
+                            android:text="@string/launcher_download_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:alpha="0.8"
+                            android:textAlignment="center"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

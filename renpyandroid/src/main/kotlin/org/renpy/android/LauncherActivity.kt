@@ -10,6 +10,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
@@ -66,8 +69,58 @@ class LauncherActivity : BaseActivity() {
         setupObservers()
         
         setupListeners()
+        setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        
+        handleShortcutIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleShortcutIntent(intent)
+    }
+    
+    private fun handleShortcutIntent(intent: Intent?) {
+        if (intent == null) return
+        val action = intent.getStringExtra("shortcut_action")
+        if (action == "start_game") {
+            binding.btnStartGame.performClick()
+        } else if (action == "export_persistent") {
+            binding.btnExport.performClick()
+        }
+    }
+    
+    private fun setupDynamicShortcuts(isSetupCompleted: Boolean) {
+        if (!isSetupCompleted) {
+            ShortcutManagerCompat.removeAllDynamicShortcuts(this)
+            return
+        }
+
+        // Start Game Shortcut
+        val startGameIntent = Intent(this, LauncherActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            putExtra("shortcut_action", "start_game")
+        }
+        val startGameShortcut = ShortcutInfoCompat.Builder(this, "shortcut_start_game")
+            .setShortLabel(getString(R.string.launcher_start_game))
+            .setIcon(IconCompat.createWithResource(this, android.R.drawable.ic_media_play))
+            .setIntent(startGameIntent)
+            .build()
+            
+        // Export Persistent Shortcut
+        val exportIntent = Intent(this, LauncherActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            putExtra("shortcut_action", "export_persistent")
+        }
+        val exportShortcut = ShortcutInfoCompat.Builder(this, "shortcut_export")
+            .setShortLabel(getString(R.string.launcher_export_button))
+            .setIcon(IconCompat.createWithResource(this, R.drawable.ic_launcher_export)) // uses our new modern SVG
+            .setIntent(exportIntent)
+            .build()
+            
+        ShortcutManagerCompat.pushDynamicShortcut(this, startGameShortcut)
+        ShortcutManagerCompat.pushDynamicShortcut(this, exportShortcut)
     }
     
     private fun setupListeners() {
