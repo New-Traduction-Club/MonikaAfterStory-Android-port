@@ -36,13 +36,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.util.Collections;
 import java.util.HashMap;
 
-import com.google.android.play.core.assetpacks.*;
-import com.google.android.play.core.assetpacks.model.*;
-import com.google.android.gms.tasks.*;
+import java.util.Collections;
+import java.util.HashMap;
+
+import android.app.PictureInPictureParams;
+import android.util.Rational;
 
 import android.app.PictureInPictureParams;
 import android.util.Rational;
@@ -53,7 +57,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.widget.RemoteViews;
 
-public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpdateListener {
+public class PythonSDLActivity extends SDLActivity {
 
     /**
      * This exists so python code can access this activity.
@@ -163,18 +167,20 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
 
         // If no version, no unpacking is necessary.
         if (data_version != null) {
-
-            try {
-                byte buf[] = new byte[64];
-                InputStream is = new FileInputStream(disk_version_fn);
-                int len = is.read(buf);
-                disk_version = new String(buf, 0, len);
-                is.close();
-            } catch (Exception e) {
+            File versionFile = new File(disk_version_fn);
+            if (versionFile.exists()) {
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(versionFile));
+                    disk_version = br.readLine();
+                    br.close();
+                } catch (Exception e) {
+                    disk_version = "";
+                }
+            } else {
                 disk_version = "";
             }
 
-            if (! data_version.equals(disk_version)) {
+            if (!data_version.equals(disk_version)) {
                 shouldUnpack = true;
             }
         }
@@ -280,18 +286,6 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
 
         nativeSetEnv("ANDROID_APK", apkFilePath);
 
-        if (!mAllPacksReady) {
-            Log.i("python", "Waiting for all packs to become ready.");
-        }
-
-        synchronized (this) {
-            while (!mAllPacksReady) {
-                try {
-                    this.wait();
-                } catch (InterruptedException e) { /* pass */ }
-            }
-        }
-
         Log.v("python", "Finished preparePython. Total Duration: " + (System.currentTimeMillis() - startTime) + "ms");
 
     };
@@ -311,33 +305,8 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
         }
     }
 
-    boolean mAllPacksReady = false;
-    AssetPackManager mAssetPackManager = null;
-
     // The pack download progress bar.
     ProgressBar mProgressBar = null;
-
-    /**
-     * Given a pack name, return true if it's been downloaded and is
-     * ready for use, or false otherwise. Returns true if the pack
-     * doesn't exist at all.
-     */
-    boolean checkPack(String name) {
-        AssetPackLocation location = mAssetPackManager.getPackLocation(name);
-        if (location != null) {
-            if (location.assetsPath() != null) {
-                nativeSetEnv("ANDROID_PACK_" + name.toUpperCase(), location.assetsPath());
-            } else {
-                AssetLocation loc = mAssetPackManager.getAssetLocation(name, "00_pack.txt");
-                if (loc != null) {
-                    nativeSetEnv("ANDROID_PACK_" + name.toUpperCase(), loc.path());
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -352,38 +321,11 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
         // Initalize the store support.
         createStore();
 
-        boolean allPacksReady = true;
-
-        if (Constants.assetPacks.length > 0) {
-
-            mAssetPackManager = AssetPackManagerFactory.getInstance(this);
-            mAssetPackManager.registerListener(this);
-
-            for (String pack : Constants.assetPacks) {
-                if (! checkPack(pack) ) {
-                    Log.i("python", "fetching: " + pack);
-                    mAssetPackManager.fetch(Collections.singletonList(pack));
-                    allPacksReady = false;
-                }
-            }
-
-        }
-
-        mAllPacksReady = allPacksReady;
-
-        String bitmapFilename;
-
-        if (allPacksReady) {
-            bitmapFilename = "android-presplash";
-        } else {
-            bitmapFilename = "android-downloading";
-        }
-
         // Show the presplash.
-        Bitmap presplashBitmap = getBitmap(bitmapFilename + ".png");
+        Bitmap presplashBitmap = getBitmap("android-presplash.png");
 
         if (presplashBitmap == null) {
-            presplashBitmap = getBitmap(bitmapFilename + ".jpg");
+            presplashBitmap = getBitmap("android-presplash.jpg");
         }
 
         if (presplashBitmap != null) {
@@ -394,17 +336,6 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
             mPresplash.setImageBitmap(presplashBitmap);
 
             mLayout.addView(mPresplash, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-        }
-
-        if (!mAllPacksReady) {
-            RelativeLayout.LayoutParams prlp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, 20);
-            prlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-            prlp.leftMargin = 20;
-            prlp.rightMargin = 20;
-            prlp.bottomMargin = 20;
-
-            mProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-            mLayout.addView(mProgressBar, prlp);
         }
 
     }
@@ -500,93 +431,6 @@ public class PythonSDLActivity extends SDLActivity implements AssetPackStateUpda
 
         synchronized (this) {
             mStopDone = true;
-            this.notifyAll();
-        }
-    }
-
-    HashMap<String, AssetPackState> assetPackStates = new HashMap<String, AssetPackState>();
-
-    long mOldProgress = 0;
-
-    public void onStateUpdate(AssetPackState assetPackState) {
-        Log.i("packs", "onStateUpdate: " + assetPackState.toString());
-
-        assetPackStates.put(assetPackState.name(), assetPackState);
-
-        switch (assetPackState.status()) {
-          case AssetPackStatus.PENDING:
-            break;
-
-          case AssetPackStatus.DOWNLOADING:
-            break;
-
-          case AssetPackStatus.TRANSFERRING:
-            break;
-
-          case AssetPackStatus.COMPLETED:
-            break;
-
-          case AssetPackStatus.FAILED:
-            Toast.makeText(this, "Download of " + assetPackState.name() + " failed. Error " + assetPackState.errorCode(), Toast.LENGTH_LONG).show();
-            Log.e("python", "error = " + assetPackState.errorCode());
-
-          case AssetPackStatus.CANCELED:
-            mAssetPackManager.fetch(Collections.singletonList(assetPackState.name()));
-            break;
-
-          case AssetPackStatus.WAITING_FOR_WIFI:
-          case AssetPackStatus.REQUIRES_USER_CONFIRMATION:
-            mAssetPackManager.showConfirmationDialog(this);
-            break;
-
-          case AssetPackStatus.NOT_INSTALLED:
-            break;
-        }
-
-        // Check all the asset packs again.
-        boolean allPacksReady = true;
-
-        long totalBytesToDownload = 0;
-        long bytesDownloaded = 0;
-
-        if (Constants.assetPacks.length > 0) {
-            for (String pack : Constants.assetPacks) {
-                if (! checkPack(pack) ) {
-                    allPacksReady = false;
-                }
-
-                AssetPackState aps = assetPackStates.get(pack);
-                if (aps != null) {
-                    totalBytesToDownload += aps.totalBytesToDownload();
-                    bytesDownloaded += aps.bytesDownloaded();
-                }
-            }
-        }
-
-        Log.d("packs", "totalBytesToDownload=" + totalBytesToDownload + ", bytesDownloaded=" + bytesDownloaded);
-
-        // Protect against a DBZ.
-        if (totalBytesToDownload == 0) {
-            totalBytesToDownload = 1;
-        }
-
-        final long newProgress = 100 * bytesDownloaded / totalBytesToDownload;
-
-        if (mOldProgress != newProgress) {
-            mOldProgress = newProgress;
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (mProgressBar != null) {
-                        mProgressBar.setProgress((int) newProgress);
-                    }
-                }
-            });
-        }
-
-        synchronized (this) {
-            mAllPacksReady = allPacksReady;
             this.notifyAll();
         }
     }
