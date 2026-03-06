@@ -212,4 +212,11 @@
     <string name="piano_close">Close</string>
     <string name="piano_size">Keyboard Size</string>
     <string name="piano_opacity">Keyboard Opacity</string>
+
+    <!-- File Viewer Strings -->
+    <string name="viewer_error_image_decode">Failed to decode image</string>
+    <string name="viewer_error_file_large">File is too large to preview (>5MB)</string>
+    <string name="viewer_error_unsupported">Preview not available for this file type</string>
+    <string name="viewer_error_read_failed">Error reading file: %1$s</string>
+    <string name="viewer_error_audio_failed">Error playing audio: %1$s</string>
 </resources>

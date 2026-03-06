@@ -43,7 +43,9 @@ class FileExplorerActivity : BaseActivity() {
                 if (file.isDirectory) {
                     viewModel.loadDirectory(file.absolutePath)
                 } else {
-                    
+                    val viewIntent = Intent(this, FileViewerActivity::class.java)
+                    viewIntent.putExtra("file_path", file.absolutePath)
+                    startActivity(viewIntent)
                 }
             },
             onItemLongClick = { _ ->

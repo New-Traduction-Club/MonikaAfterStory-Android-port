@@ -73,7 +73,16 @@ class FileAdapter(
                 val childCount = file.listFiles()?.size ?: 0
                 binding.textDetails.text = "$lastModified • $childCount items"
             } else {
-                binding.icon.setImageResource(R.drawable.ic_file)
+                val ext = file.extension.lowercase()
+                val iconRes = when (ext) {
+                    "rpy", "py", "json", "txt", "log", "xml" -> R.drawable.ic_file_document
+                    "png", "jpg", "jpeg", "webp" -> R.drawable.ic_file_image
+                    "mp3", "ogg", "wav" -> R.drawable.ic_file_audio
+                    "zip", "rpa", "rpi" -> R.drawable.ic_file_archive
+                    else -> R.drawable.ic_file
+                }
+                binding.icon.setImageResource(iconRes)
+                
                 val size = file.length() / 1024
                 binding.textDetails.text = "$lastModified • ${size} KB"
             }

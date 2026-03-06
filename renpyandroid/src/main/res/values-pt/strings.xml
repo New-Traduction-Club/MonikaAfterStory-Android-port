@@ -205,4 +205,11 @@
     <string name="piano_close">Fechar</string>
     <string name="piano_size">Tamanho do Teclado</string>
     <string name="piano_opacity">Opacidade do Teclado</string>
+
+    <!-- File Viewer Strings -->
+    <string name="viewer_error_image_decode">Falha ao decodificar a imagem</string>
+    <string name="viewer_error_file_large">O arquivo é muito grande para visualização (>5MB)</string>
+    <string name="viewer_error_unsupported">Visualização não disponível para este tipo de arquivo</string>
+    <string name="viewer_error_read_failed">Erro ao ler o arquivo: %1$s</string>
+    <string name="viewer_error_audio_failed">Erro ao reproduzir áudio: %1$s</string>
 </resources>

@@ -30,6 +30,10 @@
       android:exported="false"/>
 
     <activity
+      android:name="org.renpy.android.FileViewerActivity"
+      android:exported="false"/>
+
+    <activity
       android:name="org.renpy.android.PythonSDLActivity"
       android:exported="true"
       android:alwaysRetainTaskState="true"
