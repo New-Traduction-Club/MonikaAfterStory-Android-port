@@ -62,6 +62,27 @@ class FileExplorerViewModel : ViewModel() {
         }
     }
 
+    fun renameFile(file: File, newName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val newFile = File(file.parentFile, newName)
+                if (newFile.exists()) {
+                    postMessage("A file or folder with that name already exists")
+                    return@launch
+                }
+                
+                if (file.renameTo(newFile)) {
+                    refreshCurrentDir()
+                    postMessage("Renamed successfully")
+                } else {
+                    postMessage("Failed to rename")
+                }
+            } catch (e: Exception) {
+                postMessage("Error renaming: ${e.message}")
+            }
+        }
+    }
+
     fun deleteFiles(filesToDelete: List<File>) {
         viewModelScope.launch(Dispatchers.IO) {
             var successCount = 0

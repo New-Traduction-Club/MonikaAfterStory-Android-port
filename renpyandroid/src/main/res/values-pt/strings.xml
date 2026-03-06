@@ -53,6 +53,9 @@
     <string name="create">Criar</string>
     <string name="folder_already_exists">A pasta já existe.</string>
     <string name="folder_created">Pasta criada.</string>
+    <string name="action_rename">Renomear</string>
+    <string name="rename_title">Renomear Item</string>
+    <string name="rename_hint">Novo nome</string>
     <string name="failed_to_create_folder">Falha ao criar pasta.</string>
     <string name="delete_files">Excluir arquivos</string>
     <string name="confirm_delete_message">Tem certeza que deseja excluir os arquivos selecionados?</string>

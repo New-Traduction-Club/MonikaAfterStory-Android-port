@@ -12,6 +12,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -248,7 +249,7 @@ class SetupActivity : BaseActivity() {
     private fun showLanguageDialog(cancelable: Boolean) {
         val languages = resources.getStringArray(R.array.languages)
         
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.select_language_title))
             .setItems(languages) { _, which ->
                 val selectedLang = languages[which]
@@ -540,7 +541,7 @@ class SetupActivity : BaseActivity() {
     }
 
     private fun confirmDeleteZip(requestCode: Int) {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.setup_confirm_delete_zip_title))
             .setMessage(getString(R.string.setup_confirm_delete_zip_message))
             .setPositiveButton(getString(R.string.yes)) { _, _ ->
@@ -557,7 +558,7 @@ class SetupActivity : BaseActivity() {
     private fun checkAndStartDownload() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                AlertDialog.Builder(this)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(getString(R.string.permission_notification_title))
                     .setMessage(getString(R.string.permission_notification_message))
                     .setPositiveButton(getString(R.string.yes)) { _, _ ->

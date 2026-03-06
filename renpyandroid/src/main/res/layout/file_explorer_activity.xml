@@ -55,6 +55,14 @@
                 android:contentDescription="@string/action_delete"/>
                 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRename"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:icon="@android:drawable/ic_menu_edit"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:contentDescription="@string/action_rename"/>
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCopy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

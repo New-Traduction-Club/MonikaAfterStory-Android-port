@@ -50,15 +50,18 @@
 
 
     <!-- File Explorer Strings -->
-    <string name="import_title">Import</string>
-    <string name="import_files">Import files</string>
+    <string name="import_title">Import Options</string>
+    <string name="import_files">Import Files</string>
     <string name="import_zip">Import ZIP</string>
-    <string name="create_folder">Create folder</string>
+    <string name="create_folder">Create Folder</string>
     <string name="cancel">Cancel</string>
-    <string name="folder_name_hint">Folder name</string>
+    <string name="folder_name_hint">Folder Name</string>
     <string name="create">Create</string>
     <string name="folder_already_exists">The folder already exists.</string>
     <string name="folder_created">Folder created.</string>
+    <string name="action_rename">Rename</string>
+    <string name="rename_title">Rename Item</string>
+    <string name="rename_hint">New name</string>
     <string name="failed_to_create_folder">Failed to create folder.</string>
     <string name="delete_files">Delete files</string>
     <string name="confirm_delete_message">Are you sure you want to delete the selected files?</string>

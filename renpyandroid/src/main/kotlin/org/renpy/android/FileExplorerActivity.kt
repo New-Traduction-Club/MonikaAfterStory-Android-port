@@ -1,6 +1,6 @@
 package org.renpy.android
 
-import android.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -75,6 +75,7 @@ class FileExplorerActivity : BaseActivity() {
         binding.btnCut.setOnClickListener { copyToClipboard(true) }
         binding.btnExport.setOnClickListener { exportSelection() }
         binding.btnExtract.setOnClickListener { extractRpaSelection() }
+        binding.btnRename.setOnClickListener { showRenameDialog() }
         
         binding.fabPaste.setOnClickListener { 
             if (viewModel.hasClipboard.value == true) {
@@ -128,6 +129,30 @@ class FileExplorerActivity : BaseActivity() {
             }
         }
         binding.btnExtract.visibility = if (showExtract) View.VISIBLE else View.GONE
+        binding.btnRename.visibility = if (selectionCount == 1) View.VISIBLE else View.GONE
+    }
+
+    private fun showRenameDialog() {
+        val selected = fileAdapter.selectedFiles.toList()
+        if (selected.size != 1) return
+        val file = selected.first()
+        
+        val editText = EditText(this)
+        editText.setText(file.name)
+        editText.hint = getString(R.string.rename_hint)
+        
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.rename_title))
+            .setView(editText)
+            .setPositiveButton(getString(R.string.action_rename)) { _, _ ->
+                val newName = editText.text.toString().trim()
+                if (newName.isNotEmpty() && newName != file.name) {
+                    viewModel.renameFile(file, newName)
+                    fileAdapter.clearSelection()
+                }
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
     }
 
     private fun copyToClipboard(isCut: Boolean) {
@@ -140,7 +165,7 @@ class FileExplorerActivity : BaseActivity() {
     }
 
     private fun confirmDelete() {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.delete_files))
             .setMessage(getString(R.string.confirm_delete_message))
             .setPositiveButton(getString(R.string.delete)) { _, _ -> 
@@ -180,7 +205,7 @@ class FileExplorerActivity : BaseActivity() {
         if (selected.size != 1) return
         val rpaFile = selected.first()
         
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.extract_rpa_title))
             .setMessage(getString(R.string.confirm_extract_message, rpaFile.name))
             .setPositiveButton(getString(R.string.action_extract)) { _, _ ->
@@ -228,7 +253,7 @@ class FileExplorerActivity : BaseActivity() {
     }
     
     private fun showImportDialog() {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.import_title))
             .setItems(arrayOf(
                 getString(R.string.import_files),
@@ -248,7 +273,7 @@ class FileExplorerActivity : BaseActivity() {
     private fun showCreateFolderDialog() {
         val editText = EditText(this)
         editText.hint = getString(R.string.folder_name_hint)
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.create_folder))
             .setView(editText)
             .setPositiveButton(getString(R.string.create)) { _, _ ->

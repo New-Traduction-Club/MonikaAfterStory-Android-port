@@ -3,6 +3,7 @@ package org.renpy.android
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.renpy.android.databinding.SettingsActivityBinding
 import java.io.File
 
@@ -54,7 +55,7 @@ class SettingsActivity : BaseActivity() {
         var checkedItem = languages.indexOf(currentLanguage)
         if (checkedItem < 0) checkedItem = 0
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.select_language_title))
             .setSingleChoiceItems(languages, checkedItem) { dialog, which ->
                 val selectedLang = languages[which]

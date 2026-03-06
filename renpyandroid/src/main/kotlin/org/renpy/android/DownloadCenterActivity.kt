@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
@@ -241,7 +242,7 @@ class DownloadCenterActivity : BaseActivity() {
             val size = updateManager.getFileSize(item.url)
             progressDialog.dismiss()
             
-            androidx.appcompat.app.AlertDialog.Builder(this@DownloadCenterActivity)
+            MaterialAlertDialogBuilder(this@DownloadCenterActivity)
                 .setTitle(getString(R.string.data_warning_title))
                 .setMessage(getString(R.string.data_warning_message, size))
                 .setPositiveButton(getString(R.string.yes)) { _, _ ->

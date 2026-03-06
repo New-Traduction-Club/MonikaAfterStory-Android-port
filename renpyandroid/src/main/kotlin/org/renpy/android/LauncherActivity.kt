@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
@@ -93,7 +94,7 @@ class LauncherActivity : BaseActivity() {
         }
         
         binding.btnExport.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.launcher_export_title))
                 .setMessage(getString(R.string.launcher_export_message))
                 .setPositiveButton(getString(R.string.launcher_proceed)) { _, _ ->
@@ -110,7 +111,7 @@ class LauncherActivity : BaseActivity() {
         }
         
         binding.btnImport.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.launcher_import_title))
                 .setMessage(getString(R.string.launcher_import_message))
                 .setPositiveButton(getString(R.string.launcher_proceed)) { _, _ ->
@@ -212,7 +213,7 @@ class LauncherActivity : BaseActivity() {
             return
         }
         
-        val builder = AlertDialog.Builder(this)
+        val builder = MaterialAlertDialogBuilder(this)
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_progress, null) // Assuming we create this layout
         progressIndicator = view.findViewById(R.id.progressBar)
         progressText = view.findViewById(R.id.progressText)
@@ -244,7 +245,7 @@ class LauncherActivity : BaseActivity() {
             getString(R.string.dialog_update_available_wifi_message)
         }
         
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(title)
             .setMessage(msg)
             .setPositiveButton(getString(R.string.action_update)) { _, _ ->
@@ -261,7 +262,7 @@ class LauncherActivity : BaseActivity() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val languages = resources.getStringArray(R.array.languages)
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.select_language_title))
             .setItems(languages) { _, which ->
                 val selectedLang = languages[which]
