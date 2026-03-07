@@ -99,6 +99,10 @@ class FileExplorerActivity : BaseActivity() {
                     showCreateFolderDialog()
                     true
                 }
+                R.id.action_create_file -> {
+                    showCreateFileDialog()
+                    true
+                }
                 R.id.action_import -> {
                     showImportDialog()
                     true
@@ -260,12 +264,14 @@ class FileExplorerActivity : BaseActivity() {
             .setItems(arrayOf(
                 getString(R.string.import_files),
                 getString(R.string.import_zip),
-                getString(R.string.create_folder)
+                getString(R.string.create_folder),
+                getString(R.string.create_file)
             )) { _, which ->
                 when (which) {
                     0 -> openImportSAFFile()
                     1 -> openImportSAFZip()
                     2 -> showCreateFolderDialog()
+                    3 -> showCreateFileDialog()
                 }
             }
             .setNegativeButton(getString(R.string.cancel), null)
@@ -282,6 +288,22 @@ class FileExplorerActivity : BaseActivity() {
                 val folderName = editText.text.toString().trim()
                 if (folderName.isNotEmpty()) {
                     viewModel.createFolder(folderName)
+                }
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun showCreateFileDialog() {
+        val editText = EditText(this)
+        editText.hint = getString(R.string.file_name_hint)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.create_file))
+            .setView(editText)
+            .setPositiveButton(getString(R.string.create)) { _, _ ->
+                val fileName = editText.text.toString().trim()
+                if (fileName.isNotEmpty()) {
+                    viewModel.createFile(fileName)
                 }
             }
             .setNegativeButton(getString(R.string.cancel), null)

@@ -16,6 +16,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_create_file"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/create_file"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_import"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/label_import"

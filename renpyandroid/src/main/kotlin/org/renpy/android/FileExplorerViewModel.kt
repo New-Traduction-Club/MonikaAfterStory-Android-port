@@ -1,8 +1,9 @@
 package org.renpy.android
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,7 +14,11 @@ import java.io.FileInputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-class FileExplorerViewModel : ViewModel() {
+class FileExplorerViewModel(application: Application) : AndroidViewModel(application) {
+
+    private fun getString(resId: Int, vararg formatArgs: Any): String {
+        return getApplication<Application>().getString(resId, *formatArgs)
+    }
 
     private val _currentDir = MutableLiveData<File>()
     val currentDir: LiveData<File> = _currentDir
@@ -55,9 +60,28 @@ class FileExplorerViewModel : ViewModel() {
             val newFolder = File(current, name)
             if (newFolder.mkdirs()) {
                 refreshCurrentDir()
-                postMessage("Folder created")
+                postMessage(getString(R.string.folder_created))
             } else {
-                postMessage("Failed to create folder")
+                postMessage(getString(R.string.failed_to_create_folder))
+            }
+        }
+    }
+
+    fun createFile(name: String) {
+        val current = _currentDir.value ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val newFile = File(current, name)
+                if (newFile.exists()) {
+                    postMessage(getString(R.string.item_already_exists))
+                } else if (newFile.createNewFile()) {
+                    refreshCurrentDir()
+                    postMessage(getString(R.string.file_created))
+                } else {
+                    postMessage(getString(R.string.failed_to_create_file))
+                }
+            } catch (e: Exception) {
+                postMessage(getString(R.string.failed_to_create_file) + ": ${e.message}")
             }
         }
     }
@@ -67,18 +91,18 @@ class FileExplorerViewModel : ViewModel() {
             try {
                 val newFile = File(file.parentFile, newName)
                 if (newFile.exists()) {
-                    postMessage("A file or folder with that name already exists")
+                    postMessage(getString(R.string.item_already_exists))
                     return@launch
                 }
                 
                 if (file.renameTo(newFile)) {
                     refreshCurrentDir()
-                    postMessage("Renamed successfully")
+                    postMessage(getString(R.string.renamed_successfully))
                 } else {
-                    postMessage("Failed to rename")
+                    postMessage(getString(R.string.failed_to_rename))
                 }
             } catch (e: Exception) {
-                postMessage("Error renaming: ${e.message}")
+                postMessage(getString(R.string.error_renaming, e.message ?: ""))
             }
         }
     }
@@ -107,9 +131,9 @@ class FileExplorerViewModel : ViewModel() {
             refreshCurrentDir()
             
             if (failCount > 0) {
-                postMessage("Deleted $successCount items. Failed: $failCount")
+                postMessage(getString(R.string.deleted_items_mixed, successCount, failCount))
             } else {
-                postMessage("Deleted $successCount items")
+                postMessage(getString(R.string.deleted_items, successCount))
             }
         }
     }
@@ -118,7 +142,7 @@ class FileExplorerViewModel : ViewModel() {
         clipboardFiles = files
         isCutOperation = isCut
         _hasClipboard.value = true
-        postMessage(if (isCut) "Cut ${files.size} items" else "Copied ${files.size} items")
+        postMessage(if (isCut) getString(R.string.items_cut, files.size) else getString(R.string.items_copied, files.size))
     }
 
     fun pasteToCurrentDir() {
@@ -148,9 +172,9 @@ class FileExplorerViewModel : ViewModel() {
                 }
                 
                 refreshCurrentDir()
-                postMessage("Paste completed")
+                postMessage(getString(R.string.paste_success))
             } catch (e: Exception) {
-                postMessage("Error pasting: ${e.message}")
+                postMessage(getString(R.string.error_pasting, e.message ?: ""))
             }
         }
     }
@@ -178,7 +202,7 @@ class FileExplorerViewModel : ViewModel() {
     fun finalizeExport(uri: android.net.Uri, context: android.content.Context) {
         val files = filesToExport
         if (files.isEmpty()) {
-            postMessage("No files selected for export")
+            postMessage(getString(R.string.no_files_export))
             return
         }
 
@@ -197,9 +221,9 @@ class FileExplorerViewModel : ViewModel() {
                         }
                     }
                 }
-                postMessage("Export completed successfully")
+                postMessage(getString(R.string.export_completed))
             } catch (e: Exception) {
-                postMessage("Export failed: ${e.message}")
+                postMessage(getString(R.string.export_error, e.message ?: ""))
             } finally {
                 filesToExport = emptyList()
             }
@@ -258,10 +282,10 @@ class FileExplorerViewModel : ViewModel() {
                 }
                 
                 refreshCurrentDir()
-                postMessage("Import completed successfully")
+                postMessage(getString(R.string.status_import_completed))
                 
             } catch (e: Exception) {
-                postMessage("Import failed: ${e.message}")
+                postMessage(getString(R.string.import_failed, e.message ?: ""))
             } finally {
                 if (tempZipObj.exists()) tempZipObj.delete()
             }
