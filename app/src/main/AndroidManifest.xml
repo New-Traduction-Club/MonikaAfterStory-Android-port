@@ -47,6 +47,17 @@
     <activity android:name="org.renpy.android.SettingsActivity" android:exported="false"/>
     <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false"/>
 
+    <service
+        android:name="org.renpy.android.MyFirebaseMessagingService"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>
+
+    <meta-data
+        android:name="com.google.firebase.messaging.default_notification_channel_id"
+        android:value="updates_channel" />
 
   </application>
 

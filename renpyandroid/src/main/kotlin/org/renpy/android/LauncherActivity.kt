@@ -1,8 +1,12 @@
 package org.renpy.android
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -71,9 +75,26 @@ class LauncherActivity : BaseActivity() {
         setupListeners()
         setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         
+        createNotificationChannel()
+
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         
         handleShortcutIntent(intent)
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Update Notifications"
+            val descriptionText = "Notifications for updates and features"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("updates_channel", name, importance).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
