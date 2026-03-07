@@ -102,7 +102,7 @@
     <string name="launcher_import_desc">Importar datos persistentes</string>
     <string name="launcher_export_desc">Haz copias de seguridad</string>
     <string name="launcher_internal_desc">Manejar archivos del juego</string>
-    <string name="launcher_external_desc">Acceder comprobantes</string>
+    <string name="launcher_external_desc">Acceder a guardados</string>
     <string name="launcher_settings_desc">Configurar el launcher</string>
     <string name="launcher_download_desc">Obtener actualizaciones</string>
 
