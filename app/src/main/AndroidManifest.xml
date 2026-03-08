@@ -9,8 +9,7 @@
       android:label="@string/appName"
       android:isGame="true"
       android:theme="@style/AppTheme"
-      android:hardwareAccelerated="true"
-      android:extractNativeLibs="true">
+      android:hardwareAccelerated="true">
     
     <activity
         android:name="org.renpy.android.LauncherActivity"

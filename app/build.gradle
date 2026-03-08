@@ -19,8 +19,8 @@ android {
         applicationId "com.z.mas.portby.just6889"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 1757713309
-        versionName "1.5.1"
+        versionCode 1757713311
+        versionName "1.5.2"
     }
 
     dynamicFeatures = [":ff1"]
@@ -39,6 +39,7 @@ android {
             minifyEnabled false
             packaging {
                 jniLibs {
+                    useLegacyPackaging = true
                     keepDebugSymbols = [ "**/*.so" ]
                 }
             }
@@ -49,6 +50,7 @@ android {
             minifyEnabled false
             packaging {
                 jniLibs {
+                    useLegacyPackaging = true
                     keepDebugSymbols = [ "**/*.so" ]
                 }
             }
