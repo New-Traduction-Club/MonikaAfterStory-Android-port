@@ -227,4 +227,20 @@
     <string name="viewer_error_unsupported">Visualização não disponível para este tipo de arquivo</string>
     <string name="viewer_error_read_failed">Erro ao ler o arquivo: %1$s</string>
     <string name="viewer_error_audio_failed">Erro ao reproduzir áudio: %1$s</string>
+
+    <!-- App Info Strings -->
+    <string name="title_app_info">Informações do App</string>
+    <string name="app_info_credits_port"><![CDATA[Adaptações para Android por: <a href="https://github.com/New-Traduction-Club">Traduction Club!</a>]]></string>
+    <string name="app_info_credits_es"><![CDATA[Tradução para o Espanhol por: <a href="https://traduction-club.live/">Traduction Club!</a>]]></string>
+    <string name="app_info_credits_pt"><![CDATA[Tradução para o Português por: <a href="https://discord.gg/DcKhygEtaH">Bach ! (Monika After Story Brasil)</a>]]></string>
+    
+    <string name="app_info_acknowledgments_title">Agradecimentos e Créditos</string>
+    <string name="app_info_acknowledgments_team_salvato"><b>Team Salvato:</b> Por criar o incrível Doki Doki Literature Club!</string>
+    <string name="app_info_acknowledgments_mas_team"><b>Monika After Story Team:</b> Pelo mod original e seu contínuo e árduo trabalho.</string>
+    <string name="app_info_acknowledgments_renpy"><b>Ren\'Py:</b> Pelo motor de visual novel e o framework RAPT.</string>
+    <string name="app_info_acknowledgments_lattyware"><b>Lattyware:</b> Pela lógica fundacional de unrpa.</string>
+
+    <string name="app_info_commit">Último commit: %1$s</string>
+    <string name="app_info_version">Versão: %1$s</string>
+    <string name="launcher_app_info_desc">Sobre este app</string>
 </resources>

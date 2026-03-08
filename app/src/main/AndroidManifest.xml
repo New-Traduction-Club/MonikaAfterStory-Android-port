@@ -46,6 +46,7 @@
 
     <activity android:name="org.renpy.android.SettingsActivity" android:exported="false"/>
     <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false"/>
+    <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false"/>
 
     <service
         android:name="org.renpy.android.MyFirebaseMessagingService"

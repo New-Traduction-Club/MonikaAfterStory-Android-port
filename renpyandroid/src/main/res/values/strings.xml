@@ -234,4 +234,20 @@
     <string name="viewer_error_unsupported">Preview not available for this file type</string>
     <string name="viewer_error_read_failed">Error reading file: %1$s</string>
     <string name="viewer_error_audio_failed">Error playing audio: %1$s</string>
+
+    <!-- App Info Strings -->
+    <string name="title_app_info">App Info</string>
+    <string name="app_info_credits_port"><![CDATA[Android Adaptations by: <a href="https://github.com/New-Traduction-Club">Traduction Club!</a>]]></string>
+    <string name="app_info_credits_es"><![CDATA[Spanish Translation by: <a href="https://traduction-club.live/">Traduction Club!</a>]]></string>
+    <string name="app_info_credits_pt"><![CDATA[Portuguese Translation by: <a href="https://discord.gg/DcKhygEtaH">Bach ! (Monika After Story Brasil)</a>]]></string>
+    
+    <string name="app_info_acknowledgments_title">Acknowledgments &amp; Credits</string>
+    <string name="app_info_acknowledgments_team_salvato"><b>Team Salvato:</b> For creating the incredible Doki Doki Literature Club!</string>
+    <string name="app_info_acknowledgments_mas_team"><b>Monika After Story Team:</b> For the original mod and their continuous hard work.</string>
+    <string name="app_info_acknowledgments_renpy"><b>Ren\'Py:</b> For the visual novel engine and the RAPT framework.</string>
+    <string name="app_info_acknowledgments_lattyware"><b>Lattyware:</b> For the foundational unrpa logic.</string>
+
+    <string name="app_info_commit">Latest commit: %1$s</string>
+    <string name="app_info_version">Version: %1$s</string>
+    <string name="launcher_app_info_desc">About this app</string>
 </resources>

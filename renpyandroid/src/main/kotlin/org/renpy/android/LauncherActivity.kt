@@ -216,6 +216,10 @@ class LauncherActivity : BaseActivity() {
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        
+        binding.btnAppInfo.setOnClickListener {
+            startActivity(Intent(this, AppInfoActivity::class.java))
+        }
     }
     
     private fun setupObservers() {
