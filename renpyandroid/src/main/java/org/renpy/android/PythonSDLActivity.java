@@ -559,19 +559,6 @@ public class PythonSDLActivity extends SDLActivity {
                 .putString("last_played_day", today)
                 .remove("last_session_start")
                 .apply();
-
-            /*
-            // Forzar actualización del widget
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-            ComponentName provider = new ComponentName(this, org.renpy.android.SayoriWidgetProvider.class);
-            int[] ids = appWidgetManager.getAppWidgetIds(provider);
-            if (ids != null && ids.length > 0) {
-                for (int id : ids) {
-                    RemoteViews views = new RemoteViews(getPackageName(), R.layout.widget_sayori);
-                    appWidgetManager.updateAppWidget(id, views);
-                }
-            }
-            */
         }
     }
 }
