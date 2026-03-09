@@ -129,6 +129,16 @@ public class PythonSDLActivity extends SDLActivity {
         mVbox.addView(mFrameLayout, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 1.0));
 
         super.setContentView(mVbox);
+
+        mFrameLayout.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                if (left != oldLeft || right != oldRight || top != oldTop || bottom != oldBottom) {
+                    updatePictureInPictureParams();
+                }
+            }
+        });
     }
 
 
@@ -515,14 +525,69 @@ public class PythonSDLActivity extends SDLActivity {
         activity.startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT_TREE);
     }
 
+    public void updatePictureInPictureParams() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder();
+                
+                Rational aspectRatio = new Rational(16, 9);
+                if (mFrameLayout != null && mFrameLayout.getWidth() > 0 && mFrameLayout.getHeight() > 0) {
+                    int w = mFrameLayout.getWidth();
+                    int h = mFrameLayout.getHeight();
+                    float ratio = (float) w / h;
+                    if (ratio > 0.4184f && ratio < 2.39f) {
+                        aspectRatio = new Rational(w, h);
+                    }
+                    
+                    if (!isInPictureInPictureMode()) {
+                        android.graphics.Rect sourceRectHint = new android.graphics.Rect();
+                        mFrameLayout.getGlobalVisibleRect(sourceRectHint);
+                        builder.setSourceRectHint(sourceRectHint);
+                    }
+                }
+                
+                builder.setAspectRatio(aspectRatio);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    builder.setAutoEnterEnabled(true);
+                    builder.setSeamlessResizeEnabled(true);
+                }
+
+                setPictureInPictureParams(builder.build());
+            } catch (Exception e) {
+                Log.e("PythonSDLActivity", "Failed to update PiP params", e);
+            }
+        }
+    }
+
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PictureInPictureParams params = new PictureInPictureParams.Builder()
-                .setAspectRatio(new Rational(16, 9))
-                .build();
-            enterPictureInPictureMode(params);
+            try {
+                PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder();
+                
+                Rational aspectRatio = new Rational(16, 9);
+                if (mFrameLayout != null && mFrameLayout.getWidth() > 0 && mFrameLayout.getHeight() > 0) {
+                    int w = mFrameLayout.getWidth();
+                    int h = mFrameLayout.getHeight();
+                    float ratio = (float) w / h;
+                    if (ratio > 0.4184f && ratio < 2.39f) {
+                        aspectRatio = new Rational(w, h);
+                    }
+                    
+                    if (!isInPictureInPictureMode()) {
+                        android.graphics.Rect sourceRectHint = new android.graphics.Rect();
+                        mFrameLayout.getGlobalVisibleRect(sourceRectHint);
+                        builder.setSourceRectHint(sourceRectHint);
+                    }
+                }
+                builder.setAspectRatio(aspectRatio);
+
+                enterPictureInPictureMode(builder.build());
+            } catch (Exception e) {
+                Log.e("PythonSDLActivity", "Enter PiP failed", e);
+            }
         }
     }
 
