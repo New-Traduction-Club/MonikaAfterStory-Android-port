@@ -115,6 +115,7 @@
     <string name="launcher_browse_internal">Explorar arquivos internos</string>
     <string name="launcher_browse_external">Arquivos de Save</string>
     <string name="launcher_settings">Configurações</string>
+    <string name="launcher_backups">Backups</string>
 
     <!-- Launcher Button Subtitles -->
     <string name="launcher_import_desc">Restaurar dados do jogo</string>
@@ -123,6 +124,7 @@
     <string name="launcher_external_desc">Acessar os saves</string>
     <string name="launcher_settings_desc">Ajustes do launcher</string>
     <string name="launcher_download_desc">Obter atualizações</string>
+    <string name="launcher_backups_desc">Gerenciar backups de dados</string>
 
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Configurações</string>
@@ -134,6 +136,21 @@
     <string name="title_file_explorer">Explorador de Arquivos</string>
     <string name="label_import">Importar</string>
     <string name="label_export">Exportar</string>
+    <string name="title_backups">Backups</string>
+    <string name="create_backup">Criar Backup</string>
+    <string name="restore_backup">Restaurar</string>
+    <string name="delete_backup">Excluir</string>
+    <string name="backup_created_toast">Backup criado com sucesso!</string>
+    <string name="backup_failed_toast">Falha ao criar backup: %s</string>
+    <string name="backup_restored_toast">Backup restaurado com sucesso!</string>
+    <string name="backup_restore_failed_toast">Falha ao restaurar: %s</string>
+    <string name="backup_deleted_toast">Backup excluído.</string>
+    <string name="backup_delete_failed_toast">Falha ao excluir o backup.</string>
+    <string name="confirm_restore_title">Restaurar Backup</string>
+    <string name="confirm_restore_message">Tem certeza de que deseja restaurar este backup? Todos os dados atuais seráo excluídos e substituídos pelo conteúdo do backup.</string>
+    <string name="confirm_delete_backup_title">Excluir Backup</string>
+    <string name="confirm_delete_backup_message">Tem certeza de que deseja excluir este backup?</string>
+    <string name="no_backups_found">Nenhum backup encontrado.</string>
 
     <!-- Translation Sync Strings -->
     <string name="title_translation_sync">Sincronização Github (TL Espanhol)</string>

@@ -167,6 +167,10 @@ class LauncherActivity : BaseActivity() {
             startActivity(Intent(this, DownloadCenterActivity::class.java))
         }
         
+        binding.btnBackups.setOnClickListener {
+            startActivity(Intent(this, BackupsActivity::class.java))
+        }
+        
         binding.btnExport.setOnClickListener {
             MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.launcher_export_title))

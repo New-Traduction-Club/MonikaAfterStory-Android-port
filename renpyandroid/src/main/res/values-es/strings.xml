@@ -112,6 +112,7 @@
     <string name="launcher_browse_internal">Explorar archivos internos</string>
     <string name="launcher_browse_external">Archivos de Guardado</string>
     <string name="launcher_settings">Ajustes</string>
+    <string name="launcher_backups">Copias de Seguridad</string>
 
     <!-- Launcher Button Subtitles -->
     <string name="launcher_import_desc">Importar datos persistentes</string>
@@ -120,6 +121,7 @@
     <string name="launcher_external_desc">Acceder a guardados</string>
     <string name="launcher_settings_desc">Configurar el launcher</string>
     <string name="launcher_download_desc">Obtener actualizaciones</string>
+    <string name="launcher_backups_desc">Gestionar copias de seguridad</string>
 
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Ajustes</string>
@@ -131,6 +133,21 @@
     <string name="title_file_explorer">Explorador de Archivos</string>
     <string name="label_import">Importar</string>
     <string name="label_export">Exportar</string>
+    <string name="title_backups">Copias de Seguridad</string>
+    <string name="create_backup">Crear Copia</string>
+    <string name="restore_backup">Restaurar</string>
+    <string name="delete_backup">Borrar</string>
+    <string name="backup_created_toast">¡Copia de seguridad creada correctamente!</string>
+    <string name="backup_failed_toast">Fallo al crear la copia: %s</string>
+    <string name="backup_restored_toast">¡Copia de seguridad restaurada correctamente!</string>
+    <string name="backup_restore_failed_toast">Fallo al restaurar: %s</string>
+    <string name="backup_deleted_toast">Copia de seguridad borrada.</string>
+    <string name="backup_delete_failed_toast">Fallo al borrar la copia de seguridad.</string>
+    <string name="confirm_restore_title">Restaurar Copia</string>
+    <string name="confirm_restore_message">¿Seguro que quieres restaurar esta copia? Todos los datos actuales serán eliminados y reemplazados por el contenido de la copia.</string>
+    <string name="confirm_delete_backup_title">Borrar Copia</string>
+    <string name="confirm_delete_backup_message">¿Seguro que quieres borrar esta copia de seguridad?</string>
+    <string name="no_backups_found">No se encontraron copias de seguridad.</string>
 
     <!-- Translation Sync Strings -->
     <string name="title_translation_sync">Sincronización Github (TL Español)</string>
