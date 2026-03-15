@@ -141,6 +141,8 @@ class LauncherActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         
+        WallpaperManager.applyWallpaper(this, binding.root)
+        
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val savedLang = prefs.getString("language", "English") ?: ""
         if (currentLanguage != savedLang) {
@@ -219,6 +221,7 @@ class LauncherActivity : BaseActivity() {
             DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
             DesktopShortcut(R.string.launcher_download_center, R.drawable.ic_launcher_download, "download_center"),
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
+            DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
             DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info")
         )
     }
@@ -412,6 +415,10 @@ class LauncherActivity : BaseActivity() {
             "backups" -> {
                 returnFromWindow = true
                 startActivity(Intent(this, BackupsActivity::class.java))
+            }
+            "wallpapers" -> {
+                returnFromWindow = true
+                startActivity(Intent(this, WallpapersActivity::class.java))
             }
             "external_files" -> {
                 returnFromWindow = true

@@ -69,6 +69,7 @@
             android:textColor="#B0B0B0"
             android:layout_marginBottom="24dp" />
 
+        <!-- DDLC -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -117,7 +118,7 @@
                     android:gravity="center_vertical">
 
                     <Button
-                        android:id="@+id/btnDownloadBaseGame"
+                        android:id="@+id/btnDownloadDDLC"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -125,7 +126,7 @@
                         android:layout_marginEnd="8dp"/>
 
                     <Button
-                        android:id="@+id/btnSelectBaseGame"
+                        android:id="@+id/btnSelectDDLC"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -133,7 +134,7 @@
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/tvSelectedBaseGame"
+                    android:id="@+id/tvSelectedDDLC"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text=""

@@ -287,4 +287,14 @@
     <string name="app_info_commit">Latest commit: %1$s</string>
     <string name="app_info_version">Version: %1$s</string>
     <string name="launcher_app_info_desc">About this app</string>
+
+    <!-- Wallpapers -->
+    <string name="launcher_wallpapers">Wallpapers</string>
+    <string name="wallpaper_default">Default</string>
+    <string name="wallpaper_add">Add wallpaper</string>
+    <string name="wallpaper_delete_title">Delete wallpaper?</string>
+    <string name="wallpaper_delete_message">This wallpaper will be permanently removed.</string>
+    <string name="wallpaper_applied">Wallpaper applied</string>
+    <string name="wallpaper_crop_title">Adjust wallpaper</string>
+    <string name="wallpaper_apply">Apply</string>
 </resources>

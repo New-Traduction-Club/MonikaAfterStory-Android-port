@@ -277,4 +277,14 @@
     <string name="app_info_commit">Último commit: %1$s</string>
     <string name="app_info_version">Versión: %1$s</string>
     <string name="launcher_app_info_desc">Acerca de esta app</string>
+
+    <!-- Wallpapers -->
+    <string name="launcher_wallpapers">Fondos de pantalla</string>
+    <string name="wallpaper_default">Predeterminado</string>
+    <string name="wallpaper_add">Agregar fondo</string>
+    <string name="wallpaper_delete_title">¿Eliminar fondo?</string>
+    <string name="wallpaper_delete_message">Este fondo será eliminado permanentemente.</string>
+    <string name="wallpaper_applied">Fondo aplicado</string>
+    <string name="wallpaper_crop_title">Ajustar fondo</string>
+    <string name="wallpaper_apply">Aplicar</string>
 </resources>

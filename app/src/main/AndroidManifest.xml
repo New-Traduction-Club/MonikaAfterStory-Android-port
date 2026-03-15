@@ -52,6 +52,8 @@
     <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.WallpapersActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.WallpaperCropActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
 
     <service
         android:name="org.renpy.android.MyFirebaseMessagingService"

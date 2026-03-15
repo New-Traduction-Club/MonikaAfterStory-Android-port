@@ -280,4 +280,14 @@
     <string name="app_info_commit">Último commit: %1$s</string>
     <string name="app_info_version">Versão: %1$s</string>
     <string name="launcher_app_info_desc">Sobre este app</string>
+
+    <!-- Wallpapers -->
+    <string name="launcher_wallpapers">Papéis de parede</string>
+    <string name="wallpaper_default">Padrão</string>
+    <string name="wallpaper_add">Adicionar papel</string>
+    <string name="wallpaper_delete_title">Excluir papel de parede?</string>
+    <string name="wallpaper_delete_message">Este papel de parede será removido permanentemente.</string>
+    <string name="wallpaper_applied">Papel de parede aplicado</string>
+    <string name="wallpaper_crop_title">Ajustar papel de parede</string>
+    <string name="wallpaper_apply">Aplicar</string>
 </resources>
