@@ -27,6 +27,9 @@ class FileAdapter(
     fun toggleSelection(file: File) {
         if (selectedFiles.contains(file)) {
             selectedFiles.remove(file)
+            if (selectedFiles.isEmpty()) {
+                isSelectionMode = false
+            }
         } else {
             selectedFiles.add(file)
         }
@@ -65,13 +68,15 @@ class FileAdapter(
         fun bind(file: File) {
             binding.textName.text = file.name
             
-            val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            val dateFormat = SimpleDateFormat("MM-dd-yyyy HH:mm", Locale.getDefault())
             val lastModified = dateFormat.format(Date(file.lastModified()))
+            binding.textDate.text = lastModified
             
             if (file.isDirectory) {
                 binding.icon.setImageResource(R.drawable.ic_folder) 
-                val childCount = file.listFiles()?.size ?: 0
-                binding.textDetails.text = "$lastModified • $childCount items"
+                binding.icon.setColorFilter(android.graphics.Color.parseColor("#FFC107"))
+                binding.textType.text = itemView.context.getString(R.string.file_type_folder)
+                binding.textSize.text = "--"
             } else {
                 val ext = file.extension.lowercase()
                 val iconRes = when (ext) {
@@ -82,22 +87,34 @@ class FileAdapter(
                     else -> R.drawable.ic_file
                 }
                 binding.icon.setImageResource(iconRes)
+                binding.icon.setColorFilter(android.graphics.Color.parseColor("#DCEEFA"))
                 
-                val size = file.length() / 1024
-                binding.textDetails.text = "$lastModified • ${size} KB"
+                binding.textType.text = when (ext) {
+                    "txt" -> itemView.context.getString(R.string.file_type_text)
+                    "rpy", "py" -> itemView.context.getString(R.string.file_type_script)
+                    "png", "jpg", "jpeg", "webp" -> itemView.context.getString(R.string.file_type_image)
+                    "mp3", "ogg", "wav" -> itemView.context.getString(R.string.file_type_audio)
+                    "zip", "rpa", "rpi" -> itemView.context.getString(R.string.file_type_archive)
+                    "sh" -> itemView.context.getString(R.string.file_type_generic)
+                    else -> itemView.context.getString(R.string.file_type_generic)
+                }
+                
+                val size = file.length()
+                if (size < 1024) {
+                    binding.textSize.text = "$size B"
+                } else if (size < 1024 * 1024) {
+                    binding.textSize.text = "${size / 1024} KB"
+                } else {
+                    binding.textSize.text = "${size / (1024 * 1024)} MB"
+                }
             }
 
             val isSelected = selectedFiles.contains(file)
-            binding.cardView.isChecked = isSelected
             
             if (isSelected) {
-                binding.cardView.setCardBackgroundColor(binding.root.context.resources.getColor(android.R.color.darker_gray))
-                binding.checkbox.visibility = View.VISIBLE
-                binding.checkbox.isChecked = true
+                binding.cardView.setBackgroundColor(android.graphics.Color.parseColor("#BEB5B6"))
             } else {
-                binding.cardView.setCardBackgroundColor(binding.root.context.resources.getColor(android.R.color.transparent))
-                binding.checkbox.visibility = View.GONE
-                binding.checkbox.isChecked = false
+                binding.cardView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
 
 

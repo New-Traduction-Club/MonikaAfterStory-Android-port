@@ -1,67 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="4dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardElevation="0dp"
-    app:strokeWidth="0dp"
-    app:cardBackgroundColor="?android:attr/colorBackground">
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="12dp"
+    android:paddingHorizontal="16dp"
+    android:background="@android:color/transparent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_file"/>
+
+    <!-- Name Column -->
+    <TextView
+        android:id="@+id/textName"
+        android:layout_width="0dp"
+        android:layout_weight="1.5"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp">
+        android:layout_marginStart="16dp"
+        android:text="Filename.txt"
+        android:textColor="#B45D85"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:maxLines="1"/>
 
-        <ImageView
-            android:id="@+id/icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_file"
-            app:tint="?attr/colorPrimary"/>
+    <View android:layout_width="1dp" android:layout_height="0dp" android:layout_marginHorizontal="4dp"/>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="16dp">
+    <!-- Date Column -->
+    <TextView
+        android:id="@+id/textDate"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="03-14-2026 10:28"
+        android:textColor="#B45D85"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:maxLines="1"/>
 
-            <TextView
-                android:id="@+id/textName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Filename.txt"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:ellipsize="end"
-                android:maxLines="1"/>
+    <View android:layout_width="1dp" android:layout_height="0dp" android:layout_marginHorizontal="4dp"/>
 
-            <TextView
-                android:id="@+id/textDetails"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="2.5 MB • Jan 27, 2026"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?android:attr/textColorSecondary"/>
+    <!-- Type Column -->
+    <TextView
+        android:id="@+id/textType"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="File Folder"
+        android:textColor="#B45D85"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:maxLines="1"/>
 
-        </LinearLayout>
+    <View android:layout_width="1dp" android:layout_height="0dp" android:layout_marginHorizontal="4dp"/>
 
-        <!-- Selection Checkbox (Optional, or just use card background color) -->
-        <CheckBox
-            android:id="@+id/checkbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusable="false"
-            android:visibility="gone"/>
+    <!-- Size Column -->
+    <TextView
+        android:id="@+id/textSize"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:text="1922 B"
+        android:textColor="#B45D85"
+        android:textSize="14sp"
+        android:gravity="end"
+        android:ellipsize="end"
+        android:maxLines="1"/>
 
-    </LinearLayout>
-
-</com.google.android.material.card.MaterialCardView>
+</LinearLayout>

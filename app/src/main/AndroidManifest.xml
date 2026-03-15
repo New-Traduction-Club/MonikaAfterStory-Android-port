@@ -13,7 +13,8 @@
     
     <activity
         android:name="org.renpy.android.LauncherActivity"
-        android:exported="true">
+        android:exported="true"
+        android:screenOrientation="sensorLandscape">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -27,15 +28,18 @@
     
     <activity
       android:name="org.renpy.android.FileExplorerActivity"
-      android:exported="false"/>
+      android:exported="false"
+      android:theme="@style/Theme.Material3.Light.Dialog"/>
 
     <activity
       android:name="org.renpy.android.FileViewerActivity"
-      android:exported="false"/>
+      android:exported="false"
+      android:theme="@style/Theme.Material3.Light.Dialog"/>
 
     <activity
       android:name="org.renpy.android.PythonSDLActivity"
       android:exported="true"
+      android:process=":renpy"
       android:alwaysRetainTaskState="true"
       android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
       android:launchMode="singleTop"
@@ -44,10 +48,10 @@
 
 
 
-    <activity android:name="org.renpy.android.SettingsActivity" android:exported="false"/>
-    <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false"/>
-    <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false"/>
-    <activity android:name="org.renpy.android.BackupsActivity" android:exported="false"/>
+    <activity android:name="org.renpy.android.SettingsActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
 
     <service
         android:name="org.renpy.android.MyFirebaseMessagingService"

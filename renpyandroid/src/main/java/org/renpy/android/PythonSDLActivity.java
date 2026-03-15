@@ -381,6 +381,8 @@ public class PythonSDLActivity extends SDLActivity {
             Log.e("PythonSDLActivity", "Failed to return to launcher", e);
         }
         
+        // Skip nativeQuit() in SDLActivity.onDestroy() to prevent killing the process
+        mSkipNativeQuit = true;
         super.finish();
     }
 
@@ -596,6 +598,14 @@ public class PythonSDLActivity extends SDLActivity {
         super.onResume();
         
         // Cancel all scheduled notifications when the user returns to the game
+        // WorkManager may not be auto-initialized in the :renpy process, so initialize it manually
+        try {
+            androidx.work.WorkManager.getInstance(this);
+        } catch (IllegalStateException e) {
+            // Not initialized yet in this process, do it manually
+            androidx.work.WorkManager.initialize(this, 
+                new androidx.work.Configuration.Builder().build());
+        }
         NotificationWorker.cancelAllNotifications(this);
 
         long start = System.currentTimeMillis();

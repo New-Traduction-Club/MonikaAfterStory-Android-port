@@ -99,6 +99,25 @@
     <string name="file_imported">Arquivo importado: %s</string>
     <string name="failed_import_ignore">Falha na importação. Se você vê seu arquivo, ignore esta mensagem.</string>
 
+    <!-- File Explorer Column Headers -->
+    <string name="file_col_name">Nome</string>
+    <string name="file_col_date">Data</string>
+    <string name="file_col_type">Tipo</string>
+    <string name="file_col_size">Tamanho</string>
+
+    <!-- File Explorer Content Descriptions -->
+    <string name="file_nav_up">Subir</string>
+    <string name="file_menu">Menu</string>
+
+    <!-- File Type Labels -->
+    <string name="file_type_folder">Pasta</string>
+    <string name="file_type_text">Documento de texto</string>
+    <string name="file_type_script">Arquivo de script</string>
+    <string name="file_type_image">Arquivo de imagem</string>
+    <string name="file_type_audio">Arquivo de áudio</string>
+    <string name="file_type_archive">Arquivo compactado</string>
+    <string name="file_type_generic">Arquivo</string>
+
     <!-- LauncherActivity Strings -->
     <string name="launcher_export_title">Exportar persistente</string>
     <string name="launcher_export_message">Isto criará um arquivo ZIP com todos os seus dados salvos (persistente e outros arquivos) da pasta externa de saves. Você será solicitado a escolher um destino. Prosseguir?</string>
@@ -116,6 +135,7 @@
     <string name="launcher_browse_external">Arquivos de Save</string>
     <string name="launcher_settings">Configurações</string>
     <string name="launcher_backups">Backups</string>
+    <string name="launcher_all_programs">Ver mais</string>
 
     <!-- Launcher Button Subtitles -->
     <string name="launcher_import_desc">Restaurar dados do jogo</string>

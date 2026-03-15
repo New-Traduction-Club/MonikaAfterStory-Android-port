@@ -8,11 +8,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import org.renpy.android.databinding.ActivityBackupsBinding
 import java.io.File
 
-class BackupsActivity : BaseActivity() {
+class BackupsActivity : GameWindowActivity() {
 
     private lateinit var binding: ActivityBackupsBinding
     private lateinit var adapter: BackupsAdapter
@@ -29,23 +29,18 @@ class BackupsActivity : BaseActivity() {
         binding = ActivityBackupsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        setTitle(R.string.title_backups)
+        
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             windowInsets
         }
         
-        setupToolbar()
         setupRecyclerView()
         setupFab()
         
         loadBackups()
-    }
-
-    private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            finish()
-        }
     }
 
     private fun setupRecyclerView() {
@@ -101,7 +96,7 @@ class BackupsActivity : BaseActivity() {
             getString(R.string.delete_backup)
         )
         
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(backupFile.name)
             .setItems(options) { _, which ->
                 when(which) {
@@ -113,7 +108,7 @@ class BackupsActivity : BaseActivity() {
     }
 
     private fun confirmRestore(backupFile: File) {
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.confirm_restore_title))
             .setMessage(getString(R.string.confirm_restore_message))
             .setPositiveButton(getString(R.string.yes)) { _, _ ->
@@ -145,7 +140,7 @@ class BackupsActivity : BaseActivity() {
     }
 
     private fun confirmDelete(backupFile: File) {
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.confirm_delete_backup_title))
             .setMessage(getString(R.string.confirm_delete_backup_message))
             .setPositiveButton(getString(R.string.delete)) { _, _ ->
@@ -163,7 +158,7 @@ class BackupsActivity : BaseActivity() {
     private fun showProgressDialog(message: String) {
         if (progressDialog?.isShowing == true) return
         
-        val builder = MaterialAlertDialogBuilder(this)
+        val builder = GameDialogBuilder(this)
         val view = layoutInflater.inflate(R.layout.dialog_progress, null)
         progressText = view.findViewById(R.id.progressText)
         progressIndicator = view.findViewById(R.id.progressBar)

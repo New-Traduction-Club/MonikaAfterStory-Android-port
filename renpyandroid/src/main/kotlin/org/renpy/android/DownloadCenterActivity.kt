@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +20,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 
-class DownloadCenterActivity : BaseActivity() {
+class DownloadCenterActivity : GameWindowActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var updateManager: UpdateManager
@@ -35,9 +35,7 @@ class DownloadCenterActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_download_center)
 
-        setSupportActionBar(findViewById(R.id.toolbar))
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = getString(R.string.download_center_title)
+        setTitle(R.string.download_center_title)
 
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -45,14 +43,6 @@ class DownloadCenterActivity : BaseActivity() {
         updateManager = UpdateManager(this)
 
         loadUpdates()
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            finish()
-            return true
-        }
-        return super.onOptionsItemSelected(item)
     }
     
     private val downloadReceiver = object : BroadcastReceiver() {
@@ -242,7 +232,7 @@ class DownloadCenterActivity : BaseActivity() {
             val size = updateManager.getFileSize(item.url)
             progressDialog.dismiss()
             
-            MaterialAlertDialogBuilder(this@DownloadCenterActivity)
+            GameDialogBuilder(this@DownloadCenterActivity)
                 .setTitle(getString(R.string.data_warning_title))
                 .setMessage(getString(R.string.data_warning_message, size))
                 .setPositiveButton(getString(R.string.yes)) { _, _ ->
