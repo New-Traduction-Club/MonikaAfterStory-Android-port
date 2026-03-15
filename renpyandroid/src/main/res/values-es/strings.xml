@@ -96,6 +96,25 @@
     <string name="file_imported">Archivo importado: %s</string>
     <string name="failed_import_ignore">Fallo en importación. Si ves tu archivo ignora este mensaje.</string>
 
+    <!-- File Explorer Column Headers -->
+    <string name="file_col_name">Nombre</string>
+    <string name="file_col_date">Fecha</string>
+    <string name="file_col_type">Tipo</string>
+    <string name="file_col_size">Tamaño</string>
+
+    <!-- File Explorer Content Descriptions -->
+    <string name="file_nav_up">Subir</string>
+    <string name="file_menu">Menú</string>
+
+    <!-- File Type Labels -->
+    <string name="file_type_folder">Carpeta</string>
+    <string name="file_type_text">Documento de texto</string>
+    <string name="file_type_script">Archivo de código</string>
+    <string name="file_type_image">Imagen</string>
+    <string name="file_type_audio">Audio</string>
+    <string name="file_type_archive">Archivo comprimido</string>
+    <string name="file_type_generic">Archivo</string>
+
     <!-- LauncherActivity Strings -->
     <string name="launcher_export_title">Exportar persistente</string>
     <string name="launcher_export_message">Esto creará un archivo ZIP con todos tus datos guardados (persistente y otros archivos) de la carpeta externa de guardados. Se te pedirá elegir un destino. ¿Confirmar?</string>
@@ -113,6 +132,7 @@
     <string name="launcher_browse_external">Archivos de Guardado</string>
     <string name="launcher_settings">Ajustes</string>
     <string name="launcher_backups">Copias de Seguridad</string>
+    <string name="launcher_all_programs">Ver más</string>
 
     <!-- Launcher Button Subtitles -->
     <string name="launcher_import_desc">Importar datos persistentes</string>
@@ -257,4 +277,14 @@
     <string name="app_info_commit">Último commit: %1$s</string>
     <string name="app_info_version">Versión: %1$s</string>
     <string name="launcher_app_info_desc">Acerca de esta app</string>
+
+    <!-- Wallpapers -->
+    <string name="launcher_wallpapers">Fondos de pantalla</string>
+    <string name="wallpaper_default">Predeterminado</string>
+    <string name="wallpaper_add">Agregar fondo</string>
+    <string name="wallpaper_delete_title">¿Eliminar fondo?</string>
+    <string name="wallpaper_delete_message">Este fondo será eliminado permanentemente.</string>
+    <string name="wallpaper_applied">Fondo aplicado</string>
+    <string name="wallpaper_crop_title">Ajustar fondo</string>
+    <string name="wallpaper_apply">Aplicar</string>
 </resources>

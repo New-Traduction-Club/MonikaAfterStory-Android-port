@@ -1,11 +1,11 @@
 package org.renpy.android
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class FileExplorerActivity : BaseActivity() {
+class FileExplorerActivity : GameWindowActivity() {
 
     private lateinit var binding: FileExplorerActivityBinding
     private val viewModel: FileExplorerViewModel by viewModels()
@@ -36,6 +36,8 @@ class FileExplorerActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = FileExplorerActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        setTitle(getString(R.string.title_file_explorer).lowercase())
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         fileAdapter = FileAdapter(
@@ -61,7 +63,7 @@ class FileExplorerActivity : BaseActivity() {
         }
         
         viewModel.currentDir.observe(this) { dir ->
-            supportActionBar?.title = dir.name
+            setTitle(dir.name.lowercase())
         }
 
         viewModel.statusMessage.observe(this) { msg ->
@@ -92,23 +94,36 @@ class FileExplorerActivity : BaseActivity() {
         
         viewModel.loadDirectory(rootDir.absolutePath)
         
-        binding.toolbar.inflateMenu(R.menu.file_explorer_menu)
-        binding.toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_create_folder -> {
-                    showCreateFolderDialog()
-                    true
-                }
-                R.id.action_create_file -> {
-                    showCreateFileDialog()
-                    true
-                }
-                R.id.action_import -> {
-                    showImportDialog()
-                    true
-                }
-                else -> false
+        binding.btnQuickAdd.setOnClickListener { showImportDialog() }
+
+        binding.btnNavUp.setOnClickListener {
+            val current = viewModel.currentDir.value
+            if (current != null && current.absolutePath != rootDir.absolutePath) {
+                viewModel.navigateUp(rootDir.absolutePath)
             }
+        }
+
+        binding.btnMenu.setOnClickListener { view ->
+            val popup = PopupMenu(this, view)
+            popup.menuInflater.inflate(R.menu.file_explorer_menu, popup.menu)
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_create_folder -> {
+                        showCreateFolderDialog()
+                        true
+                    }
+                    R.id.action_create_file -> {
+                        showCreateFileDialog()
+                        true
+                    }
+                    R.id.action_import -> {
+                        showImportDialog()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
         }
     }
     
@@ -122,9 +137,16 @@ class FileExplorerActivity : BaseActivity() {
         if (hasClipboard) {
             binding.fabPaste.setImageResource(R.drawable.ic_paste)
             binding.fabPaste.visibility = View.VISIBLE
+        } else if (hasSelection) {
+            binding.fabPaste.visibility = View.GONE
         } else {
-            binding.fabPaste.setImageResource(android.R.drawable.ic_menu_add)
-            binding.fabPaste.visibility = View.VISIBLE
+            binding.fabPaste.visibility = View.GONE
+        }
+        
+        if (hasSelection || hasClipboard) {
+            binding.bottomAppBar.visibility = View.VISIBLE
+        } else {
+            binding.bottomAppBar.visibility = View.GONE
         }
         
         var showExtract = false
@@ -147,7 +169,7 @@ class FileExplorerActivity : BaseActivity() {
         editText.setText(file.name)
         editText.hint = getString(R.string.rename_hint)
         
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.rename_title))
             .setView(editText)
             .setPositiveButton(getString(R.string.action_rename)) { _, _ ->
@@ -171,7 +193,7 @@ class FileExplorerActivity : BaseActivity() {
     }
 
     private fun confirmDelete() {
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.delete_files))
             .setMessage(getString(R.string.confirm_delete_message))
             .setPositiveButton(getString(R.string.delete)) { _, _ -> 
@@ -211,7 +233,7 @@ class FileExplorerActivity : BaseActivity() {
         if (selected.size != 1) return
         val rpaFile = selected.first()
         
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.extract_rpa_title))
             .setMessage(getString(R.string.confirm_extract_message, rpaFile.name))
             .setPositiveButton(getString(R.string.action_extract)) { _, _ ->
@@ -259,7 +281,7 @@ class FileExplorerActivity : BaseActivity() {
     }
     
     private fun showImportDialog() {
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.import_title))
             .setItems(arrayOf(
                 getString(R.string.import_files),
@@ -281,7 +303,7 @@ class FileExplorerActivity : BaseActivity() {
     private fun showCreateFolderDialog() {
         val editText = EditText(this)
         editText.hint = getString(R.string.folder_name_hint)
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.create_folder))
             .setView(editText)
             .setPositiveButton(getString(R.string.create)) { _, _ ->
@@ -297,7 +319,7 @@ class FileExplorerActivity : BaseActivity() {
     private fun showCreateFileDialog() {
         val editText = EditText(this)
         editText.hint = getString(R.string.file_name_hint)
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.create_file))
             .setView(editText)
             .setPositiveButton(getString(R.string.create)) { _, _ ->
@@ -396,12 +418,7 @@ class FileExplorerActivity : BaseActivity() {
             fileAdapter.clearSelection()
             updateActionUI()
         } else {
-            val current = viewModel.currentDir.value
-            if (current != null && current.absolutePath != rootDir.absolutePath) {
-                viewModel.navigateUp(rootDir.absolutePath)
-            } else {
-                super.onBackPressed()
-            }
+            super.onBackPressed()
         }
     }
 }

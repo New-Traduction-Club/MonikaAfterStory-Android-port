@@ -6,9 +6,9 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="4dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="0dp"
-    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
     android:clickable="true"
     android:focusable="true">
 
@@ -24,7 +24,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_launcher_backup"
-            app:tint="?attr/colorOnSurfaceVariant" />
+            app:tint="#9BCAE1" />
             
         <LinearLayout
             android:layout_width="0dp"
@@ -37,7 +37,7 @@
                 android:id="@+id/tvFileName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#333333"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:ellipsize="middle"
                 android:singleLine="true"/>
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#888888"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:alpha="0.8"/>
                 

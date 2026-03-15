@@ -20,7 +20,7 @@ import org.renpy.android.databinding.ActivityFileViewerBinding
 import java.io.File
 import java.io.FileReader
 
-class FileViewerActivity : AppCompatActivity() {
+class FileViewerActivity : GameWindowActivity() {
 
     private lateinit var binding: ActivityFileViewerBinding
     private lateinit var file: File
@@ -33,7 +33,7 @@ class FileViewerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityFileViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        
         val filePath = intent.getStringExtra("file_path")
         if (filePath == null) {
             finish()
@@ -41,25 +41,9 @@ class FileViewerActivity : AppCompatActivity() {
         }
 
         file = File(filePath)
-
-        // Enable Edge-to-Edge display
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            
-            // Apply top padding to the AppBarLayout so the Toolbar clears the status bar/notch
-            binding.toolbar.setPadding(0, insets.top, 0, 0)
-            
-            // Apply bottom padding to the root layout so the ScrollView clears the navigation bar
-            view.setPadding(0, 0, 0, insets.bottom)
-            
-            windowInsets
-        }
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = file.name
-        supportActionBar?.subtitle = "${file.length() / 1024} KB"
+        
+        setTitle(file.name)
+        setTitle("${file.name} - ${file.length() / 1024} KB")
 
         loadFileContent()
     }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <ImageView
+        android:id="@+id/wallpaperThumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:background="#E8D4DE" />
+
+    <!-- Active check overlay -->
+    <ImageView
+        android:id="@+id/checkOverlay"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="4dp"
+        android:src="@android:drawable/checkbox_on_background"
+        android:visibility="gone" />
+
+    <!-- Label below thumbnail -->
+    <TextView
+        android:id="@+id/wallpaperLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#88FFFFFF"
+        android:textColor="#4A4960"
+        android:textSize="10sp"
+        android:gravity="center"
+        android:paddingVertical="2dp"
+        android:singleLine="true" />
+
+</FrameLayout>

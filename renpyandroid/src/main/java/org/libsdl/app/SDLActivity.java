@@ -102,6 +102,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     /** If shared libraries (e.g. SDL or the native application) could not be loaded. */
     public static boolean mBrokenLibraries = true;
 
+    /** If set to true, onDestroy() will skip nativeQuit() to avoid killing the process. */
+    protected static boolean mSkipNativeQuit = false;
+
     // Main components
     protected static SDLActivity mSingleton;
     protected static SDLSurface mSurface;
@@ -476,7 +479,12 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             }
         }
 
-        SDLActivity.nativeQuit();
+        if (!mSkipNativeQuit) {
+            SDLActivity.nativeQuit();
+        } else {
+            Log.v(TAG, "Skipping nativeQuit()");
+            mSkipNativeQuit = false;
+        }
 
         super.onDestroy();
     }

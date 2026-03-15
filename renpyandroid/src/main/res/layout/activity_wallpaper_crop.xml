@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- The image that user pans and zooms -->
+    <ImageView
+        android:id="@+id/cropImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="matrix" />
+
+    <!-- Semi-transparent overlay with a transparent viewport hole -->
+    <View
+        android:id="@+id/cropOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Bottom action bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="12dp"
+        android:background="#88000000">
+
+        <TextView
+            android:id="@+id/btnCropCancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cancel"
+            android:textColor="#CCCCCC"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/btnCropApply"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/wallpaper_apply"
+            android:textColor="#CC7295"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:background="?android:attr/selectableItemBackground" />
+    </LinearLayout>
+
+</FrameLayout>

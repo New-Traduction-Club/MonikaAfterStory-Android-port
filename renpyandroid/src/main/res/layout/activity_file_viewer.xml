@@ -4,22 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?android:attr/colorBackground">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="?attr/homeAsUpIndicator"
-            android:background="?attr/colorPrimary"
-            app:titleTextColor="?attr/colorOnPrimary"
-            app:subtitleTextColor="?attr/colorOnPrimary" />
-            
-    </com.google.android.material.appbar.AppBarLayout>
+    android:background="@android:color/transparent">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -71,39 +56,44 @@
             android:visibility="gone">
             
             <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:src="@drawable/ic_file_audio"
-                app:tint="?attr/colorPrimary" />
+                app:tint="#B45D85" />
                 
             <TextView
                 android:id="@+id/audioTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="Song_Title.mp3"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#4A4960"
                 android:gravity="center" />
                 
             <SeekBar
                 android:id="@+id/audioSeekBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp" />
+                android:layout_marginTop="24dp"
+                android:progressTint="#CC7295"
+                android:thumbTint="#B45D85"
+                android:progressBackgroundTint="#E8D4DE" />
                 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="4dp">
                 
                 <TextView
                     android:id="@+id/audioCurrentTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="00:00"
-                    android:textAppearance="?attr/textAppearanceBodySmall" />
+                    android:textSize="11sp"
+                    android:textColor="#888888" />
                     
                 <Space
                     android:layout_width="0dp"
@@ -115,18 +105,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="00:00"
-                    android:textAppearance="?attr/textAppearanceBodySmall" />
+                    android:textSize="11sp"
+                    android:textColor="#888888" />
                     
             </LinearLayout>
             
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
+            <ImageButton
                 android:id="@+id/fabPlayPause"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="20dp"
                 android:src="@android:drawable/ic_media_play"
-                app:backgroundTint="?attr/colorPrimaryContainer"
-                app:tint="?attr/colorOnPrimaryContainer" />
+                android:scaleType="centerInside"
+                android:background="@drawable/btn_play_background"
+                android:contentDescription="Play/Pause"
+                app:tint="#FFFFFF" />
                 
         </LinearLayout>
 

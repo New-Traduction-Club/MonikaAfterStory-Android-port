@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_game_background"
+    android:paddingBottom="4dp">
+
+    <!-- Title bar -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        android:textColor="#B45D85"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <!-- Message area -->
+    <TextView
+        android:id="@+id/dialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="12dp"
+        android:textColor="#4A4960"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <!-- Container for custom views (EditText, progress, lists, etc.) -->
+    <FrameLayout
+        android:id="@+id/dialogCustomContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- List container for single-choice / items -->
+    <ListView
+        android:id="@+id/dialogListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="#E8D4DE"
+        android:dividerHeight="1dp"
+        android:visibility="gone" />
+
+    <!-- Button row -->
+    <LinearLayout
+        android:id="@+id/dialogButtonRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/dialogNegativeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:textColor="#888888"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:background="?android:attr/selectableItemBackground"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/dialogPositiveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:textColor="#B45D85"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:background="?android:attr/selectableItemBackground"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

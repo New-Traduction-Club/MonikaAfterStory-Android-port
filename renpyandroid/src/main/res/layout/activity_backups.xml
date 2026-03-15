@@ -3,25 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="@string/title_backups"
-            app:navigationIcon="?attr/homeAsUpIndicator" />
-            
-    </com.google.android.material.appbar.AppBarLayout>
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_height="match_parent">
         
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
@@ -38,6 +25,7 @@
             android:layout_gravity="center"
             android:text="@string/no_backups_found"
             android:visibility="gone"
+            android:textColor="#333333"
             android:textAppearance="?attr/textAppearanceBodyLarge"/>
             
     </FrameLayout>
@@ -49,6 +37,9 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         app:icon="@android:drawable/ic_menu_add"
+        app:backgroundTint="#D25C7E"
+        app:iconTint="#FFFFFF"
+        android:textColor="#FFFFFF"
         android:text="@string/create_backup" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

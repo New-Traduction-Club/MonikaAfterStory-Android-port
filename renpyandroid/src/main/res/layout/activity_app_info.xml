@@ -4,48 +4,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/transparent"
     android:fitsSystemWindows="true">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fitsSystemWindows="true">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="@string/title_app_info"
-            app:navigationIcon="?attr/homeAsUpIndicator" />
-
-    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal"
-            android:padding="24dp">
+            android:padding="2dp">
 
             <ImageView
                 android:id="@+id/ivAppIcon"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginTop="32dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_marginTop="16dp"
                 android:contentDescription="@string/app_name" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="@string/app_name"
-                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                android:textColor="#D25C7E"
                 android:textStyle="bold"
                 android:textAlignment="center"/>
 
@@ -54,14 +40,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?android:attr/textColorSecondary"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="#333333"
                 android:textAlignment="center"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="24dp"
                 android:orientation="vertical"
                 android:gravity="center_horizontal"
                 android:paddingHorizontal="16dp">
@@ -71,7 +57,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="#555555"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textAlignment="center"/>
                     
                 <TextView
@@ -79,7 +66,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="#555555"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textAlignment="center"/>
                     
                 <TextView
@@ -87,14 +75,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="#555555"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textAlignment="center"/>
                     
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/app_info_acknowledgments_title"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="#D25C7E"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp"
                     android:textAlignment="center"/>
@@ -103,8 +93,9 @@
                     android:id="@+id/tvAckTeamSalvato"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="#333333"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
                     
@@ -112,8 +103,9 @@
                     android:id="@+id/tvAckMasTeam"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="#333333"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
                     
@@ -121,8 +113,9 @@
                     android:id="@+id/tvAckRenpy"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="#333333"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
                     
@@ -130,8 +123,9 @@
                     android:id="@+id/tvAckLattyware"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="#333333"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
             </LinearLayout>
@@ -141,11 +135,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="1dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -161,14 +153,14 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@android:drawable/ic_menu_info_details"
-                        app:tint="?attr/colorOnSurfaceVariant"
+                        app:tint="#D25C7E"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
                         android:id="@+id/tvCommit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="#D25C7E"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textStyle="bold" />
                 </LinearLayout>

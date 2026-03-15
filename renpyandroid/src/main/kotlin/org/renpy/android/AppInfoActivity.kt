@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import org.renpy.android.databinding.ActivityAppInfoBinding
 
-class AppInfoActivity : BaseActivity() {
+class AppInfoActivity : GameWindowActivity() {
 
     private lateinit var binding: ActivityAppInfoBinding
 
@@ -16,10 +16,8 @@ class AppInfoActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAppInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        binding.toolbar.setNavigationOnClickListener {
-            onBackPressed()
-        }
+        
+        setTitle(R.string.title_app_info)
 
         // Set App Icon
         try {
