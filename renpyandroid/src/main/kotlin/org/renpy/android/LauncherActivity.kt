@@ -5,9 +5,11 @@ import android.app.NotificationManager
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
@@ -39,6 +41,35 @@ import java.util.Date
 import java.util.Locale
 
 class LauncherActivity : BaseActivity() {
+
+    // Fixed virtual DPI and font scale to keep the Taskbar consistent across all devices
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val language = prefs.getString("language", "English") ?: "English"
+        val locale = when (language) {
+            "Español" -> Locale("es")
+            "Português" -> Locale("pt")
+            else -> Locale.ENGLISH
+        }
+        Locale.setDefault(locale)
+
+        val config = Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+        val localeContext = newBase.createConfigurationContext(config)
+
+        val metrics = localeContext.resources.displayMetrics
+        val virtualHeight = 500f
+        val rawHeight = Math.min(metrics.widthPixels, metrics.heightPixels)
+        val targetDensity = rawHeight / virtualHeight
+        val targetDensityDpi = (targetDensity * DisplayMetrics.DENSITY_DEFAULT).toInt()
+
+        val dpiConfig = Configuration(localeContext.resources.configuration)
+        dpiConfig.densityDpi = targetDensityDpi
+        dpiConfig.fontScale = 1.0f
+
+        val finalContext = localeContext.createConfigurationContext(dpiConfig)
+        super.attachBaseContext(finalContext)
+    }
 
     private lateinit var binding: LauncherActivityBinding
     private val viewModel: LauncherViewModel by viewModels()

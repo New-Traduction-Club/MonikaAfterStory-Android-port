@@ -78,7 +78,7 @@
             android:layout_marginStart="32dp"
             android:src="@drawable/ic_launcher_settings" 
             android:padding="8dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/bg_taskbar_button_press"
             android:clickable="true"
             android:focusable="true"
             app:tint="#D25C7E"

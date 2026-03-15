@@ -46,18 +46,19 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
-                <!-- Simple text X for close -->
+                <!-- Close button with pink square frame -->
                 <TextView
                     android:id="@+id/btnWindowClose"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:text="X"
                     android:textColor="#D25C7E"
-                    android:textSize="20sp"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:paddingHorizontal="8dp" />
+                    android:background="@drawable/bg_close_button" />
             </LinearLayout>
 
             <View

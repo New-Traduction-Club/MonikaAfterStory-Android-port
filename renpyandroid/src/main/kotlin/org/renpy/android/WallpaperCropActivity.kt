@@ -163,6 +163,25 @@ class WallpaperCropActivity : GameWindowActivity() {
             paint.strokeWidth = 2f
             canvas.drawRect(viewportRect, paint)
 
+            // Draw crosshair inside the viewport
+            val guidePaint = Paint()
+            guidePaint.color = Color.parseColor("#80FFFFFF")
+            guidePaint.style = Paint.Style.STROKE
+            guidePaint.strokeWidth = 1f
+
+            // Vertical center line
+            canvas.drawLine(
+                viewportRect.centerX(), viewportRect.top,
+                viewportRect.centerX(), viewportRect.bottom,
+                guidePaint
+            )
+            // Horizontal center line
+            canvas.drawLine(
+                viewportRect.left, viewportRect.centerY(),
+                viewportRect.right, viewportRect.centerY(),
+                guidePaint
+            )
+
             overlayView.background = BitmapDrawable(resources, overlay)
         }
     }
@@ -185,6 +204,7 @@ class WallpaperCropActivity : GameWindowActivity() {
                         val dx = x - lastTouchX
                         val dy = y - lastTouchY
                         imageMatrix.postTranslate(dx, dy)
+                        clampImageToViewport()
                         imageView.imageMatrix = imageMatrix
                         lastTouchX = x
                         lastTouchY = y
@@ -210,10 +230,43 @@ class WallpaperCropActivity : GameWindowActivity() {
         return true
     }
 
+    // Clamp the image so it always covers the viewport completely
+    private fun clampImageToViewport() {
+        val bmp = sourceBitmap ?: return
+
+        // Get current image bounds by mapping the bitmap corners through the matrix
+        val pts = floatArrayOf(
+            0f, 0f,
+            bmp.width.toFloat(), 0f,
+            bmp.width.toFloat(), bmp.height.toFloat(),
+            0f, bmp.height.toFloat()
+        )
+        imageMatrix.mapPoints(pts)
+
+        val imgLeft = Math.min(Math.min(pts[0], pts[2]), Math.min(pts[4], pts[6]))
+        val imgTop = Math.min(Math.min(pts[1], pts[3]), Math.min(pts[5], pts[7]))
+        val imgRight = Math.max(Math.max(pts[0], pts[2]), Math.max(pts[4], pts[6]))
+        val imgBottom = Math.max(Math.max(pts[1], pts[3]), Math.max(pts[5], pts[7]))
+
+        var dx = 0f
+        var dy = 0f
+
+        if (imgLeft > viewportRect.left) dx = viewportRect.left - imgLeft
+        if (imgTop > viewportRect.top) dy = viewportRect.top - imgTop
+        if (imgRight < viewportRect.right) dx = viewportRect.right - imgRight
+        if (imgBottom < viewportRect.bottom) dy = viewportRect.bottom - imgBottom
+
+        if (dx != 0f || dy != 0f) {
+            imageMatrix.postTranslate(dx, dy)
+        }
+    }
+
     private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             val factor = detector.scaleFactor
-            imageMatrix.postScale(factor, factor, detector.focusX, detector.focusY)
+            // Scale around the viewport center to prevent horizontal/vertical drift
+            imageMatrix.postScale(factor, factor, viewportRect.centerX(), viewportRect.centerY())
+            clampImageToViewport()
             imageView.imageMatrix = imageMatrix
             return true
         }
@@ -227,27 +280,51 @@ class WallpaperCropActivity : GameWindowActivity() {
             val inverse = Matrix()
             imageMatrix.invert(inverse)
 
-            val srcPoints = floatArrayOf(
-                viewportRect.left, viewportRect.top,
-                viewportRect.right, viewportRect.bottom
+            // Map all 4 corners of the viewport to source bitmap coordinates
+            val corners = floatArrayOf(
+                viewportRect.left, viewportRect.top,     // top-left
+                viewportRect.right, viewportRect.top,    // top-right
+                viewportRect.right, viewportRect.bottom, // bottom-right
+                viewportRect.left, viewportRect.bottom   // bottom-left
             )
-            inverse.mapPoints(srcPoints)
+            inverse.mapPoints(corners)
 
-            val srcLeft = srcPoints[0].coerceIn(0f, bmp.width.toFloat())
-            val srcTop = srcPoints[1].coerceIn(0f, bmp.height.toFloat())
-            val srcRight = srcPoints[2].coerceIn(0f, bmp.width.toFloat())
-            val srcBottom = srcPoints[3].coerceIn(0f, bmp.height.toFloat())
+            // Derive the bounding rect from the mapped corners
+            val srcLeft = Math.min(Math.min(corners[0], corners[2]), Math.min(corners[4], corners[6]))
+                .coerceIn(0f, bmp.width.toFloat())
+            val srcTop = Math.min(Math.min(corners[1], corners[3]), Math.min(corners[5], corners[7]))
+                .coerceIn(0f, bmp.height.toFloat())
+            val srcRight = Math.max(Math.max(corners[0], corners[2]), Math.max(corners[4], corners[6]))
+                .coerceIn(0f, bmp.width.toFloat())
+            val srcBottom = Math.max(Math.max(corners[1], corners[3]), Math.max(corners[5], corners[7]))
+                .coerceIn(0f, bmp.height.toFloat())
 
-            val srcW = (srcRight - srcLeft).toInt()
-            val srcH = (srcBottom - srcTop).toInt()
+            // Enforce viewport aspect ratio (sadly) to prevent stretching
+            val vpAspect = viewportRect.width() / viewportRect.height()
+            var cropW = srcRight - srcLeft
+            var cropH = srcBottom - srcTop
+            val cropAspect = cropW / cropH
 
-            if (srcW <= 0 || srcH <= 0) {
-                Toast.makeText(this, "Invalid crop area", Toast.LENGTH_SHORT).show()
-                return
+            var finalLeft = srcLeft
+            var finalTop = srcTop
+
+            if (cropAspect > vpAspect) {
+                val newW = cropH * vpAspect
+                finalLeft += (cropW - newW) / 2f
+                cropW = newW
+            } else {
+                val newH = cropW / vpAspect
+                finalTop += (cropH - newH) / 2f
+                cropH = newH
             }
 
+            val iLeft = finalLeft.toInt().coerceIn(0, bmp.width - 1)
+            val iTop = finalTop.toInt().coerceIn(0, bmp.height - 1)
+            val iW = cropW.toInt().coerceIn(1, bmp.width - iLeft)
+            val iH = cropH.toInt().coerceIn(1, bmp.height - iTop)
+
             // Crop from source bitmap
-            val cropped = Bitmap.createBitmap(bmp, srcLeft.toInt(), srcTop.toInt(), srcW, srcH)
+            val cropped = Bitmap.createBitmap(bmp, iLeft, iTop, iW, iH)
 
             // Scale to screen dimensions
             val scaled = Bitmap.createScaledBitmap(cropped, screenWidth, screenHeight, true)
