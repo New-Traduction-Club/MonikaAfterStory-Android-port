@@ -63,10 +63,16 @@ class UpdateAdapter(
             
             if (updateManager.isUpdateAvailable(item)) {
                 holder.buttonAction.text = holder.itemView.context.getString(R.string.btn_update)
-                holder.buttonAction.setOnClickListener { onUpdateClick(item) }
+                holder.buttonAction.setOnClickListener {
+                    SoundEffects.playClick(holder.itemView.context)
+                    onUpdateClick(item)
+                }
             } else {
                 holder.buttonAction.text = holder.itemView.context.getString(R.string.btn_reinstall)
-                holder.buttonAction.setOnClickListener { onUpdateClick(item) }
+                holder.buttonAction.setOnClickListener {
+                    SoundEffects.playClick(holder.itemView.context)
+                    onUpdateClick(item)
+                }
             }
         }
     }

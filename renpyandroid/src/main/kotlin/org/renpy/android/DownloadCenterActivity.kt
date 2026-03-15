@@ -37,6 +37,8 @@ class DownloadCenterActivity : GameWindowActivity() {
 
         setTitle(R.string.download_center_title)
 
+        SoundEffects.initialize(this)
+
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
         
@@ -115,6 +117,7 @@ class DownloadCenterActivity : GameWindowActivity() {
 
     private fun setupAdapter() {
         adapter = UpdateAdapter(updatesList, updateManager) { item ->
+            SoundEffects.playClick(this)
             checkNetworkAndStartDownload(item)
         }
         recyclerView.adapter = adapter

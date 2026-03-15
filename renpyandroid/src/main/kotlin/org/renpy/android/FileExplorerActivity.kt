@@ -39,9 +39,12 @@ class FileExplorerActivity : GameWindowActivity() {
         
         setTitle(getString(R.string.title_file_explorer).lowercase())
 
+        SoundEffects.initialize(this)
+
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         fileAdapter = FileAdapter(
             onItemClick = { file ->
+                SoundEffects.playClick(this)
                 if (file.isDirectory) {
                     viewModel.loadDirectory(file.absolutePath)
                 } else {
@@ -51,6 +54,7 @@ class FileExplorerActivity : GameWindowActivity() {
                 }
             },
             onItemLongClick = { _ ->
+                SoundEffects.playClick(this)
                 updateActionUI()
             }
         )
@@ -74,14 +78,15 @@ class FileExplorerActivity : GameWindowActivity() {
             updateActionUI()
         }
 
-        binding.btnDelete.setOnClickListener { confirmDelete() }
-        binding.btnCopy.setOnClickListener { copyToClipboard(false) }
-        binding.btnCut.setOnClickListener { copyToClipboard(true) }
-        binding.btnExport.setOnClickListener { exportSelection() }
-        binding.btnExtract.setOnClickListener { extractRpaSelection() }
-        binding.btnRename.setOnClickListener { showRenameDialog() }
+        binding.btnDelete.setOnClickListener { SoundEffects.playClick(this); confirmDelete() }
+        binding.btnCopy.setOnClickListener { SoundEffects.playClick(this); copyToClipboard(false) }
+        binding.btnCut.setOnClickListener { SoundEffects.playClick(this); copyToClipboard(true) }
+        binding.btnExport.setOnClickListener { SoundEffects.playClick(this); exportSelection() }
+        binding.btnExtract.setOnClickListener { SoundEffects.playClick(this); extractRpaSelection() }
+        binding.btnRename.setOnClickListener { SoundEffects.playClick(this); showRenameDialog() }
         
         binding.fabPaste.setOnClickListener { 
+            SoundEffects.playClick(this)
             if (viewModel.hasClipboard.value == true) {
                 viewModel.pasteToCurrentDir()
             } else {
@@ -94,9 +99,10 @@ class FileExplorerActivity : GameWindowActivity() {
         
         viewModel.loadDirectory(rootDir.absolutePath)
         
-        binding.btnQuickAdd.setOnClickListener { showImportDialog() }
+        binding.btnQuickAdd.setOnClickListener { SoundEffects.playClick(this); showImportDialog() }
 
         binding.btnNavUp.setOnClickListener {
+            SoundEffects.playClick(this)
             val current = viewModel.currentDir.value
             if (current != null && current.absolutePath != rootDir.absolutePath) {
                 viewModel.navigateUp(rootDir.absolutePath)
@@ -104,6 +110,7 @@ class FileExplorerActivity : GameWindowActivity() {
         }
 
         binding.btnMenu.setOnClickListener { view ->
+            SoundEffects.playClick(this)
             val popup = PopupMenu(this, view)
             popup.menuInflater.inflate(R.menu.file_explorer_menu, popup.menu)
             popup.setOnMenuItemClickListener { item ->

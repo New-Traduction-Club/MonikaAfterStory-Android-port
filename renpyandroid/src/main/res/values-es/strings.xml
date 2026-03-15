@@ -146,6 +146,9 @@
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Ajustes</string>
     <string name="settings_language">Idioma</string>
+    <string name="settings_sound_effect_title">Efecto de sonido de botones</string>
+    <string name="settings_sound_effect_default">Predeterminado</string>
+    <string name="settings_sound_effect_reimagined">Reimaginado</string>
     <string name="select_language_title">Seleccionar Idioma</string>
     <string name="title_tools">Herramientas</string>
     <string name="label_internal_files">Explorar Archivos Internos</string>

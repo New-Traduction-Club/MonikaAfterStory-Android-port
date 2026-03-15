@@ -96,6 +96,7 @@ class GameDialogBuilder(private val context: Context) {
     }
 
     fun create(): AlertDialog {
+        SoundEffects.initialize(context)
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_game, null)
 
         val titleView = dialogView.findViewById<TextView>(R.id.dialogTitle)
@@ -150,6 +151,7 @@ class GameDialogBuilder(private val context: Context) {
             positiveButton.text = positiveText
             positiveButton.visibility = View.VISIBLE
             positiveButton.setOnClickListener {
+                SoundEffects.playClick(context)
                 positiveListener?.onClick(dialog, DialogInterface.BUTTON_POSITIVE)
                 dialog.dismiss()
             }
@@ -160,6 +162,7 @@ class GameDialogBuilder(private val context: Context) {
             negativeButton.text = negativeText
             negativeButton.visibility = View.VISIBLE
             negativeButton.setOnClickListener {
+                SoundEffects.playClick(context)
                 negativeListener?.onClick(dialog, DialogInterface.BUTTON_NEGATIVE)
                 dialog.dismiss()
             }
@@ -188,6 +191,7 @@ class GameDialogBuilder(private val context: Context) {
         }
         listView.adapter = adapter
         listView.setOnItemClickListener { _, _, position, _ ->
+            SoundEffects.playClick(context)
             itemsListener?.onClick(dialog, position)
             dialog.dismiss()
         }
@@ -211,6 +215,7 @@ class GameDialogBuilder(private val context: Context) {
             listView.setItemChecked(checkedItem, true)
         }
         listView.setOnItemClickListener { _, _, position, _ ->
+            SoundEffects.playClick(context)
             singleChoiceListener?.onClick(dialog, position)
         }
     }

@@ -155,6 +155,9 @@
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
+    <string name="settings_sound_effect_title">Button sound effect</string>
+    <string name="settings_sound_effect_default">Default</string>
+    <string name="settings_sound_effect_reimagined">Reimagined</string>
     <string name="select_language_title">Select Language</string>
     <string name="title_tools">Tools</string>
     <string name="label_internal_files">Browse Internal Files</string>

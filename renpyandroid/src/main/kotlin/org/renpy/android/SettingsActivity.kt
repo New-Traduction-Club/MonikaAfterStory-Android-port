@@ -11,6 +11,7 @@ class SettingsActivity : GameWindowActivity() {
 
     private lateinit var binding: SettingsActivityBinding
     private var currentLanguage: String = "English"
+    private var currentSoundEffect: String = "default"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,9 +21,11 @@ class SettingsActivity : GameWindowActivity() {
         
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         currentLanguage = prefs.getString("language", "English") ?: "English"
+        currentSoundEffect = prefs.getString("sound_effect", "default") ?: "default"
         
         setTitle(R.string.settings_title)
         setupLanguageUI()
+        setupSoundUI(prefs)
         setupNetworkUI(prefs)
     }
     
@@ -40,6 +43,43 @@ class SettingsActivity : GameWindowActivity() {
         
         binding.switchWifiOnly.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("wifi_only", isChecked).apply()
+        }
+    }
+
+    private fun setupSoundUI(prefs: android.content.SharedPreferences) {
+        binding.txtCurrentSoundEffect.text = soundLabelFor(currentSoundEffect)
+
+        binding.cardSoundEffect.setOnClickListener {
+            showSoundEffectDialog(prefs)
+        }
+    }
+
+    private fun showSoundEffectDialog(prefs: android.content.SharedPreferences) {
+        val options = arrayOf(
+            getString(R.string.settings_sound_effect_default),
+            getString(R.string.settings_sound_effect_reimagined)
+        )
+        val values = arrayOf("default", "reimagined")
+        val checkedIndex = values.indexOf(currentSoundEffect).takeIf { it >= 0 } ?: 0
+
+        GameDialogBuilder(this)
+            .setTitle(getString(R.string.settings_sound_effect_title))
+            .setSingleChoiceItems(options, checkedIndex) { dialog, which ->
+                val chosenValue = values.getOrNull(which) ?: "default"
+                currentSoundEffect = chosenValue
+                prefs.edit().putString("sound_effect", chosenValue).apply()
+                binding.txtCurrentSoundEffect.text = soundLabelFor(chosenValue)
+                SoundEffects.initialize(this)
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun soundLabelFor(value: String): String {
+        return when (value) {
+            "reimagined" -> getString(R.string.settings_sound_effect_reimagined)
+            else -> getString(R.string.settings_sound_effect_default)
         }
     }
     

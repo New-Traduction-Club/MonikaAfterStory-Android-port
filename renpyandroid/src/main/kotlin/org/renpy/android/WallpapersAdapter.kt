@@ -69,9 +69,13 @@ class WallpapersAdapter(
                 vh.label.text = id
             }
 
-            vh.itemView.setOnClickListener { onItemClick(id) }
+            vh.itemView.setOnClickListener {
+                SoundEffects.playClick(context)
+                onItemClick(id)
+            }
             vh.itemView.setOnLongClickListener {
                 if (id != "default") {
+                    SoundEffects.playClick(context)
                     onItemLongClick(id)
                 }
                 true
@@ -84,7 +88,10 @@ class WallpapersAdapter(
             vh.thumbnail.setBackgroundColor(Color.parseColor("#F5EEF0"))
             vh.thumbnail.setColorFilter(Color.parseColor("#B45D85"))
             vh.label.text = context.getString(R.string.wallpaper_add)
-            vh.itemView.setOnClickListener { onAddClick() }
+            vh.itemView.setOnClickListener {
+                SoundEffects.playClick(context)
+                onAddClick()
+            }
             vh.itemView.setOnLongClickListener { false }
         }
     }

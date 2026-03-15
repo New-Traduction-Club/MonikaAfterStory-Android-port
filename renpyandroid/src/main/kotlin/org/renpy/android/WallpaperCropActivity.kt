@@ -48,6 +48,8 @@ class WallpaperCropActivity : GameWindowActivity() {
         setContentView(R.layout.activity_wallpaper_crop)
         setTitle(R.string.wallpaper_crop_title)
 
+        SoundEffects.initialize(this)
+
         imageView = findViewById(R.id.cropImageView)
         overlayView = findViewById(R.id.cropOverlay)
 
@@ -68,8 +70,14 @@ class WallpaperCropActivity : GameWindowActivity() {
 
         loadImage(Uri.parse(uriStr))
 
-        findViewById<View>(R.id.btnCropCancel).setOnClickListener { finish() }
-        findViewById<View>(R.id.btnCropApply).setOnClickListener { applyCrop() }
+        findViewById<View>(R.id.btnCropCancel).setOnClickListener {
+            SoundEffects.playClick(this)
+            finish()
+        }
+        findViewById<View>(R.id.btnCropApply).setOnClickListener {
+            SoundEffects.playClick(this)
+            applyCrop()
+        }
 
         imageView.setOnTouchListener { _, event -> handleTouch(event) }
     }

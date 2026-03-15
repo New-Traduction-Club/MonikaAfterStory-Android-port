@@ -149,6 +149,9 @@
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Configurações</string>
     <string name="settings_language">Idioma</string>
+    <string name="settings_sound_effect_title">Efeito sonoro dos botões</string>
+    <string name="settings_sound_effect_default">Padrão</string>
+    <string name="settings_sound_effect_reimagined">Reimaginado</string>
     <string name="select_language_title">Selecionar Idioma</string>
     <string name="title_tools">Ferramentas</string>
     <string name="label_internal_files">Explorar Arquivos Internos</string>

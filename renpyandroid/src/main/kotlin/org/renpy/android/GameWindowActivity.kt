@@ -55,6 +55,8 @@ abstract class GameWindowActivity : BaseActivity() {
         
         // Let derived activities set their own content via setContentView()
         overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
+
+        SoundEffects.initialize(this)
     }
 
     override fun finish() {
@@ -115,6 +117,7 @@ abstract class GameWindowActivity : BaseActivity() {
         layoutInflater.inflate(layoutResID, contentContainer, true)
 
         btnWindowClose.setOnClickListener {
+            SoundEffects.playClick(this)
             onBackPressed()
         }
 
@@ -132,6 +135,7 @@ abstract class GameWindowActivity : BaseActivity() {
         contentContainer.addView(view)
 
         btnWindowClose.setOnClickListener {
+            SoundEffects.playClick(this)
             onBackPressed()
         }
 

@@ -30,6 +30,8 @@ class BackupsActivity : GameWindowActivity() {
         setContentView(binding.root)
         
         setTitle(R.string.title_backups)
+
+        SoundEffects.initialize(this)
         
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -45,6 +47,7 @@ class BackupsActivity : GameWindowActivity() {
 
     private fun setupRecyclerView() {
         adapter = BackupsAdapter(emptyList()) { backupFile ->
+            SoundEffects.playClick(this)
             showBackupOptionsDialog(backupFile)
         }
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -53,6 +56,7 @@ class BackupsActivity : GameWindowActivity() {
 
     private fun setupFab() {
         binding.fabAddBackup.setOnClickListener {
+            SoundEffects.playClick(this)
             binding.fabAddBackup.isEnabled = false
             showProgressDialog("Creating backup...")
             

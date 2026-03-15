@@ -110,6 +110,8 @@ class LauncherActivity : BaseActivity() {
 
         binding = LauncherActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        SoundEffects.initialize(this)
         
         setupObservers()
         
@@ -180,6 +182,8 @@ class LauncherActivity : BaseActivity() {
             recreate()
             return
         }
+
+        SoundEffects.initialize(this)
         
         if (returnFromWindow) {
             returnFromWindow = false
@@ -259,11 +263,13 @@ class LauncherActivity : BaseActivity() {
 
     private fun updateStartMenuAdapter() {
         binding.desktopRecyclerView.adapter = DesktopItemAdapter(getPinnedItems()) { clickedItem ->
+            SoundEffects.playClick(this)
             handleShortcutExecution(clickedItem)
         }
         
         binding.expandedRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.expandedRecyclerView.adapter = DesktopItemAdapter(getExpandedItems()) { clickedItem ->
+            SoundEffects.playClick(this)
             handleShortcutExecution(clickedItem)
         }
         
@@ -276,6 +282,7 @@ class LauncherActivity : BaseActivity() {
         binding.desktopRecyclerView.layoutManager = LinearLayoutManager(this)
 
         binding.btnStartMenu.setOnClickListener {
+            SoundEffects.playClick(this)
             toggleStartMenu()
         }
 
@@ -728,4 +735,5 @@ class LauncherActivity : BaseActivity() {
             e.printStackTrace()
         }
     }
+
 }
