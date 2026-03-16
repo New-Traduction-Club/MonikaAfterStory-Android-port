@@ -22,4 +22,12 @@
         <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:windowBackground">@color/colorBackground</item>
     </style>
+
+    <style name="CropImageActivityTheme" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+    </style>
 </resources>

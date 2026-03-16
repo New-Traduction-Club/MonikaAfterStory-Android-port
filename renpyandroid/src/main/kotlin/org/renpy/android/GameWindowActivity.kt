@@ -15,15 +15,27 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.cardview.widget.CardView
+import android.widget.LinearLayout
 
 abstract class GameWindowActivity : BaseActivity() {
+
+    enum class WindowMode { MAXIMIZED, WINDOWED }
 
     override fun attachBaseContext(newBase: Context) {
         val config = Configuration(newBase.resources.configuration)
         val metrics = newBase.resources.displayMetrics
-        
-        // Use a fixed virtual height of 450dp for all windows
-        val virtualHeight = 450f
+
+        val prefs = newBase.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val forcedMode = overrideWindowMode()
+        val isWindowedPreferred = when (forcedMode) {
+            WindowMode.WINDOWED -> true
+            WindowMode.MAXIMIZED -> false
+            null -> prefs.getString(KEY_WINDOW_MODE, null) == "windowed"
+        }
+
+        val virtualHeight = if (isWindowedPreferred) 580f else 490f
         val rawHeight = Math.min(metrics.widthPixels, metrics.heightPixels)
         val targetDensity = rawHeight / virtualHeight
         val targetDensityDpi = (targetDensity * DisplayMetrics.DENSITY_DEFAULT).toInt()
@@ -38,6 +50,7 @@ abstract class GameWindowActivity : BaseActivity() {
     private lateinit var contentContainer: FrameLayout
     private lateinit var txtWindowTitle: TextView
     private lateinit var btnWindowClose: TextView
+    private var windowRootLayout: ViewGroup? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,23 +89,26 @@ abstract class GameWindowActivity : BaseActivity() {
         
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
             val systemInsets = insets.getInsets(WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.systemBars())
+            val windowMode = getWindowMode()
             
             val density = resources.displayMetrics.density
             val px16 = (16 * density).toInt()
             val px12 = (12 * density).toInt()
             val extraRightMargin = (24 * density).toInt()
+            val leftInset = if (windowMode == WindowMode.MAXIMIZED) systemInsets.left else 0
+            val rightInset = if (windowMode == WindowMode.MAXIMIZED) systemInsets.right else 0
             
             headerLayout.setPadding(
-                systemInsets.left + px16,
+                leftInset + px16,
                 systemInsets.top + px12,
-                systemInsets.right + px16 + extraRightMargin,
+                rightInset + px16 + extraRightMargin,
                 px12
             )
             
             contentContainer.setPadding(
-                systemInsets.left,
+                leftInset,
                 0,
-                systemInsets.right + extraRightMargin,
+                rightInset + extraRightMargin,
                 0
             )
             
@@ -110,7 +126,9 @@ abstract class GameWindowActivity : BaseActivity() {
         contentContainer = rootLayout.findViewById(R.id.windowContent)
         txtWindowTitle = rootLayout.findViewById(R.id.txtWindowTitle)
         btnWindowClose = rootLayout.findViewById(R.id.btnWindowClose)
+        windowRootLayout = rootLayout
 
+        applyWindowMode(rootLayout)
         setupWindowChrome(rootLayout)
 
         // Inflate the child activity's layout into the container
@@ -122,14 +140,21 @@ abstract class GameWindowActivity : BaseActivity() {
         }
 
         super.setContentView(rootLayout)
+        promptWindowModeIfNeeded(rootLayout)
     }
 
-    override fun setContentView(view: View) {
+    override fun setContentView(view: View?) {
+        if (view == null) {
+            super.setContentView(null)
+            return
+        }
         val rootLayout = layoutInflater.inflate(R.layout.layout_game_window_chrome, null) as ViewGroup
         contentContainer = rootLayout.findViewById(R.id.windowContent)
         txtWindowTitle = rootLayout.findViewById(R.id.txtWindowTitle)
         btnWindowClose = rootLayout.findViewById(R.id.btnWindowClose)
+        windowRootLayout = rootLayout
 
+        applyWindowMode(rootLayout)
         setupWindowChrome(rootLayout)
 
         contentContainer.addView(view)
@@ -140,9 +165,10 @@ abstract class GameWindowActivity : BaseActivity() {
         }
 
         super.setContentView(rootLayout)
+        promptWindowModeIfNeeded(rootLayout)
     }
 
-    override fun setContentView(view: View, params: ViewGroup.LayoutParams?) {
+    override fun setContentView(view: View?, params: ViewGroup.LayoutParams?) {
         super.setContentView(view, params)
     }
 
@@ -159,4 +185,133 @@ abstract class GameWindowActivity : BaseActivity() {
             txtWindowTitle.text = title
         }
     }
+
+    protected open fun overrideWindowMode(): WindowMode? = null
+
+    protected fun getWindowMode(): WindowMode {
+        overrideWindowMode()?.let { return it }
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return when (prefs.getString(KEY_WINDOW_MODE, null)) {
+            "windowed" -> WindowMode.WINDOWED
+            else -> WindowMode.MAXIMIZED
+        }
+    }
+
+    private fun setWindowMode(mode: WindowMode) {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val value = if (mode == WindowMode.WINDOWED) "windowed" else "maximized"
+        prefs.edit().putString(KEY_WINDOW_MODE, value).apply()
+    }
+
+    private fun applyWindowMode(rootLayout: ViewGroup) {
+        val card = rootLayout.findViewById<CardView>(R.id.cardWindowContainer) ?: return
+        val params = card.layoutParams as? ConstraintLayout.LayoutParams ?: return
+
+        when (getWindowMode()) {
+            WindowMode.MAXIMIZED -> {
+                params.width = 0
+                params.height = 0
+                params.matchConstraintPercentWidth = 1.0f
+                params.matchConstraintPercentHeight = 1.0f
+                card.cardElevation = 0f
+                card.radius = 0f
+            }
+            WindowMode.WINDOWED -> {
+                params.width = 0
+                params.height = 0
+                params.matchConstraintPercentWidth = 0.8f
+                params.matchConstraintPercentHeight = 0.9f
+                card.cardElevation = dp(12f)
+                card.radius = dp(8f)
+            }
+        }
+        card.layoutParams = params
+    }
+
+    protected fun showWindowModeChooser(
+        recreateOnChange: Boolean = true,
+        onApplied: (() -> Unit)? = null
+    ) {
+        val rootLayout = windowRootLayout ?: return
+        showWindowModeDialog(
+            rootLayout,
+            allowCancel = true,
+            recreateOnChange = recreateOnChange,
+            onApplied = onApplied
+        )
+    }
+
+    private fun promptWindowModeIfNeeded(rootLayout: ViewGroup) {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_WINDOW_MODE)) return
+
+        showWindowModeDialog(
+            rootLayout,
+            allowCancel = false,
+            recreateOnChange = true,
+            onApplied = null
+        )
+    }
+
+    private fun showWindowModeDialog(
+        rootLayout: ViewGroup,
+        allowCancel: Boolean,
+        recreateOnChange: Boolean,
+        onApplied: (() -> Unit)?
+    ) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_window_mode_choice, null)
+        val optionWindowed = dialogView.findViewById<LinearLayout>(R.id.optionWindowed)
+        val optionMaximized = dialogView.findViewById<LinearLayout>(R.id.optionMaximized)
+
+        var selected = getWindowMode()
+
+        fun updateSelection() {
+            optionWindowed.isSelected = selected == WindowMode.WINDOWED
+            optionMaximized.isSelected = selected == WindowMode.MAXIMIZED
+        }
+
+        optionWindowed.setOnClickListener {
+            SoundEffects.playClick(this)
+            selected = WindowMode.WINDOWED
+            updateSelection()
+        }
+
+        optionMaximized.setOnClickListener {
+            SoundEffects.playClick(this)
+            selected = WindowMode.MAXIMIZED
+            updateSelection()
+        }
+
+        updateSelection()
+
+        val builder = GameDialogBuilder(this)
+            .setTitle(getString(R.string.window_mode_prompt_title))
+            .setView(dialogView)
+            .setPositiveButton(getString(R.string.window_mode_apply), null)
+
+        if (allowCancel) {
+            builder.setNegativeButton(getString(R.string.cancel), null)
+        } else {
+            builder.setCancelable(false)
+        }
+
+        val dialog = builder.create()
+
+        dialog.show()
+        val positiveButton = dialog.findViewById<TextView>(R.id.dialogPositiveButton)
+        positiveButton?.setOnClickListener {
+            SoundEffects.playClick(this)
+            val previous = getWindowMode()
+            setWindowMode(selected)
+            applyWindowMode(rootLayout)
+            onApplied?.invoke()
+            val shouldRecreate = recreateOnChange && previous != selected
+            dialog.dismiss()
+            if (shouldRecreate) {
+                recreate()
+            }
+        }
+    }
+
+    private fun dp(value: Float): Float = value * resources.displayMetrics.density
 }

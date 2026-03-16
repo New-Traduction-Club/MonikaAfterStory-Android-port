@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -23,21 +24,21 @@ import org.renpy.android.databinding.LauncherActivityBinding
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import kotlin.random.Random
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.lifecycle.lifecycleScope
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.app.ActivityManager
 
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class LauncherActivity : BaseActivity() {
 
@@ -79,6 +80,7 @@ class LauncherActivity : BaseActivity() {
     private var progressText: android.widget.TextView? = null
     
     private var pendingExportUri: Uri? = null
+    private var wallpaperRotationJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -163,7 +165,7 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleShortcutIntent(intent)
     }
@@ -173,7 +175,10 @@ class LauncherActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         
+        WallpaperManager.advanceOnAppToggle(this)
+        WallpaperManager.maybeAdvanceByTime(this)
         WallpaperManager.applyWallpaper(this, binding.root)
+        startWallpaperRotation()
         
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val savedLang = prefs.getString("language", "English") ?: ""
@@ -188,11 +193,15 @@ class LauncherActivity : BaseActivity() {
             returnFromWindow = false
             lifecycleScope.launch {
                 delay(200)
-                if (binding.startMenuPanel.visibility != View.VISIBLE) {
-                    toggleStartMenu()
-                }
+                ensureStartMenuVisible()
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopWallpaperRotation()
+        WallpaperManager.advanceOnAppToggle(this)
     }
 
     private fun handleShortcutIntent(intent: Intent?) {
@@ -271,31 +280,17 @@ class LauncherActivity : BaseActivity() {
             SoundEffects.playClick(this)
             handleShortcutExecution(clickedItem)
         }
-        
-        val layoutParams = binding.startMenuPanel.layoutParams
-        layoutParams.height = resources.getDimensionPixelSize(R.dimen.start_menu_collapsed_height)
-        binding.startMenuPanel.layoutParams = layoutParams
     }
 
     private fun initializeDesktopGrid(isFirstStart: Boolean) {
         binding.desktopRecyclerView.layoutManager = LinearLayoutManager(this)
-
-        binding.btnStartMenu.setOnClickListener {
-            SoundEffects.playClick(this)
-            toggleStartMenu()
-        }
 
         updateStartMenuAdapter()
 
         if (isFirstStart) {
             startBootSequence()
         } else {
-            lifecycleScope.launch {
-                delay(500)
-                if (binding.startMenuPanel.visibility != View.VISIBLE) {
-                    toggleStartMenu()
-                }
-            }
+            ensureStartMenuVisible()
         }
     }
 
@@ -338,8 +333,8 @@ class LauncherActivity : BaseActivity() {
                 .withEndAction {
                     binding.bootScreenLayout.visibility = View.GONE
                     lifecycleScope.launch {
-                        delay(200)
-                        toggleStartMenu()
+                        delay(1000)
+                        showStartMenuAnimated()
                     }
                 }
                 .start()
@@ -350,41 +345,88 @@ class LauncherActivity : BaseActivity() {
         binding.txtBiosConsole.append(text)
     }
 
-    private fun toggleStartMenu() {
-        if (binding.startMenuPanel.visibility == View.VISIBLE) {
-            // Hide expanded panel immediately
-            binding.expandedProgramsPanel.visibility = View.GONE
-            isStartMenuExpanded = false
-            
-            // Slide down to hide
-            binding.startMenuPanel.animate()
-                .translationY(binding.startMenuPanel.height.toFloat())
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(300)
-                .withEndAction {
-                    binding.startMenuPanel.visibility = View.GONE
-                }
-                .start()
+    private fun ensureStartMenuVisible() {
+        binding.startMenuPanel.visibility = View.VISIBLE
+        binding.startMenuPanel.translationY = 0f
+        binding.startMenuPanel.bringToFront()
+
+        if (isStartMenuExpanded) {
+            binding.expandedProgramsPanel.visibility = View.VISIBLE
+            binding.expandedProgramsPanel.translationX = 0f
         } else {
-            // Slide up to show
-            binding.startMenuPanel.visibility = View.INVISIBLE
-            binding.startMenuPanel.post {
-                val height = binding.startMenuPanel.height.toFloat()
-                binding.startMenuPanel.translationY = height
-                binding.startMenuPanel.visibility = View.VISIBLE
-                binding.startMenuPanel.animate()
-                    .translationY(0f)
-                    .setInterpolator(AccelerateDecelerateInterpolator())
-                    .setDuration(300)
-                    .start()
-            }
+            binding.expandedProgramsPanel.visibility = View.GONE
+            binding.expandedProgramsPanel.translationX = 0f
         }
+    }
+
+    private fun showStartMenuAnimated() {
+        binding.expandedProgramsPanel.clearAnimation()
+        binding.expandedProgramsPanel.visibility = View.GONE
+        binding.expandedProgramsPanel.translationX = 0f
+        binding.startMenuPanel.clearAnimation()
+        binding.startMenuPanel.visibility = View.INVISIBLE
+        binding.startMenuPanel.translationY = 0f
+        binding.startMenuPanel.alpha = 1f
+
+        binding.startMenuPanel.post {
+            val startHeight = binding.startMenuPanel.height.toFloat()
+            binding.startMenuPanel.translationY = startHeight
+            binding.startMenuPanel.visibility = View.VISIBLE
+            binding.startMenuPanel.animate()
+                .translationY(0f)
+                .setDuration(520)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+        }
+    }
+
+    private fun showExpandedMenuAnimated() {
+        val panel = binding.expandedProgramsPanel
+        panel.clearAnimation()
+        panel.visibility = View.INVISIBLE
+        panel.alpha = 1f
+        panel.post {
+            val width = panel.width.takeIf { it > 0 }?.toFloat() ?: binding.startMenuPanel.width.toFloat()
+            panel.translationX = -width
+            binding.startMenuPanel.bringToFront()
+            panel.visibility = View.VISIBLE
+            panel.animate()
+                .translationX(0f)
+                .setDuration(260)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+        }
+    }
+
+    private fun hideExpandedMenuAnimated() {
+        val panel = binding.expandedProgramsPanel
+        if (panel.visibility != View.VISIBLE) {
+            panel.translationX = 0f
+            panel.visibility = View.GONE
+            return
+        }
+
+        panel.clearAnimation()
+        val width = panel.width.takeIf { it > 0 }?.toFloat() ?: binding.startMenuPanel.width.toFloat()
+        panel.animate()
+            .translationX(-width)
+            .setDuration(220)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                panel.visibility = View.GONE
+                panel.translationX = 0f
+            }
+            .start()
     }
 
     private fun handleShortcutExecution(shortcut: DesktopShortcut) {
         if (shortcut.actionId == "toggle_expand") {
             isStartMenuExpanded = !isStartMenuExpanded
-            binding.expandedProgramsPanel.visibility = if (isStartMenuExpanded) View.VISIBLE else View.GONE
+            if (isStartMenuExpanded) {
+                showExpandedMenuAnimated()
+            } else {
+                hideExpandedMenuAnimated()
+            }
             return
         }
         
@@ -481,6 +523,30 @@ class LauncherActivity : BaseActivity() {
                 delay(60000)
             }
         }
+    }
+
+    private fun startWallpaperRotation() {
+        wallpaperRotationJob?.cancel()
+
+        val config = WallpaperManager.getSlideshowConfig(this)
+        val intervalMinutes = config.intervalMinutes
+        if (!config.enabled || intervalMinutes == null || intervalMinutes <= 0) return
+
+        val intervalMs = TimeUnit.MINUTES.toMillis(intervalMinutes.toLong())
+        wallpaperRotationJob = lifecycleScope.launch {
+            while (true) {
+                delay(intervalMs)
+                val changed = WallpaperManager.advanceWallpaper(this@LauncherActivity) != null
+                if (changed) {
+                    WallpaperManager.applyWallpaper(this@LauncherActivity, binding.root)
+                }
+            }
+        }
+    }
+
+    private fun stopWallpaperRotation() {
+        wallpaperRotationJob?.cancel()
+        wallpaperRotationJob = null
     }
     
     private fun setupObservers() {

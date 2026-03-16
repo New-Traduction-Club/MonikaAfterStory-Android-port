@@ -9,8 +9,10 @@
     <!-- Start Menu Panel (hidden by default) -->
     <androidx.cardview.widget.CardView
         android:id="@+id/startMenuPanel"
-        android:layout_width="320dp"
+        android:layout_width="240dp"
         android:layout_height="0dp"
+        app:layout_constraintHeight_default="wrap"
+        app:layout_constraintHeight_max="@dimen/start_menu_collapsed_height"
         app:layout_constrainedHeight="true"
         android:layout_marginStart="32dp"
         android:layout_marginTop="0dp"
@@ -18,7 +20,7 @@
         app:cardBackgroundColor="@color/colorWindowBackground"
         app:cardCornerRadius="0dp"
         app:cardElevation="8dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintVertical_bias="1.0"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/taskbarLayout"
@@ -36,17 +38,13 @@
     <!-- Expanded Programs Panel (hidden by default, shown on "See more") -->
     <androidx.cardview.widget.CardView
         android:id="@+id/expandedProgramsPanel"
-        android:layout_width="320dp"
+        android:layout_width="240dp"
         android:layout_height="0dp"
-        app:layout_constrainedHeight="true"
-        android:layout_marginStart="2dp"
-        android:layout_marginTop="0dp"
-        android:layout_marginBottom="0dp"
+        android:layout_marginStart="0dp"
         app:cardBackgroundColor="@color/colorWindowBackground"
         app:cardCornerRadius="0dp"
-        app:cardElevation="8dp"
+        app:cardElevation="4dp"
         android:visibility="gone"
-        app:layout_constraintVertical_bias="1.0"
         app:layout_constraintTop_toTopOf="@+id/startMenuPanel"
         app:layout_constraintBottom_toBottomOf="@+id/startMenuPanel"
         app:layout_constraintStart_toEndOf="@+id/startMenuPanel">
@@ -64,27 +62,14 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/taskbarLayout"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="30dp"
         android:background="@color/colorTaskbarBackground"
         android:elevation="12dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-
-        <ImageView
-            android:id="@+id/btnStartMenu"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="32dp"
-            android:src="@drawable/ic_launcher_settings" 
-            android:padding="8dp"
-            android:background="@drawable/bg_taskbar_button_press"
-            android:clickable="true"
-            android:focusable="true"
-            app:tint="@color/colorTaskbarTint"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/txtSystemClock"

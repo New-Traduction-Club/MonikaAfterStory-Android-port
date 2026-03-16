@@ -1,357 +1,367 @@
 package org.renpy.android
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
-import android.graphics.RectF
-import android.graphics.drawable.BitmapDrawable
+import android.graphics.ImageDecoder
+import android.hardware.display.DisplayManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.DisplayMetrics
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
-import android.view.View
-import android.widget.ImageView
-import java.util.UUID
+import android.view.Display
+import android.webkit.MimeTypeMap
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.canhub.cropper.CropException
+import com.canhub.cropper.CropImage
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.Locale
+import kotlin.math.max
 
-class WallpaperCropActivity : GameWindowActivity() {
+class WallpaperCropActivity : BaseActivity() {
 
-    private lateinit var imageView: ImageView
-    private lateinit var overlayView: View
+    private var sourceUri: Uri? = null
+    private var preparedSourceUri: Uri? = null
+    private var tempOutputFile: File? = null
 
-    private var sourceBitmap: Bitmap? = null
-    private val imageMatrix = Matrix()
+    private var targetWidth = 0
+    private var targetHeight = 0
+    private var cropLaunched = false
 
-    // Touch tracking
-    private var lastTouchX = 0f
-    private var lastTouchY = 0f
-    private var activePointerId = MotionEvent.INVALID_POINTER_ID
-    private var scaleFactor = 1f
+    private var tempSourceFile: File? = null
 
-    // Screen dimensions for the crop viewport
-    private var screenWidth = 0
-    private var screenHeight = 0
+    private val cropLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val cropResult = extractCropResult(result.data)
+        val outputUri = cropResult?.uriContent
+        val error = cropResult?.error
 
-    // Viewport rect (the area of screen the wallpaper will cover)
-    private var viewportRect = RectF()
+        if (result.resultCode == Activity.RESULT_OK && outputUri != null && error == null) {
+            applyCroppedWallpaper(outputUri)
+            return@registerForActivityResult
+        }
 
-    private lateinit var scaleDetector: ScaleGestureDetector
+        if (error != null && error !is CropException.Cancellation) {
+            showCropError(error)
+        }
+        finish()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_wallpaper_crop)
-        setTitle(R.string.wallpaper_crop_title)
-
         SoundEffects.initialize(this)
 
-        imageView = findViewById(R.id.cropImageView)
-        overlayView = findViewById(R.id.cropOverlay)
-
-        // Get real screen dimensions
-        val metrics = DisplayMetrics()
-        @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.getRealMetrics(metrics)
-        screenWidth = metrics.widthPixels
-        screenHeight = metrics.heightPixels
-
-        scaleDetector = ScaleGestureDetector(this, ScaleListener())
-
-        val uriStr = intent.getStringExtra("image_uri")
-        if (uriStr == null) {
+        sourceUri = savedInstanceState?.getString(STATE_SOURCE_URI)?.let(Uri::parse)
+            ?: intent.getStringExtra("image_uri")?.let(Uri::parse)
+        if (sourceUri == null) {
             finish()
             return
         }
 
-        loadImage(Uri.parse(uriStr))
+        preparedSourceUri = savedInstanceState?.getString(STATE_PREPARED_SOURCE_URI)?.let(Uri::parse)
+        targetWidth = savedInstanceState?.getInt(STATE_TARGET_WIDTH) ?: 0
+        targetHeight = savedInstanceState?.getInt(STATE_TARGET_HEIGHT) ?: 0
+        cropLaunched = savedInstanceState?.getBoolean(STATE_CROP_LAUNCHED, false) ?: false
+        savedInstanceState?.getString(STATE_TEMP_SOURCE_PATH)?.let { tempSourceFile = File(it) }
+        savedInstanceState?.getString(STATE_TEMP_OUTPUT_PATH)?.let { tempOutputFile = File(it) }
 
-        findViewById<View>(R.id.btnCropCancel).setOnClickListener {
-            SoundEffects.playClick(this)
-            finish()
-        }
-        findViewById<View>(R.id.btnCropApply).setOnClickListener {
-            SoundEffects.playClick(this)
-            applyCrop()
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            val (resolvedWidth, resolvedHeight) = resolveTargetWallpaperSize()
+            targetWidth = resolvedWidth
+            targetHeight = resolvedHeight
         }
 
-        imageView.setOnTouchListener { _, event -> handleTouch(event) }
+        if (!cropLaunched) {
+            launchCrop()
+        }
     }
 
-    private fun loadImage(uri: Uri) {
+    private fun launchCrop() {
+        val source = sourceUri ?: run {
+            finish()
+            return
+        }
+
         try {
-            val inputStream = contentResolver.openInputStream(uri)
-            sourceBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
+            val localSource = preparedSourceUri ?: copySourceToCache(source).also { preparedSourceUri = it }
+            val outputFile = tempOutputFile ?: File(
+                cacheDir,
+                "wallpaper_crop_result_${System.currentTimeMillis()}.png"
+            ).also { tempOutputFile = it }
+            val outputUri = Uri.fromFile(outputFile)
 
-            if (sourceBitmap == null) {
-                InAppNotifier.show(this, getString(R.string.viewer_error_image_decode))
-                finish()
-                return
-            }
+            val ratio = simplifyRatio(targetWidth, targetHeight)
+            val cropOptions = CropImageOptions(
+                imageSourceIncludeGallery = false,
+                imageSourceIncludeCamera = false,
+                guidelines = CropImageView.Guidelines.ON,
+                fixAspectRatio = true,
+                aspectRatioX = ratio.first,
+                aspectRatioY = ratio.second,
+                autoZoomEnabled = true,
+                multiTouchEnabled = true,
+                centerMoveEnabled = true,
+                canChangeCropWindow = true,
+                initialCropWindowPaddingRatio = 0f,
+                maxZoom = 8,
+                outputCompressFormat = Bitmap.CompressFormat.PNG,
+                outputCompressQuality = 100,
+                outputRequestWidth = targetWidth,
+                outputRequestHeight = targetHeight,
+                outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_EXACT,
+                customOutputUri = outputUri,
+                activityTitle = getString(R.string.wallpaper_crop_title),
+                cropMenuCropButtonTitle = getString(R.string.wallpaper_apply),
+                activityBackgroundColor = ContextCompat.getColor(this, R.color.colorWindowContentBackground),
+                toolbarColor = ContextCompat.getColor(this, R.color.colorWindowHeaderBackground),
+                toolbarTitleColor = ContextCompat.getColor(this, R.color.colorTextPrimary),
+                toolbarBackButtonColor = ContextCompat.getColor(this, R.color.colorPrimary),
+                toolbarTintColor = ContextCompat.getColor(this, R.color.colorPrimary),
+                activityMenuTextColor = ContextCompat.getColor(this, R.color.colorPrimary),
+                activityMenuIconColor = ContextCompat.getColor(this, R.color.colorPrimary),
+                backgroundColor = 0x88000000.toInt(),
+                borderLineColor = ContextCompat.getColor(this, R.color.colorPrimary),
+                borderCornerColor = ContextCompat.getColor(this, R.color.colorPrimary),
+                guidelinesColor = ContextCompat.getColor(this, R.color.colorDivider)
+            )
 
-            // Wait for layout to be ready
-            imageView.post {
-                setupInitialTransform()
-                drawOverlay()
+            cropLaunched = true
+            val cropIntent = Intent(this, FullscreenCropImageActivity::class.java).apply {
+                putExtra(
+                    CropImage.CROP_IMAGE_EXTRA_BUNDLE,
+                    Bundle(2).apply {
+                        putParcelable(CropImage.CROP_IMAGE_EXTRA_SOURCE, localSource)
+                        putParcelable(CropImage.CROP_IMAGE_EXTRA_OPTIONS, cropOptions)
+                    }
+                )
             }
-        } catch (e: Exception) {
-            InAppNotifier.show(this, e.message ?: "", true)
+            cropLauncher.launch(cropIntent)
+        } catch (e: IOException) {
+            showCropError(e)
+            finish()
+        } catch (e: SecurityException) {
+            showCropError(e)
             finish()
         }
     }
 
-    private fun setupInitialTransform() {
-        val bmp = sourceBitmap ?: return
-        val viewW = imageView.width.toFloat()
-        val viewH = imageView.height.toFloat()
+    private fun extractCropResult(data: Intent?): CropImage.ActivityResult? {
+        if (data == null) return null
+        return data.parcelableCompat(CropImage.CROP_IMAGE_EXTRA_RESULT)
+    }
 
-        // Calculate viewport rect, centered, matching device screen aspect ratio
-        val screenAspect = screenWidth.toFloat() / screenHeight.toFloat()
-        val viewAspect = viewW / viewH
-
-        val vpW: Float
-        val vpH: Float
-        if (screenAspect > viewAspect) {
-            vpW = viewW * 0.9f
-            vpH = vpW / screenAspect
+    private inline fun <reified T : Parcelable> Intent.parcelableCompat(key: String): T? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getParcelableExtra(key, T::class.java)
         } else {
-            vpH = viewH * 0.8f
-            vpW = vpH * screenAspect
-        }
-        val vpLeft = (viewW - vpW) / 2f
-        val vpTop = (viewH - vpH) / 2f
-        viewportRect = RectF(vpLeft, vpTop, vpLeft + vpW, vpTop + vpH)
-
-        // Scale image to fill the viewport initially
-        val scaleX = vpW / bmp.width
-        val scaleY = vpH / bmp.height
-        scaleFactor = Math.max(scaleX, scaleY)
-
-        imageMatrix.reset()
-        imageMatrix.postScale(scaleFactor, scaleFactor)
-
-        // Center image on viewport
-        val scaledW = bmp.width * scaleFactor
-        val scaledH = bmp.height * scaleFactor
-        val tx = viewportRect.centerX() - scaledW / 2f
-        val ty = viewportRect.centerY() - scaledH / 2f
-        imageMatrix.postTranslate(tx, ty)
-
-        imageView.imageMatrix = imageMatrix
-        imageView.setImageBitmap(bmp)
-    }
-
-    private fun drawOverlay() {
-        overlayView.post {
-            val w = overlayView.width
-            val h = overlayView.height
-            if (w == 0 || h == 0) return@post
-
-            val overlay = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(overlay)
-
-            // Draw semi-transparent black
-            val paint = Paint()
-            paint.color = Color.parseColor("#88000000")
-            canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
-
-            // Cut out the viewport rectangle (transparent hole)
-            paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
-            canvas.drawRect(viewportRect, paint)
-
-            // Draw viewport border
-            paint.xfermode = null
-            paint.color = Color.parseColor("#CC7295")
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 2f
-            canvas.drawRect(viewportRect, paint)
-
-            // Draw crosshair inside the viewport
-            val guidePaint = Paint()
-            guidePaint.color = Color.parseColor("#80FFFFFF")
-            guidePaint.style = Paint.Style.STROKE
-            guidePaint.strokeWidth = 1f
-
-            // Vertical center line
-            canvas.drawLine(
-                viewportRect.centerX(), viewportRect.top,
-                viewportRect.centerX(), viewportRect.bottom,
-                guidePaint
-            )
-            // Horizontal center line
-            canvas.drawLine(
-                viewportRect.left, viewportRect.centerY(),
-                viewportRect.right, viewportRect.centerY(),
-                guidePaint
-            )
-
-            overlayView.background = BitmapDrawable(resources, overlay)
+            @Suppress("DEPRECATION")
+            getParcelableExtra(key)
         }
     }
 
-    private fun handleTouch(event: MotionEvent): Boolean {
-        scaleDetector.onTouchEvent(event)
-
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                activePointerId = event.getPointerId(0)
-                lastTouchX = event.x
-                lastTouchY = event.y
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (!scaleDetector.isInProgress) {
-                    val pointerIndex = event.findPointerIndex(activePointerId)
-                    if (pointerIndex >= 0) {
-                        val x = event.getX(pointerIndex)
-                        val y = event.getY(pointerIndex)
-                        val dx = x - lastTouchX
-                        val dy = y - lastTouchY
-                        imageMatrix.postTranslate(dx, dy)
-                        clampImageToViewport()
-                        imageView.imageMatrix = imageMatrix
-                        lastTouchX = x
-                        lastTouchY = y
-                    }
-                }
-            }
-            MotionEvent.ACTION_POINTER_UP -> {
-                val pointerIndex = event.actionIndex
-                val pointerId = event.getPointerId(pointerIndex)
-                if (pointerId == activePointerId) {
-                    val newPointerIndex = if (pointerIndex == 0) 1 else 0
-                    if (newPointerIndex < event.pointerCount) {
-                        lastTouchX = event.getX(newPointerIndex)
-                        lastTouchY = event.getY(newPointerIndex)
-                        activePointerId = event.getPointerId(newPointerIndex)
-                    }
-                }
-            }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                activePointerId = MotionEvent.INVALID_POINTER_ID
-            }
+    private fun applyCroppedWallpaper(resultUri: Uri) {
+        val decoded = try {
+            decodeBitmap(resultUri, targetWidth, targetHeight)
+        } catch (e: IOException) {
+            showCropError(e)
+            finish()
+            return
         }
-        return true
-    }
 
-    // Clamp the image so it always covers the viewport completely
-    private fun clampImageToViewport() {
-        val bmp = sourceBitmap ?: return
-
-        // Get current image bounds by mapping the bitmap corners through the matrix
-        val pts = floatArrayOf(
-            0f, 0f,
-            bmp.width.toFloat(), 0f,
-            bmp.width.toFloat(), bmp.height.toFloat(),
-            0f, bmp.height.toFloat()
-        )
-        imageMatrix.mapPoints(pts)
-
-        val imgLeft = Math.min(Math.min(pts[0], pts[2]), Math.min(pts[4], pts[6]))
-        val imgTop = Math.min(Math.min(pts[1], pts[3]), Math.min(pts[5], pts[7]))
-        val imgRight = Math.max(Math.max(pts[0], pts[2]), Math.max(pts[4], pts[6]))
-        val imgBottom = Math.max(Math.max(pts[1], pts[3]), Math.max(pts[5], pts[7]))
-
-        var dx = 0f
-        var dy = 0f
-
-        if (imgLeft > viewportRect.left) dx = viewportRect.left - imgLeft
-        if (imgTop > viewportRect.top) dy = viewportRect.top - imgTop
-        if (imgRight < viewportRect.right) dx = viewportRect.right - imgRight
-        if (imgBottom < viewportRect.bottom) dy = viewportRect.bottom - imgBottom
-
-        if (dx != 0f || dy != 0f) {
-            imageMatrix.postTranslate(dx, dy)
+        if (decoded == null) {
+            InAppNotifier.show(this, getString(R.string.viewer_error_image_decode), true)
+            finish()
+            return
         }
-    }
 
-    private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            val factor = detector.scaleFactor
-            // Scale around the viewport center to prevent horizontal/vertical drift
-            imageMatrix.postScale(factor, factor, viewportRect.centerX(), viewportRect.centerY())
-            clampImageToViewport()
-            imageView.imageMatrix = imageMatrix
-            return true
+        val finalBitmap = if (decoded.width != targetWidth || decoded.height != targetHeight) {
+            Bitmap.createScaledBitmap(decoded, targetWidth, targetHeight, true).also { decoded.recycle() }
+        } else {
+            decoded
         }
-    }
-
-    private fun applyCrop() {
-        val bmp = sourceBitmap ?: return
 
         try {
-            // Get the inverse of the image matrix to map viewport coords to bitmap coords
-            val inverse = Matrix()
-            imageMatrix.invert(inverse)
+            val name = "wallpaper_${System.currentTimeMillis()}.png"
+            WallpaperManager.saveWallpaper(this, finalBitmap, name)
+            WallpaperManager.setActive(this, name)
+            window?.decorView?.rootView?.let { WallpaperManager.applyWallpaper(this, it) }
+            InAppNotifier.show(this, getString(R.string.wallpaper_applied))
+        } catch (e: RuntimeException) {
+            showCropError(e)
+        } finally {
+            finalBitmap.recycle()
+            finish()
+        }
+    }
 
-            // Map all 4 corners of the viewport to source bitmap coordinates
-            val corners = floatArrayOf(
-                viewportRect.left, viewportRect.top,     // top-left
-                viewportRect.right, viewportRect.top,    // top-right
-                viewportRect.right, viewportRect.bottom, // bottom-right
-                viewportRect.left, viewportRect.bottom   // bottom-left
-            )
-            inverse.mapPoints(corners)
+    @Throws(IOException::class)
+    private fun decodeBitmap(uri: Uri, desiredWidth: Int, desiredHeight: Int): Bitmap? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(contentResolver, uri)
+            return ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                decoder.isMutableRequired = false
+                decoder.setTargetSize(desiredWidth, desiredHeight)
+            }
+        }
+        return decodeSampledBitmapLegacy(uri, desiredWidth, desiredHeight)
+    }
 
-            // Derive the bounding rect from the mapped corners
-            val srcLeft = Math.min(Math.min(corners[0], corners[2]), Math.min(corners[4], corners[6]))
-                .coerceIn(0f, bmp.width.toFloat())
-            val srcTop = Math.min(Math.min(corners[1], corners[3]), Math.min(corners[5], corners[7]))
-                .coerceIn(0f, bmp.height.toFloat())
-            val srcRight = Math.max(Math.max(corners[0], corners[2]), Math.max(corners[4], corners[6]))
-                .coerceIn(0f, bmp.width.toFloat())
-            val srcBottom = Math.max(Math.max(corners[1], corners[3]), Math.max(corners[5], corners[7]))
-                .coerceIn(0f, bmp.height.toFloat())
+    @Throws(IOException::class)
+    private fun decodeSampledBitmapLegacy(uri: Uri, desiredWidth: Int, desiredHeight: Int): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
 
-            // Enforce viewport aspect ratio (sadly) to prevent stretching
-            val vpAspect = viewportRect.width() / viewportRect.height()
-            var cropW = srcRight - srcLeft
-            var cropH = srcBottom - srcTop
-            val cropAspect = cropW / cropH
+        val sampleSize = calculateSampleSize(
+            srcWidth = bounds.outWidth,
+            srcHeight = bounds.outHeight,
+            reqWidth = desiredWidth,
+            reqHeight = desiredHeight
+        )
 
-            var finalLeft = srcLeft
-            var finalTop = srcTop
+        val decodeOptions = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, decodeOptions)
+        }
+    }
 
-            if (cropAspect > vpAspect) {
-                val newW = cropH * vpAspect
-                finalLeft += (cropW - newW) / 2f
-                cropW = newW
-            } else {
-                val newH = cropW / vpAspect
-                finalTop += (cropH - newH) / 2f
-                cropH = newH
+    private fun calculateSampleSize(srcWidth: Int, srcHeight: Int, reqWidth: Int, reqHeight: Int): Int {
+        var sampleSize = 1
+        if (srcWidth <= 0 || srcHeight <= 0) return sampleSize
+
+        while ((srcWidth / (sampleSize * 2)) >= reqWidth && (srcHeight / (sampleSize * 2)) >= reqHeight) {
+            sampleSize *= 2
+        }
+        return max(1, sampleSize)
+    }
+
+    @Throws(IOException::class)
+    private fun copySourceToCache(uri: Uri): Uri {
+        val extension = guessExtension(uri)
+        val file = File(cacheDir, "wallpaper_crop_source_${System.currentTimeMillis()}.$extension")
+        contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(file).use { output ->
+                input.copyTo(output)
+            }
+        } ?: throw IOException("Unable to open source image")
+        tempSourceFile = file
+        return Uri.fromFile(file)
+    }
+
+    private fun guessExtension(uri: Uri): String {
+        val mimeType = contentResolver.getType(uri)
+        if (!mimeType.isNullOrEmpty()) {
+            val fromMime = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+            if (!fromMime.isNullOrBlank()) return fromMime.lowercase(Locale.US)
+        }
+
+        val segment = uri.lastPathSegment.orEmpty()
+        val dot = segment.lastIndexOf('.')
+        if (dot >= 0 && dot + 1 < segment.length) {
+            return segment.substring(dot + 1).lowercase(Locale.US)
+        }
+        return "png"
+    }
+
+    private fun resolveTargetWallpaperSize(): Pair<Int, Int> {
+        val orientation = resources.configuration.orientation
+        val displayManager = getSystemService(DisplayManager::class.java)
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.display ?: displayManager?.getDisplay(Display.DEFAULT_DISPLAY)
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay
+        }
+
+        if (display != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val mode = display.mode
+                val longSide = max(mode.physicalWidth, mode.physicalHeight)
+                val shortSide = minOf(mode.physicalWidth, mode.physicalHeight)
+                return if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                    Pair(max(longSide, 1), max(shortSide, 1))
+                } else {
+                    Pair(max(shortSide, 1), max(longSide, 1))
+                }
             }
 
-            val iLeft = finalLeft.toInt().coerceIn(0, bmp.width - 1)
-            val iTop = finalTop.toInt().coerceIn(0, bmp.height - 1)
-            val iW = cropW.toInt().coerceIn(1, bmp.width - iLeft)
-            val iH = cropH.toInt().coerceIn(1, bmp.height - iTop)
-
-            // Crop from source bitmap
-            val cropped = Bitmap.createBitmap(bmp, iLeft, iTop, iW, iH)
-
-            // Scale to screen dimensions
-            val scaled = Bitmap.createScaledBitmap(cropped, screenWidth, screenHeight, true)
-            if (cropped != scaled) cropped.recycle()
-
-            // Save
-            val name = "wallpaper_${System.currentTimeMillis()}.png"
-            WallpaperManager.saveWallpaper(this, scaled, name)
-            WallpaperManager.setActive(this, name)
-            scaled.recycle()
-
-            InAppNotifier.show(this, getString(R.string.wallpaper_applied))
-            finish()
-        } catch (e: Exception) {
-            InAppNotifier.show(this, "Error: ${e.message}")
+            val realMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            display.getRealMetrics(realMetrics)
+            val longSide = max(realMetrics.widthPixels, realMetrics.heightPixels)
+            val shortSide = minOf(realMetrics.widthPixels, realMetrics.heightPixels)
+            return if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                Pair(max(longSide, 1), max(shortSide, 1))
+            } else {
+                Pair(max(shortSide, 1), max(longSide, 1))
+            }
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            return Pair(max(bounds.width(), 1), max(bounds.height(), 1))
+        }
+
+        val metrics = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getRealMetrics(metrics)
+        return Pair(max(metrics.widthPixels, 1), max(metrics.heightPixels, 1))
+    }
+
+    private fun simplifyRatio(width: Int, height: Int): Pair<Int, Int> {
+        var a = max(width, 1)
+        var b = max(height, 1)
+        while (b != 0) {
+            val remainder = a % b
+            a = b
+            b = remainder
+        }
+        val gcd = max(a, 1)
+        return Pair(max(width / gcd, 1), max(height / gcd, 1))
+    }
+
+    private fun showCropError(error: Throwable?) {
+        val message = error?.localizedMessage ?: getString(R.string.viewer_error_image_decode)
+        InAppNotifier.show(this, getString(R.string.setup_error, message), true)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_SOURCE_URI, sourceUri?.toString())
+        outState.putString(STATE_PREPARED_SOURCE_URI, preparedSourceUri?.toString())
+        outState.putInt(STATE_TARGET_WIDTH, targetWidth)
+        outState.putInt(STATE_TARGET_HEIGHT, targetHeight)
+        outState.putBoolean(STATE_CROP_LAUNCHED, cropLaunched)
+        outState.putString(STATE_TEMP_SOURCE_PATH, tempSourceFile?.absolutePath)
+        outState.putString(STATE_TEMP_OUTPUT_PATH, tempOutputFile?.absolutePath)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        sourceBitmap = null
+        if (isFinishing) {
+            tempSourceFile?.let { if (it.exists()) it.delete() }
+            tempOutputFile?.let { if (it.exists()) it.delete() }
+        }
+    }
+
+    companion object {
+        private const val STATE_SOURCE_URI = "state_source_uri"
+        private const val STATE_PREPARED_SOURCE_URI = "state_prepared_source_uri"
+        private const val STATE_TARGET_WIDTH = "state_target_width"
+        private const val STATE_TARGET_HEIGHT = "state_target_height"
+        private const val STATE_CROP_LAUNCHED = "state_crop_launched"
+        private const val STATE_TEMP_SOURCE_PATH = "state_temp_source_path"
+        private const val STATE_TEMP_OUTPUT_PATH = "state_temp_output_path"
     }
 }

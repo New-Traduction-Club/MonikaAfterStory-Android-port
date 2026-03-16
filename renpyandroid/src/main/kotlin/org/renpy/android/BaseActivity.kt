@@ -39,6 +39,7 @@ abstract class BaseActivity : AppCompatActivity() {
     companion object {
         const val PREFS_NAME = "app_prefs"
         const val KEY_DARK_MODE = "dark_mode_enabled"
+        const val KEY_WINDOW_MODE = "window_mode"
 
         fun applyUserNightMode(context: Context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

@@ -16,19 +16,20 @@ class SettingsActivity : GameWindowActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        binding = SettingsActivityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        
-        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
-        currentLanguage = prefs.getString("language", "English") ?: "English"
-        currentSoundEffect = prefs.getString("sound_effect", "default") ?: "default"
-        
-        setTitle(R.string.settings_title)
-        setupLanguageUI()
-        setupSoundUI(prefs)
-        setupThemeUI(prefs)
-        setupNetworkUI(prefs)
-    }
+         binding = SettingsActivityBinding.inflate(layoutInflater)
+         setContentView(binding.root)
+         
+         val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
+         currentLanguage = prefs.getString("language", "English") ?: "English"
+         currentSoundEffect = prefs.getString("sound_effect", "default") ?: "default"
+         
+         setTitle(R.string.settings_title)
+         setupLanguageUI()
+         setupSoundUI(prefs)
+         setupThemeUI(prefs)
+        setupWindowModeUI()
+         setupNetworkUI(prefs)
+     }
     
     private fun setupLanguageUI() {
         binding.txtCurrentLanguage.text = currentLanguage
@@ -59,11 +60,21 @@ class SettingsActivity : GameWindowActivity() {
         }
     }
 
-    private fun setupSoundUI(prefs: android.content.SharedPreferences) {
-        binding.txtCurrentSoundEffect.text = soundLabelFor(currentSoundEffect)
+     private fun setupSoundUI(prefs: android.content.SharedPreferences) {
+         binding.txtCurrentSoundEffect.text = soundLabelFor(currentSoundEffect)
+ 
+         binding.cardSoundEffect.setOnClickListener {
+             showSoundEffectDialog(prefs)
+         }
+     }
 
-        binding.cardSoundEffect.setOnClickListener {
-            showSoundEffectDialog(prefs)
+    private fun setupWindowModeUI() {
+        binding.txtCurrentWindowMode.text = windowModeLabel()
+
+        binding.cardWindowMode.setOnClickListener {
+            showWindowModeChooser(recreateOnChange = true) {
+                binding.txtCurrentWindowMode.text = windowModeLabel()
+            }
         }
     }
 
@@ -96,11 +107,11 @@ class SettingsActivity : GameWindowActivity() {
         }
     }
     
-    private fun showLanguageDialog() {
-        val languages = resources.getStringArray(R.array.languages)
-        // Find current index
-        var checkedItem = languages.indexOf(currentLanguage)
-        if (checkedItem < 0) checkedItem = 0
+     private fun showLanguageDialog() {
+         val languages = resources.getStringArray(R.array.languages)
+         // Find current index
+         var checkedItem = languages.indexOf(currentLanguage)
+         if (checkedItem < 0) checkedItem = 0
 
         GameDialogBuilder(this)
             .setTitle(getString(R.string.select_language_title))
@@ -120,15 +131,29 @@ class SettingsActivity : GameWindowActivity() {
                 }
                 dialog.dismiss()
             }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
+             .setNegativeButton(getString(R.string.cancel), null)
+             .show()
+     }
+
+    private fun windowModeLabel(): String {
+        return when (getWindowMode()) {
+            WindowMode.WINDOWED -> getString(R.string.window_mode_windowed)
+            WindowMode.MAXIMIZED -> getString(R.string.window_mode_maximized)
+        }
     }
 
-    private fun createLanguageFile(language: String) {
-        try {
-            val gameDir = File(filesDir, "game")
-            if (!gameDir.exists()) {
-                gameDir.mkdirs()
+    override fun onResume() {
+        super.onResume()
+        if (::binding.isInitialized) {
+            binding.txtCurrentWindowMode.text = windowModeLabel()
+        }
+    }
+
+     private fun createLanguageFile(language: String) {
+         try {
+             val gameDir = File(filesDir, "game")
+             if (!gameDir.exists()) {
+                 gameDir.mkdirs()
             }
 
             gameDir.listFiles { file -> file.name.startsWith("language_") && file.name.endsWith(".txt") }
