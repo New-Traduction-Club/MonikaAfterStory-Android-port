@@ -16,7 +16,8 @@
         android:id="@+id/icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@drawable/ic_file"/>
+        android:src="@drawable/ic_file"
+        app:tint="@color/colorIconTint"/>
 
     <!-- Name Column -->
     <TextView
@@ -26,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="Filename.txt"
-        android:textColor="#B45D85"
+        android:textColor="@color/colorTextPrimary"
         android:textStyle="bold"
         android:textSize="14sp"
         android:ellipsize="end"
@@ -41,7 +42,7 @@
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:text="03-14-2026 10:28"
-        android:textColor="#B45D85"
+        android:textColor="@color/colorTextSecondary"
         android:textSize="14sp"
         android:ellipsize="end"
         android:maxLines="1"/>
@@ -55,7 +56,7 @@
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:text="File Folder"
-        android:textColor="#B45D85"
+        android:textColor="@color/colorTextSecondary"
         android:textSize="14sp"
         android:ellipsize="end"
         android:maxLines="1"/>
@@ -68,7 +69,7 @@
         android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:text="1922 B"
-        android:textColor="#B45D85"
+        android:textColor="@color/colorTextSecondary"
         android:textSize="14sp"
         android:gravity="end"
         android:ellipsize="end"

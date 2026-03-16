@@ -210,9 +210,12 @@
     <string name="action_update">Actualizar</string>
 
     <string name="settings_category_general">General</string>
+    <string name="settings_category_appearance">Apariencia</string>
     <string name="settings_category_network">Red</string>
     <string name="settings_wifi_only_title">Actualizaciones solo Wi-Fi</string>
     <string name="settings_wifi_only_desc">Solo descargar actualizaciones cuando esté conectado a Wi-Fi</string>
+    <string name="settings_dark_mode_title">Modo oscuro</string>
+    <string name="settings_dark_mode_desc">Usar el modo oscuro</string>
 
     <!-- Notification Strings -->
     <string name="notification_channel_name">Descargas</string>

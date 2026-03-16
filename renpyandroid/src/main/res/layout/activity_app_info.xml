@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent"
+    android:background="@color/colorSurface"
     android:fitsSystemWindows="true">
 
     <androidx.core.widget.NestedScrollView
@@ -31,7 +31,7 @@
                 android:layout_marginTop="16dp"
                 android:text="@string/app_name"
                 android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="#D25C7E"
+                android:textColor="@color/colorPrimary"
                 android:textStyle="bold"
                 android:textAlignment="center"/>
 
@@ -41,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="#333333"
+                android:textColor="@color/colorTextPrimary"
                 android:textAlignment="center"/>
 
             <LinearLayout
@@ -57,7 +57,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:textColor="#555555"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textAlignment="center"/>
                     
@@ -66,7 +66,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:textColor="#555555"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textAlignment="center"/>
                     
@@ -75,7 +75,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
-                    android:textColor="#555555"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textAlignment="center"/>
                     
@@ -84,7 +84,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/app_info_acknowledgments_title"
                     android:textAppearance="?attr/textAppearanceTitleSmall"
-                    android:textColor="#D25C7E"
+                    android:textColor="@color/colorPrimary"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp"
                     android:textAlignment="center"/>
@@ -94,7 +94,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:textColor="#333333"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
@@ -104,7 +104,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:textColor="#333333"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
@@ -114,7 +114,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:textColor="#333333"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
@@ -124,7 +124,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:textColor="#333333"
+                    android:textColor="@color/colorTextSecondary"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textAlignment="center"
                     android:alpha="0.8"/>
@@ -137,7 +137,7 @@
                 android:layout_marginTop="24dp"
                 app:cardCornerRadius="4dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@color/colorCardBackground"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -150,19 +150,19 @@
                     android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_info_details"
-                        app:tint="#D25C7E"
-                        android:layout_marginEnd="12dp"/>
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_info_details"
+                    app:tint="@color/colorIconTint"
+                    android:layout_marginEnd="12dp"/>
 
                     <TextView
                         android:id="@+id/tvCommit"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="#D25C7E"
-                        android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textStyle="bold" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorPrimary"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

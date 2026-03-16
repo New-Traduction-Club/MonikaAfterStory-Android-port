@@ -15,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 
 /**
  * Custom styled dialog builder that matches the launcher's visual theme.
@@ -183,9 +184,10 @@ class GameDialogBuilder(private val context: Context) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = super.getView(position, convertView, parent)
                 val textView = view.findViewById<TextView>(android.R.id.text1)
-                textView.setTextColor(Color.parseColor("#4A4960"))
+                textView.setTextColor(ContextCompat.getColor(context, R.color.colorTextPrimary))
                 textView.textSize = 14f
                 textView.setPadding(dpToPx(16), dpToPx(12), dpToPx(16), dpToPx(12))
+                view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorWindowContentBackground))
                 return view
             }
         }
@@ -205,8 +207,9 @@ class GameDialogBuilder(private val context: Context) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = super.getView(position, convertView, parent)
                 val textView = view.findViewById<TextView>(android.R.id.text1)
-                textView.setTextColor(Color.parseColor("#4A4960"))
+                textView.setTextColor(ContextCompat.getColor(context, R.color.colorTextPrimary))
                 textView.textSize = 14f
+                view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorWindowContentBackground))
                 return view
             }
         }

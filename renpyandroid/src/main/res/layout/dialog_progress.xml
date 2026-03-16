@@ -19,6 +19,6 @@
         android:layout_height="wrap_content"
         android:text="@string/status_checking_network"
         android:textSize="16sp"
-        android:textColor="?android:attr/textColorPrimary" />
+        android:textColor="@color/colorTextPrimary" />
 
 </LinearLayout>

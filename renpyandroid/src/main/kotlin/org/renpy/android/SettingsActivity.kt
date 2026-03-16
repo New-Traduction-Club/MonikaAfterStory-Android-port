@@ -19,13 +19,14 @@ class SettingsActivity : GameWindowActivity() {
         binding = SettingsActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
         currentLanguage = prefs.getString("language", "English") ?: "English"
         currentSoundEffect = prefs.getString("sound_effect", "default") ?: "default"
         
         setTitle(R.string.settings_title)
         setupLanguageUI()
         setupSoundUI(prefs)
+        setupThemeUI(prefs)
         setupNetworkUI(prefs)
     }
     
@@ -43,6 +44,18 @@ class SettingsActivity : GameWindowActivity() {
         
         binding.switchWifiOnly.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("wifi_only", isChecked).apply()
+        }
+    }
+
+    private fun setupThemeUI(prefs: android.content.SharedPreferences) {
+        val darkModeEnabled = prefs.getBoolean(BaseActivity.KEY_DARK_MODE, false)
+        binding.switchDarkMode.isChecked = darkModeEnabled
+
+        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(BaseActivity.KEY_DARK_MODE, isChecked).apply()
+            BaseActivity.applyUserNightMode(this)
+            delegate.applyDayNight()
+            recreate()
         }
     }
 
@@ -94,7 +107,7 @@ class SettingsActivity : GameWindowActivity() {
             .setSingleChoiceItems(languages, checkedItem) { dialog, which ->
                 val selectedLang = languages[which]
                 if (selectedLang != currentLanguage) {
-                    val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
                     prefs.edit()
                         .putString("language", selectedLang)
                         .apply()

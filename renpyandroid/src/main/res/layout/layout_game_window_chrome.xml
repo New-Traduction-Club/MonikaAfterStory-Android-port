@@ -12,7 +12,7 @@
         android:layout_height="0dp"
         app:layout_constraintWidth_percent="1.0"
         app:layout_constraintHeight_percent="1.0"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@color/colorWindowBackground"
         app:cardCornerRadius="0dp"
         app:cardElevation="0dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -34,7 +34,7 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="12dp"
                 android:gravity="center_vertical"
-                android:background="#FFFFFF">
+                android:background="@color/colorWindowHeaderBackground">
 
                 <TextView
                     android:id="@+id/txtWindowTitle"
@@ -42,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Window Title"
-                    android:textColor="#D25C7E"
+                    android:textColor="@color/colorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -52,7 +52,7 @@
                     android:layout_width="28dp"
                     android:layout_height="28dp"
                     android:text="X"
-                    android:textColor="#D25C7E"
+                    android:textColor="@color/colorPrimary"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:gravity="center"
@@ -64,7 +64,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#EEDADA" /> <!-- very light pink separator -->
+                android:background="@color/colorDivider" /> <!-- very light pink separator -->
 
             <!-- Child Content Container -->
             <FrameLayout
@@ -72,14 +72,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#FCFBFB" /> <!-- slight off-white paper color -->
+                android:background="@color/colorWindowContentBackground" /> <!-- slight off-white paper color -->
 
             <!-- Thick Pink Footer Bar -->
             <View
                 android:id="@+id/footerBar"
                 android:layout_width="match_parent"
                 android:layout_height="24dp"
-                android:background="#F09BBD" /> <!-- distinct pink bar -->
+                android:background="@color/colorWindowFooter" /> <!-- distinct pink bar -->
 
         </LinearLayout>
 

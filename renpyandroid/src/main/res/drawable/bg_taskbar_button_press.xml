@@ -3,7 +3,7 @@
     <!-- Pressed state: pink fill -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="#D25C7E" />
+            <solid android:color="@color/colorTaskbarButtonPressed" />
         </shape>
     </item>
     <!-- Default state: transparent -->

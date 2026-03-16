@@ -3,14 +3,14 @@ package org.renpy.android
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.color.DynamicColors
+import androidx.appcompat.app.AppCompatDelegate
 import java.util.Locale
 
 abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        applyUserNightMode(this)
         super.onCreate(savedInstanceState)
-        DynamicColors.applyIfAvailable(this)
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -18,7 +18,7 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     private fun updateBaseContextLocale(context: Context): Context {
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val language = prefs.getString("language", "English") ?: "English"
         val locale = getLocaleFromLanguage(language)
         Locale.setDefault(locale)
@@ -33,6 +33,18 @@ abstract class BaseActivity : AppCompatActivity() {
             "Español" -> Locale("es")
             "Português" -> Locale("pt")
             else -> Locale.ENGLISH
+        }
+    }
+
+    companion object {
+        const val PREFS_NAME = "app_prefs"
+        const val KEY_DARK_MODE = "dark_mode_enabled"
+
+        fun applyUserNightMode(context: Context) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val isDark = prefs.getBoolean(KEY_DARK_MODE, false)
+            val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+            AppCompatDelegate.setDefaultNightMode(mode)
         }
     }
 }
