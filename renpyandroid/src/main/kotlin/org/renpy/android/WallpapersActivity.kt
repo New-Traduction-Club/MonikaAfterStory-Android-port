@@ -2,7 +2,6 @@ package org.renpy.android
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.GridLayoutManager
@@ -62,7 +61,7 @@ class WallpapersActivity : GameWindowActivity() {
     private fun selectWallpaper(id: String) {
         WallpaperManager.setActive(this, id)
         adapter.updateActive(id)
-        Toast.makeText(this, getString(R.string.wallpaper_applied), Toast.LENGTH_SHORT).show()
+        InAppNotifier.show(this, getString(R.string.wallpaper_applied))
     }
 
     private fun confirmDelete(id: String) {
@@ -83,4 +82,3 @@ class WallpapersActivity : GameWindowActivity() {
         )
     }
 }
-

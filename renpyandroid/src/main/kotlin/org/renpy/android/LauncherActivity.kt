@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -402,7 +401,7 @@ class LauncherActivity : BaseActivity() {
                     } catch (e: Exception) {
                         runOnUiThread {
                             dismissProgressDialog()
-                            Toast.makeText(this@LauncherActivity, getString(R.string.install_error, e.message), Toast.LENGTH_LONG).show()
+                            InAppNotifier.show(this@LauncherActivity, getString(R.string.install_error, e.message), true)
                         }
                     }
                 }.start()
@@ -515,7 +514,7 @@ class LauncherActivity : BaseActivity() {
                 }
                 is LauncherViewModel.LaunchState.Error -> {
                     dismissProgressDialog()
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    InAppNotifier.show(this, state.message, true)
                     viewModel.consumeLaunchState()
                     startActivity(Intent(this, PythonSDLActivity::class.java))
                 }
@@ -523,7 +522,7 @@ class LauncherActivity : BaseActivity() {
         }
         
         viewModel.operationStatus.observe(this) { msg ->
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+            InAppNotifier.show(this, msg)
         }
         
         viewModel.exportComplete.observe(this) { zipFile ->
@@ -535,9 +534,9 @@ class LauncherActivity : BaseActivity() {
                         }
                     }
                     zipFile.delete()
-                    Toast.makeText(this, getString(R.string.export_completed_toast), Toast.LENGTH_LONG).show()
+                    InAppNotifier.show(this, getString(R.string.export_completed_toast), true)
                 } catch (e: Exception) {
-                    Toast.makeText(this, getString(R.string.export_failed_toast, e.message), Toast.LENGTH_LONG).show()
+                    InAppNotifier.show(this, getString(R.string.export_failed_toast, e.message), true)
                 } finally {
                     pendingExportUri = null
                 }
@@ -639,7 +638,7 @@ class LauncherActivity : BaseActivity() {
                         viewModel.importSaves(tempZip, savesDir) 
                     }
                 } catch (e: Exception) {
-                    runOnUiThread { Toast.makeText(this, "Import preparation failed", Toast.LENGTH_SHORT).show() }
+                    runOnUiThread { InAppNotifier.show(this, "Import preparation failed") }
                 }
             }.start()
         }
@@ -667,7 +666,7 @@ class LauncherActivity : BaseActivity() {
                 } catch (e: Exception) {
                     runOnUiThread {
                         dismissProgressDialog()
-                        Toast.makeText(this, getString(R.string.install_error, e.message), Toast.LENGTH_LONG).show()
+                        InAppNotifier.show(this, getString(R.string.install_error, e.message), true)
                     }
                 }
             }.start()

@@ -7,7 +7,6 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -63,7 +62,7 @@ class DownloadCenterActivity : GameWindowActivity() {
                         installUpdate(currentDownloadItem!!)
                     } else {
                         val error = intent.getStringExtra(DownloadService.EXTRA_ERROR)
-                        Toast.makeText(this@DownloadCenterActivity, getString(R.string.download_failed_error, error), Toast.LENGTH_SHORT).show()
+                        InAppNotifier.show(this@DownloadCenterActivity, getString(R.string.download_failed_error, error))
                         adapter.setFailed(currentDownloadItemId!!)
                         currentDownloadItemId = null
                         currentDownloadItem = null
@@ -107,7 +106,7 @@ class DownloadCenterActivity : GameWindowActivity() {
                 updatesList = updates
                 setupAdapter()
             } else {
-                Toast.makeText(this@DownloadCenterActivity, getString(R.string.no_updates_found), Toast.LENGTH_LONG).show()
+                InAppNotifier.show(this@DownloadCenterActivity, getString(R.string.no_updates_found), true)
             }
             
             progressBar.visibility = android.view.View.GONE
@@ -125,7 +124,7 @@ class DownloadCenterActivity : GameWindowActivity() {
 
     private fun startDownload(item: UpdateItem) {
         if (currentDownloadItemId != null) {
-            Toast.makeText(this, getString(R.string.download_in_progress), Toast.LENGTH_SHORT).show()
+            InAppNotifier.show(this, getString(R.string.download_in_progress))
             return
         }
 
@@ -190,7 +189,7 @@ class DownloadCenterActivity : GameWindowActivity() {
                 updateManager.setLocalVersion(item.id, item.version)
                 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@DownloadCenterActivity, getString(R.string.update_installed, item.name), Toast.LENGTH_SHORT).show()
+                    InAppNotifier.show(this@DownloadCenterActivity, getString(R.string.update_installed, item.name))
                     adapter.setCompleted(item.id)
                     currentDownloadItemId = null
                     currentDownloadItem = null
@@ -199,7 +198,7 @@ class DownloadCenterActivity : GameWindowActivity() {
                 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@DownloadCenterActivity, getString(R.string.installation_failed, e.message), Toast.LENGTH_LONG).show()
+                    InAppNotifier.show(this@DownloadCenterActivity, getString(R.string.installation_failed, e.message), true)
                     adapter.setFailed(item.id)
                     currentDownloadItemId = null
                     currentDownloadItem = null

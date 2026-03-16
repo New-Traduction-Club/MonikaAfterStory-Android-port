@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.PopupMenu
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.renpy.android.databinding.FileExplorerActivityBinding
@@ -71,7 +70,7 @@ class FileExplorerActivity : GameWindowActivity() {
         }
 
         viewModel.statusMessage.observe(this) { msg ->
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+            InAppNotifier.show(this, msg)
         }
         
         viewModel.hasClipboard.observe(this) { hasClip ->
@@ -275,13 +274,13 @@ class FileExplorerActivity : GameWindowActivity() {
                 )
                 withContext(Dispatchers.Main) {
                     progressDialog.dismiss()
-                    Toast.makeText(this@FileExplorerActivity, getString(R.string.extraction_completed), Toast.LENGTH_SHORT).show()
+                    InAppNotifier.show(this@FileExplorerActivity, getString(R.string.extraction_completed))
                     viewModel.loadDirectory(viewModel.currentDir.value?.absolutePath ?: rootDir.absolutePath)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressDialog.dismiss()
-                    Toast.makeText(this@FileExplorerActivity, getString(R.string.extraction_error, e.message), Toast.LENGTH_LONG).show()
+                    InAppNotifier.show(this@FileExplorerActivity, getString(R.string.extraction_error, e.message), true)
                 }
             }
         }

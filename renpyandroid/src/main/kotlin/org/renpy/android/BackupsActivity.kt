@@ -2,7 +2,6 @@ package org.renpy.android
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.view.WindowCompat
@@ -72,10 +71,10 @@ class BackupsActivity : GameWindowActivity() {
                     dismissProgressDialog()
                     binding.fabAddBackup.isEnabled = true
                     if (resultPath != null) {
-                        Toast.makeText(this, getString(R.string.backup_created_toast), Toast.LENGTH_SHORT).show()
+                         InAppNotifier.show(this, getString(R.string.backup_created_toast))
                         loadBackups()
                     } else {
-                        Toast.makeText(this, getString(R.string.backup_failed_toast, "Unknown error"), Toast.LENGTH_SHORT).show()
+                         InAppNotifier.show(this, getString(R.string.backup_failed_toast, "Unknown error"))
                     }
                 }
             }.start()
@@ -135,9 +134,9 @@ class BackupsActivity : GameWindowActivity() {
             runOnUiThread {
                 dismissProgressDialog()
                 if (success) {
-                    Toast.makeText(this, getString(R.string.backup_restored_toast), Toast.LENGTH_SHORT).show()
+                     InAppNotifier.show(this, getString(R.string.backup_restored_toast))
                 } else {
-                    Toast.makeText(this, getString(R.string.backup_restore_failed_toast, "I/O Error"), Toast.LENGTH_SHORT).show()
+                     InAppNotifier.show(this, getString(R.string.backup_restore_failed_toast, "I/O Error"))
                 }
             }
         }.start()
@@ -149,10 +148,10 @@ class BackupsActivity : GameWindowActivity() {
             .setMessage(getString(R.string.confirm_delete_backup_message))
             .setPositiveButton(getString(R.string.delete)) { _, _ ->
                 if (backupFile.delete()) {
-                    Toast.makeText(this, getString(R.string.backup_deleted_toast), Toast.LENGTH_SHORT).show()
+                     InAppNotifier.show(this, getString(R.string.backup_deleted_toast))
                     loadBackups()
                 } else {
-                    Toast.makeText(this, getString(R.string.backup_delete_failed_toast), Toast.LENGTH_SHORT).show()
+                     InAppNotifier.show(this, getString(R.string.backup_delete_failed_toast))
                 }
             }
             .setNegativeButton(getString(R.string.cancel), null)

@@ -17,7 +17,6 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.ImageView
-import android.widget.Toast
 import java.util.UUID
 
 class WallpaperCropActivity : GameWindowActivity() {
@@ -89,7 +88,7 @@ class WallpaperCropActivity : GameWindowActivity() {
             inputStream?.close()
 
             if (sourceBitmap == null) {
-                Toast.makeText(this, getString(R.string.viewer_error_image_decode), Toast.LENGTH_SHORT).show()
+                InAppNotifier.show(this, getString(R.string.viewer_error_image_decode))
                 finish()
                 return
             }
@@ -100,7 +99,7 @@ class WallpaperCropActivity : GameWindowActivity() {
                 drawOverlay()
             }
         } catch (e: Exception) {
-            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+            InAppNotifier.show(this, e.message ?: "", true)
             finish()
         }
     }
@@ -344,10 +343,10 @@ class WallpaperCropActivity : GameWindowActivity() {
             WallpaperManager.setActive(this, name)
             scaled.recycle()
 
-            Toast.makeText(this, getString(R.string.wallpaper_applied), Toast.LENGTH_SHORT).show()
+            InAppNotifier.show(this, getString(R.string.wallpaper_applied))
             finish()
         } catch (e: Exception) {
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            InAppNotifier.show(this, "Error: ${e.message}")
         }
     }
 

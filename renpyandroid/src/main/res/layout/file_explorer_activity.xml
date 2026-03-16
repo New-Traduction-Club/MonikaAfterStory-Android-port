@@ -98,7 +98,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#FCFBFB"
+        android:background="@color/colorSurface"
         android:paddingVertical="8dp"
         android:paddingHorizontal="16dp"
         android:gravity="center_vertical"
@@ -119,7 +119,7 @@
                 android:layout_height="32dp"
                 android:src="@drawable/ic_more_vert"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/file_menu"/>
 
             <ImageButton
@@ -129,7 +129,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_delete"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/action_delete"/>
                 
             <ImageButton
@@ -139,7 +139,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@android:drawable/ic_menu_edit"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/action_rename"/>
 
             <ImageButton
@@ -149,7 +149,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_copy" 
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/action_copy"/>
 
             <ImageButton
@@ -159,7 +159,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_cut" 
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/action_cut"/>
 
             <ImageButton
@@ -169,7 +169,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_extract"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/action_extract"
                 android:visibility="gone"/>
 
@@ -180,7 +180,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_save"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:tint="#4A4960"
+                app:tint="@color/colorOnSurface"
                 android:contentDescription="@string/label_export"/>
         </LinearLayout>
 
@@ -190,7 +190,7 @@
             android:layout_height="32dp"
             android:src="@drawable/ic_paste"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="#4A4960"
+            app:tint="@color/colorOnSurface"
             android:contentDescription="@string/action_paste"
             android:visibility="gone"/>
 

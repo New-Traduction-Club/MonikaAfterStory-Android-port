@@ -52,7 +52,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import org.renpy.android.InAppNotifier;
 
 import java.util.Hashtable;
 import java.util.Locale;
@@ -1615,37 +1615,14 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             return - 1;
         }
 
-        try
-        {
-            class OneShotTask implements Runnable {
-                String mMessage;
-                int mDuration;
-                int mGravity;
-                int mXOffset;
-                int mYOffset;
-
-                OneShotTask(String message, int duration, int gravity, int xOffset, int yOffset) {
-                    mMessage  = message;
-                    mDuration = duration;
-                    mGravity  = gravity;
-                    mXOffset  = xOffset;
-                    mYOffset  = yOffset;
-                }
-
+        try {
+            final boolean isLong = duration == android.widget.Toast.LENGTH_LONG;
+            mSingleton.runOnUiThread(new Runnable() {
+                @Override
                 public void run() {
-                    try
-                    {
-                        Toast toast = Toast.makeText(mSingleton, mMessage, mDuration);
-                        if (mGravity >= 0) {
-                            toast.setGravity(mGravity, mXOffset, mYOffset);
-                        }
-                        toast.show();
-                    } catch(Exception ex) {
-                        Log.e(TAG, ex.getMessage());
-                    }
+                    InAppNotifier.show(mSingleton, message, isLong);
                 }
-            }
-            mSingleton.runOnUiThread(new OneShotTask(message, duration, gravity, xOffset, yOffset));
+            });
         } catch(Exception ex) {
             return -1;
         }
