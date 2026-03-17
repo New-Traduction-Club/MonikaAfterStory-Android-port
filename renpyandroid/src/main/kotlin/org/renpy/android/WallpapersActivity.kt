@@ -151,7 +151,7 @@ class WallpapersActivity : GameWindowActivity() {
         var selectedIds = if (config.selectedIds.isNotEmpty()) {
             config.selectedIds.toMutableList()
         } else {
-            wallpapers.take(5).toMutableList()
+            wallpapers.take(WallpaperManager.MAX_SLIDESHOW_SELECTION).toMutableList()
         }
 
         val unitOptions = listOf(
@@ -205,7 +205,7 @@ class WallpapersActivity : GameWindowActivity() {
         val positiveButton = parentDialog.findViewById<TextView>(R.id.dialogPositiveButton)
         positiveButton?.setOnClickListener {
             SoundEffects.playClick(this)
-            if (selectedIds.size !in 2..5) {
+            if (!isSelectionCountValid(selectedIds.size)) {
                 InAppNotifier.show(this, getString(R.string.wallpaper_slideshow_validation_selection), true)
                 return@setOnClickListener
             }
@@ -259,6 +259,23 @@ class WallpapersActivity : GameWindowActivity() {
         val listContainer = dialogView.findViewById<LinearLayout>(R.id.wallpaperSelectionContainer)
         val selectionHint = dialogView.findViewById<TextView>(R.id.selectionHint)
         selectionHint.text = getString(R.string.wallpaper_slideshow_selection_hint)
+        val checkBoxes = mutableListOf<CheckBox>()
+
+        fun checkedCount(): Int = checkBoxes.count { it.isChecked }
+
+        fun refreshCheckboxConstraints() {
+            val count = checkedCount()
+            val atMin = count <= WallpaperManager.MIN_SLIDESHOW_SELECTION
+            val atMax = count >= WallpaperManager.MAX_SLIDESHOW_SELECTION
+
+            checkBoxes.forEach { checkBox ->
+                val disableByMin = atMin && checkBox.isChecked
+                val disableByMax = atMax && !checkBox.isChecked
+                val disable = disableByMin || disableByMax
+                checkBox.isEnabled = !disable
+                checkBox.alpha = if (disable) 0.65f else 1f
+            }
+        }
 
         wallpapers.forEach { id ->
             val checkBox = CheckBox(this)
@@ -266,8 +283,25 @@ class WallpapersActivity : GameWindowActivity() {
             checkBox.tag = id
             checkBox.isChecked = currentSelection.contains(id)
             checkBox.setTextColor(ContextCompat.getColor(this, R.color.colorTextPrimary))
+            checkBox.setOnClickListener {
+                val count = checkedCount()
+                when {
+                    count > WallpaperManager.MAX_SLIDESHOW_SELECTION -> {
+                        checkBox.isChecked = false
+                        InAppNotifier.show(this, getString(R.string.wallpaper_slideshow_validation_selection), true)
+                    }
+                    count < WallpaperManager.MIN_SLIDESHOW_SELECTION -> {
+                        checkBox.isChecked = true
+                        InAppNotifier.show(this, getString(R.string.wallpaper_slideshow_validation_selection), true)
+                    }
+                }
+                refreshCheckboxConstraints()
+            }
+
+            checkBoxes.add(checkBox)
             listContainer.addView(checkBox)
         }
+        refreshCheckboxConstraints()
 
         val selectionDialog = GameDialogBuilder(this)
             .setTitle(getString(R.string.wallpaper_slideshow_select_title))
@@ -296,15 +330,11 @@ class WallpapersActivity : GameWindowActivity() {
         val positiveButton = selectionDialog.findViewById<TextView>(R.id.dialogPositiveButton)
         positiveButton?.setOnClickListener {
             SoundEffects.playClick(this)
-            val selected = mutableListOf<String>()
-            for (i in 0 until listContainer.childCount) {
-                val child = listContainer.getChildAt(i)
-                if (child is CheckBox && child.isChecked) {
-                    selected.add(child.tag as String)
-                }
-            }
+            val selected = checkBoxes
+                .filter { it.isChecked }
+                .map { it.tag as String }
 
-            if (selected.size !in 2..5) {
+            if (!isSelectionCountValid(selected.size)) {
                 InAppNotifier.show(this, getString(R.string.wallpaper_slideshow_validation_selection), true)
                 return@setOnClickListener
             }
@@ -322,5 +352,9 @@ class WallpapersActivity : GameWindowActivity() {
         } else {
             getString(R.string.wallpaper_slideshow_interval_minutes, minutes)
         }
+    }
+
+    private fun isSelectionCountValid(count: Int): Boolean {
+        return count in WallpaperManager.MIN_SLIDESHOW_SELECTION..WallpaperManager.MAX_SLIDESHOW_SELECTION
     }
 }

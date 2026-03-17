@@ -8,10 +8,8 @@ import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -104,6 +102,7 @@ class GameDialogBuilder(private val context: Context) {
         val messageView = dialogView.findViewById<TextView>(R.id.dialogMessage)
         val customContainer = dialogView.findViewById<FrameLayout>(R.id.dialogCustomContainer)
         val listView = dialogView.findViewById<ListView>(R.id.dialogListView)
+        val buttonRow = dialogView.findViewById<View>(R.id.dialogButtonRow)
         val positiveButton = dialogView.findViewById<TextView>(R.id.dialogPositiveButton)
         val negativeButton = dialogView.findViewById<TextView>(R.id.dialogNegativeButton)
 
@@ -169,6 +168,17 @@ class GameDialogBuilder(private val context: Context) {
             }
         }
 
+        dialog.setOnShowListener {
+            constrainScrollableContentHeight(
+                dialogView = dialogView,
+                titleView = titleView,
+                messageView = messageView,
+                buttonRow = buttonRow,
+                customContainer = customContainer,
+                listView = listView
+            )
+        }
+
         return dialog
     }
 
@@ -220,6 +230,41 @@ class GameDialogBuilder(private val context: Context) {
         listView.setOnItemClickListener { _, _, position, _ ->
             SoundEffects.playClick(context)
             singleChoiceListener?.onClick(dialog, position)
+        }
+    }
+
+    private fun constrainScrollableContentHeight(
+        dialogView: View,
+        titleView: TextView,
+        messageView: TextView,
+        buttonRow: View,
+        customContainer: FrameLayout,
+        listView: ListView
+    ) {
+        dialogView.post {
+            val maxDialogHeight = (context.resources.displayMetrics.heightPixels * 0.85f).toInt()
+            val fixedHeight = titleView.height + messageView.height + buttonRow.height +
+                dialogView.paddingTop + dialogView.paddingBottom
+
+            val scrollableViews = buildList<View> {
+                if (customContainer.visibility == View.VISIBLE) add(customContainer)
+                if (listView.visibility == View.VISIBLE) add(listView)
+            }
+            if (scrollableViews.isEmpty()) return@post
+
+            val availableContentHeight = (maxDialogHeight - fixedHeight).coerceAtLeast(dpToPx(96))
+            val maxHeightPerView = (availableContentHeight / scrollableViews.size)
+                .coerceAtLeast(dpToPx(96))
+
+            scrollableViews.forEach { target ->
+                val params = target.layoutParams
+                params.height = if (target.height > maxHeightPerView) {
+                    maxHeightPerView
+                } else {
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                }
+                target.layoutParams = params
+            }
         }
     }
 

@@ -14,6 +14,9 @@ import java.util.concurrent.TimeUnit
  */
 object WallpaperManager {
 
+    const val MIN_SLIDESHOW_SELECTION = 2
+    const val MAX_SLIDESHOW_SELECTION = 5
+
     private const val PREFS_KEY = "active_wallpaper"
     private const val DEFAULT_ID = "default"
     private const val WALLPAPERS_DIR = "wallpapers"
@@ -126,7 +129,7 @@ object WallpaperManager {
         val rawSelection = prefs.getString(KEY_SLIDESHOW_SELECTION, "") ?: ""
         val selection = rawSelection.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val validSelection = sanitizeSelection(context, selection)
-        val validatedEnabled = enabled && validSelection.size >= 2
+        val validatedEnabled = enabled && validSelection.size >= MIN_SLIDESHOW_SELECTION
         return SlideshowConfig(
             enabled = validatedEnabled,
             intervalMinutes = interval,
@@ -138,7 +141,9 @@ object WallpaperManager {
     fun saveSlideshowConfig(context: Context, config: SlideshowConfig) {
         val prefs = prefs(context)
         val selection = sanitizeSelection(context, config.selectedIds)
-        val effectiveEnabled = config.enabled && selection.size >= 2 && (config.intervalMinutes != null || config.changeOnAppToggle)
+        val effectiveEnabled = config.enabled &&
+            selection.size >= MIN_SLIDESHOW_SELECTION &&
+            (config.intervalMinutes != null || config.changeOnAppToggle)
         val editor = prefs.edit()
         editor.putBoolean(KEY_SLIDESHOW_ENABLED, effectiveEnabled)
         if (config.intervalMinutes != null && config.intervalMinutes > 0) {
@@ -188,7 +193,7 @@ object WallpaperManager {
         val config = getSlideshowConfig(context)
         if (!config.enabled) return null
         val pool = rotationPool(context, config)
-        if (pool.size < 2) return null
+        if (pool.size < MIN_SLIDESHOW_SELECTION) return null
 
         val currentId = getActiveId(context)
         val currentIndex = pool.indexOf(currentId)
@@ -206,11 +211,11 @@ object WallpaperManager {
 
     private fun rotationPool(context: Context, config: SlideshowConfig): List<String> {
         val selection = sanitizeSelection(context, config.selectedIds)
-        return if (selection.size >= 2) selection else emptyList()
+        return if (selection.size >= MIN_SLIDESHOW_SELECTION) selection else emptyList()
     }
 
     private fun sanitizeSelection(context: Context, selection: List<String>): List<String> {
         val available = getWallpaperList(context).toSet()
-        return selection.filter { available.contains(it) }.take(5)
+        return selection.filter { available.contains(it) }.take(MAX_SLIDESHOW_SELECTION)
     }
 }

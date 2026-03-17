@@ -1,17 +1,20 @@
 package org.renpy.android
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.renpy.android.databinding.FileExplorerActivityBinding
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileInputStream
+import java.io.IOException
 import android.app.ProgressDialog
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -19,6 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class FileExplorerActivity : GameWindowActivity() {
+
+    companion object {
+        private const val STATE_CURRENT_DIR_PATH = "state_current_dir_path"
+    }
 
     private lateinit var binding: FileExplorerActivityBinding
     private val viewModel: FileExplorerViewModel by viewModels()
@@ -95,8 +102,10 @@ class FileExplorerActivity : GameWindowActivity() {
 
         val startPath = intent.getStringExtra("startPath") ?: filesDir.absolutePath
         rootDir = File(startPath)
-        
-        viewModel.loadDirectory(rootDir.absolutePath)
+
+        val restoredPath = savedInstanceState?.getString(STATE_CURRENT_DIR_PATH)
+        val initialPath = restoredPath?.takeIf { isRestorablePath(it) } ?: rootDir.absolutePath
+        viewModel.loadDirectory(initialPath)
         
         binding.btnQuickAdd.setOnClickListener { SoundEffects.playClick(this); showImportDialog() }
 
@@ -170,10 +179,11 @@ class FileExplorerActivity : GameWindowActivity() {
         val selected = fileAdapter.selectedFiles.toList()
         if (selected.size != 1) return
         val file = selected.first()
-        
-        val editText = EditText(this)
-        editText.setText(file.name)
-        editText.hint = getString(R.string.rename_hint)
+
+        val editText = createDialogInput(
+            hintRes = R.string.rename_hint,
+            initialText = file.name
+        )
         
         GameDialogBuilder(this)
             .setTitle(getString(R.string.rename_title))
@@ -307,8 +317,7 @@ class FileExplorerActivity : GameWindowActivity() {
     }
     
     private fun showCreateFolderDialog() {
-        val editText = EditText(this)
-        editText.hint = getString(R.string.folder_name_hint)
+        val editText = createDialogInput(hintRes = R.string.folder_name_hint)
         GameDialogBuilder(this)
             .setTitle(getString(R.string.create_folder))
             .setView(editText)
@@ -323,8 +332,7 @@ class FileExplorerActivity : GameWindowActivity() {
     }
 
     private fun showCreateFileDialog() {
-        val editText = EditText(this)
-        editText.hint = getString(R.string.file_name_hint)
+        val editText = createDialogInput(hintRes = R.string.file_name_hint)
         GameDialogBuilder(this)
             .setTitle(getString(R.string.create_file))
             .setView(editText)
@@ -336,6 +344,18 @@ class FileExplorerActivity : GameWindowActivity() {
             }
             .setNegativeButton(getString(R.string.cancel), null)
             .show()
+    }
+
+    private fun createDialogInput(hintRes: Int, initialText: String? = null): EditText {
+        return EditText(this).apply {
+            hint = getString(hintRes)
+            setTextColor(ContextCompat.getColor(this@FileExplorerActivity, R.color.colorTextPrimary))
+            setHintTextColor(ContextCompat.getColor(this@FileExplorerActivity, R.color.colorTextSecondary))
+            backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this@FileExplorerActivity, R.color.colorPrimary)
+            )
+            initialText?.let { setText(it) }
+        }
     }
 
     private fun openImportSAFFile() {
@@ -417,6 +437,28 @@ class FileExplorerActivity : GameWindowActivity() {
             if (cut != null && cut != -1) result = result?.substring(cut + 1)
         }
         return result
+    }
+
+    private fun isRestorablePath(path: String): Boolean {
+        val restoredDir = File(path)
+        if (!restoredDir.exists() || !restoredDir.isDirectory) return false
+
+        return try {
+            val rootCanonicalPath = rootDir.canonicalPath
+            val restoredCanonicalPath = restoredDir.canonicalPath
+            restoredCanonicalPath == rootCanonicalPath ||
+                restoredCanonicalPath.startsWith("$rootCanonicalPath${File.separator}")
+        } catch (e: IOException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        viewModel.currentDir.value?.absolutePath?.let {
+            outState.putString(STATE_CURRENT_DIR_PATH, it)
+        }
     }
 
     override fun onBackPressed() {
