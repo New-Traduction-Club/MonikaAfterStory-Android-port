@@ -16,6 +16,7 @@ import androidx.work.WorkerParameters
 import androidx.work.Data
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 /**
  * A robust Worker for handling Game Notifications.
@@ -170,7 +171,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
                 val file = File(imagePath)
                 if (file.exists()) {
                     try {
-                        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                        val bitmap = decodeSampledBitmap(file, 1024, 1024)
                         if (bitmap != null) {
                             builder.setLargeIcon(bitmap)
                             builder.setStyle(NotificationCompat.BigPictureStyle()
@@ -185,6 +186,25 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
 
             // Use a unique ID based on time to allow multiple notifications
             manager.notify(System.currentTimeMillis().toInt(), builder.build())
+        }
+
+        private fun decodeSampledBitmap(file: File, reqWidth: Int, reqHeight: Int): Bitmap? {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.absolutePath, bounds)
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                return BitmapFactory.decodeFile(file.absolutePath)
+            }
+
+            var sampleSize = 1
+            while ((bounds.outWidth / (sampleSize * 2)) >= reqWidth && (bounds.outHeight / (sampleSize * 2)) >= reqHeight) {
+                sampleSize *= 2
+            }
+
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = max(1, sampleSize)
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            return BitmapFactory.decodeFile(file.absolutePath, decodeOptions)
         }
     }
 

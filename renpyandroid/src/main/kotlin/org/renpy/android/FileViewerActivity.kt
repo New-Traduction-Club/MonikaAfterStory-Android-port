@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import org.renpy.android.databinding.ActivityFileViewerBinding
 import java.io.File
 import java.io.FileReader
+import kotlin.math.max
 
 class FileViewerActivity : GameWindowActivity() {
 
@@ -64,7 +65,7 @@ class FileViewerActivity : GameWindowActivity() {
 
             try {
                 if (isImage) {
-                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    val bitmap = decodeSampledBitmap(file, 1920, 1080)
                     withContext(Dispatchers.Main) {
                         binding.progressBar.visibility = View.GONE
                         if (bitmap != null) {
@@ -182,6 +183,25 @@ class FileViewerActivity : GameWindowActivity() {
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return String.format("%02d:%02d", minutes, seconds)
+    }
+
+    private fun decodeSampledBitmap(file: File, reqWidth: Int, reqHeight: Int): android.graphics.Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+            return BitmapFactory.decodeFile(file.absolutePath)
+        }
+
+        var sampleSize = 1
+        while ((bounds.outWidth / (sampleSize * 2)) >= reqWidth && (bounds.outHeight / (sampleSize * 2)) >= reqHeight) {
+            sampleSize *= 2
+        }
+
+        val decodeOptions = BitmapFactory.Options().apply {
+            inSampleSize = max(1, sampleSize)
+            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeFile(file.absolutePath, decodeOptions)
     }
 
     override fun onDestroy() {

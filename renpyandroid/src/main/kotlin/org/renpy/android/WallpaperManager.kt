@@ -8,6 +8,7 @@ import android.view.View
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 /**
  * Manages user-wallpapers stored in external storage.
@@ -106,7 +107,7 @@ object WallpaperManager {
         } else {
             val file = File(getWallpapersDir(context), activeId)
             if (file.exists()) {
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                val bitmap = decodeSampledBitmap(file, 1920, 1080)
                 if (bitmap != null) {
                     rootView.background = BitmapDrawable(context.resources, bitmap)
                 } else {
@@ -217,5 +218,24 @@ object WallpaperManager {
     private fun sanitizeSelection(context: Context, selection: List<String>): List<String> {
         val available = getWallpaperList(context).toSet()
         return selection.filter { available.contains(it) }.take(MAX_SLIDESHOW_SELECTION)
+    }
+
+    private fun decodeSampledBitmap(file: File, reqWidth: Int, reqHeight: Int): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+            return BitmapFactory.decodeFile(file.absolutePath)
+        }
+
+        var sampleSize = 1
+        while ((bounds.outWidth / (sampleSize * 2)) >= reqWidth && (bounds.outHeight / (sampleSize * 2)) >= reqHeight) {
+            sampleSize *= 2
+        }
+
+        val decodeOptions = BitmapFactory.Options().apply {
+            inSampleSize = max(1, sampleSize)
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeFile(file.absolutePath, decodeOptions)
     }
 }

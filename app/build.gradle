@@ -47,11 +47,12 @@ android {
 
         release {
             signingConfig signingConfigs.release
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             packaging {
                 jniLibs {
                     useLegacyPackaging = true
-                    keepDebugSymbols = [ "**/*.so" ]
                 }
             }
         }
@@ -60,7 +61,7 @@ android {
 
 
     androidResources {
-        noCompress = [ 'ogv', 'avi', 'mpg', 'webm', 'mkv', 'mp4', 'mp3', 'mp2', 'ogg', 'opus', 'flac', 'png', 'jpg', 'jpeg', 'webp', 'avif', 'rpyc', 'rpymc', 'rpyb', ]
+        noCompress = [ 'ogv', 'avi', 'mpg', 'webm', 'mkv', 'mp4', 'mp3', 'mp2', 'ogg', 'opus', 'flac', 'rpyc', 'rpymc', 'rpyb', ]
     }
 }
 
