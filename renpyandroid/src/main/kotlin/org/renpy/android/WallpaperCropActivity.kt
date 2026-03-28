@@ -5,7 +5,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
+import android.graphics.Rect
 import android.hardware.display.DisplayManager
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -36,16 +38,17 @@ class WallpaperCropActivity : BaseActivity() {
     private var cropLaunched = false
 
     private var tempSourceFile: File? = null
+    private var isVideoSource = false
+    private var tempVideoFrameFile: File? = null
 
     private val cropLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val cropResult = extractCropResult(result.data)
-        val outputUri = cropResult?.uriContent
         val error = cropResult?.error
 
-        if (result.resultCode == Activity.RESULT_OK && outputUri != null && error == null) {
-            applyCroppedWallpaper(outputUri)
+        if (result.resultCode == Activity.RESULT_OK && cropResult != null && error == null) {
+            applyCroppedWallpaper(cropResult)
             return@registerForActivityResult
         }
 
@@ -70,8 +73,10 @@ class WallpaperCropActivity : BaseActivity() {
         targetWidth = savedInstanceState?.getInt(STATE_TARGET_WIDTH) ?: 0
         targetHeight = savedInstanceState?.getInt(STATE_TARGET_HEIGHT) ?: 0
         cropLaunched = savedInstanceState?.getBoolean(STATE_CROP_LAUNCHED, false) ?: false
+        isVideoSource = savedInstanceState?.getBoolean(STATE_IS_VIDEO_SOURCE, false) ?: false
         savedInstanceState?.getString(STATE_TEMP_SOURCE_PATH)?.let { tempSourceFile = File(it) }
         savedInstanceState?.getString(STATE_TEMP_OUTPUT_PATH)?.let { tempOutputFile = File(it) }
+        savedInstanceState?.getString(STATE_TEMP_VIDEO_FRAME_PATH)?.let { tempVideoFrameFile = File(it) }
 
         if (targetWidth <= 0 || targetHeight <= 0) {
             val (resolvedWidth, resolvedHeight) = resolveTargetWallpaperSize()
@@ -92,6 +97,15 @@ class WallpaperCropActivity : BaseActivity() {
 
         try {
             val localSource = preparedSourceUri ?: copySourceToCache(source).also { preparedSourceUri = it }
+            if (!cropLaunched && !isVideoSource) {
+                isVideoSource = isVideo(localSource)
+            }
+
+            if (isVideoSource) {
+                launchVideoCrop(localSource)
+                return
+            }
+
             val outputFile = tempOutputFile ?: File(
                 cacheDir,
                 "wallpaper_crop_result_${System.currentTimeMillis()}.png"
@@ -153,6 +167,69 @@ class WallpaperCropActivity : BaseActivity() {
         }
     }
 
+    @Throws(IOException::class)
+    private fun launchVideoCrop(videoUri: Uri) {
+        val frameFile = tempVideoFrameFile ?: File(
+            cacheDir,
+            "wallpaper_video_preview_${System.currentTimeMillis()}.png"
+        ).also { tempVideoFrameFile = it }
+        if (!frameFile.exists() || frameFile.length() <= 0L) {
+            extractVideoFrameToFile(videoUri, frameFile)
+        }
+
+        val outputFile = File(
+            cacheDir,
+            "wallpaper_crop_result_${System.currentTimeMillis()}.png"
+        ).also { tempOutputFile = it }
+        val outputUri = Uri.fromFile(outputFile)
+        val ratio = simplifyRatio(targetWidth, targetHeight)
+        val cropOptions = CropImageOptions(
+            imageSourceIncludeGallery = false,
+            imageSourceIncludeCamera = false,
+            guidelines = CropImageView.Guidelines.ON,
+            fixAspectRatio = true,
+            aspectRatioX = ratio.first,
+            aspectRatioY = ratio.second,
+            autoZoomEnabled = true,
+            multiTouchEnabled = true,
+            centerMoveEnabled = true,
+            canChangeCropWindow = true,
+            initialCropWindowPaddingRatio = 0f,
+            maxZoom = 8,
+            outputCompressFormat = Bitmap.CompressFormat.PNG,
+            outputCompressQuality = 100,
+            outputRequestWidth = targetWidth,
+            outputRequestHeight = targetHeight,
+            outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_EXACT,
+            customOutputUri = outputUri,
+            activityTitle = getString(R.string.wallpaper_crop_title),
+            cropMenuCropButtonTitle = getString(R.string.wallpaper_apply),
+            activityBackgroundColor = ContextCompat.getColor(this, R.color.colorWindowContentBackground),
+            toolbarColor = ContextCompat.getColor(this, R.color.colorWindowHeaderBackground),
+            toolbarTitleColor = ContextCompat.getColor(this, R.color.colorTextPrimary),
+            toolbarBackButtonColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            toolbarTintColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            activityMenuTextColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            activityMenuIconColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            backgroundColor = 0x88000000.toInt(),
+            borderLineColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            borderCornerColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            guidelinesColor = ContextCompat.getColor(this, R.color.colorDivider)
+        )
+
+        cropLaunched = true
+        val cropIntent = Intent(this, FullscreenCropImageActivity::class.java).apply {
+            putExtra(
+                CropImage.CROP_IMAGE_EXTRA_BUNDLE,
+                Bundle(2).apply {
+                    putParcelable(CropImage.CROP_IMAGE_EXTRA_SOURCE, Uri.fromFile(frameFile))
+                    putParcelable(CropImage.CROP_IMAGE_EXTRA_OPTIONS, cropOptions)
+                }
+            )
+        }
+        cropLauncher.launch(cropIntent)
+    }
+
     private fun extractCropResult(data: Intent?): CropImage.ActivityResult? {
         if (data == null) return null
         return data.parcelableCompat(CropImage.CROP_IMAGE_EXTRA_RESULT)
@@ -167,7 +244,141 @@ class WallpaperCropActivity : BaseActivity() {
         }
     }
 
-    private fun applyCroppedWallpaper(resultUri: Uri) {
+    private fun applyCroppedWallpaper(cropResult: CropImage.ActivityResult) {
+        val localSource = preparedSourceUri ?: sourceUri
+        if (localSource == null) {
+            InAppNotifier.show(this, getString(R.string.viewer_error_image_decode), true)
+            finish()
+            return
+        }
+
+        if (isVideoSource || isVideo(localSource)) {
+            applyVideoWallpaper(localSource, cropResult)
+            return
+        }
+
+        val sourceExtension = guessExtension(localSource).lowercase(Locale.US)
+        val detectedAnimatedFormat = detectAnimatedFormat(localSource)
+        val animatedExtension = when {
+            sourceExtension == GIF_EXTENSION -> GIF_EXTENSION
+            detectedAnimatedFormat == GIF_EXTENSION -> GIF_EXTENSION
+            detectedAnimatedFormat == WEBP_EXTENSION -> WEBP_EXTENSION
+            else -> null
+        }
+
+        if (animatedExtension != null) {
+            applyLiveWallpaper(localSource, animatedExtension, cropResult)
+            return
+        }
+
+        applyStaticWallpaper(cropResult.uriContent)
+    }
+
+    private fun applyVideoWallpaper(sourceUri: Uri, cropResult: CropImage.ActivityResult) {
+        try {
+            val extension = normalizeVideoExtension(guessExtension(sourceUri))
+            val name = "wallpaper_${System.currentTimeMillis()}.$extension"
+            WallpaperManager.saveWallpaperFromUri(this, sourceUri, name)
+            WallpaperManager.setWallpaperCrop(this, name, extractNormalizedCrop(cropResult))
+            WallpaperManager.setActive(this, name)
+            window?.decorView?.rootView?.let { WallpaperManager.applyWallpaper(this, it) }
+            InAppNotifier.show(this, getString(R.string.wallpaper_applied))
+        } catch (e: IOException) {
+            showCropError(e)
+        } catch (e: SecurityException) {
+            showCropError(e)
+        } catch (e: RuntimeException) {
+            showCropError(e)
+        } finally {
+            finish()
+        }
+    }
+
+    private fun detectAnimatedFormat(uri: Uri): String? {
+        val header = ByteArray(21)
+        val bytesRead = try {
+            contentResolver.openInputStream(uri)?.use { input ->
+                readAtLeast(input, header)
+            } ?: -1
+        } catch (_: IOException) {
+            -1
+        } catch (_: SecurityException) {
+            -1
+        }
+
+        if (bytesRead >= 6 && isGifHeader(header)) {
+            return "gif"
+        }
+        if (bytesRead >= 21 && isAnimatedWebpHeader(header)) {
+            return "webp"
+        }
+        return null
+    }
+
+    private fun readAtLeast(input: java.io.InputStream, buffer: ByteArray): Int {
+        var offset = 0
+        while (offset < buffer.size) {
+            val read = input.read(buffer, offset, buffer.size - offset)
+            if (read <= 0) break
+            offset += read
+        }
+        return offset
+    }
+
+    private fun isGifHeader(header: ByteArray): Boolean {
+        val sig = String(header, 0, 6, Charsets.US_ASCII)
+        return sig == "GIF87a" || sig == "GIF89a"
+    }
+
+    private fun isAnimatedWebpHeader(header: ByteArray): Boolean {
+        val riff = header[0] == 'R'.code.toByte() &&
+            header[1] == 'I'.code.toByte() &&
+            header[2] == 'F'.code.toByte() &&
+            header[3] == 'F'.code.toByte()
+        val webp = header[8] == 'W'.code.toByte() &&
+            header[9] == 'E'.code.toByte() &&
+            header[10] == 'B'.code.toByte() &&
+            header[11] == 'P'.code.toByte()
+        val vp8x = header[12] == 'V'.code.toByte() &&
+            header[13] == 'P'.code.toByte() &&
+            header[14] == '8'.code.toByte() &&
+            header[15] == 'X'.code.toByte()
+        if (!riff || !webp || !vp8x) return false
+        val flags = header[20].toInt() and 0xFF
+        return (flags and 0x02) != 0
+    }
+
+    private fun applyLiveWallpaper(sourceUri: Uri, extension: String, cropResult: CropImage.ActivityResult) {
+        try {
+            val safeExtension = when (extension.lowercase(Locale.US)) {
+                GIF_EXTENSION -> GIF_EXTENSION
+                WEBP_EXTENSION -> WEBP_EXTENSION
+                else -> GIF_EXTENSION
+            }
+            val name = "wallpaper_${System.currentTimeMillis()}.$safeExtension"
+            WallpaperManager.saveWallpaperFromUri(this, sourceUri, name)
+            WallpaperManager.setWallpaperCrop(this, name, extractNormalizedCrop(cropResult))
+            WallpaperManager.setActive(this, name)
+            window?.decorView?.rootView?.let { WallpaperManager.applyWallpaper(this, it) }
+            InAppNotifier.show(this, getString(R.string.wallpaper_applied))
+        } catch (e: IOException) {
+            showCropError(e)
+        } catch (e: SecurityException) {
+            showCropError(e)
+        } catch (e: RuntimeException) {
+            showCropError(e)
+        } finally {
+            finish()
+        }
+    }
+
+    private fun applyStaticWallpaper(resultUri: Uri?) {
+        if (resultUri == null) {
+            InAppNotifier.show(this, getString(R.string.viewer_error_image_decode), true)
+            finish()
+            return
+        }
+
         val decoded = try {
             decodeBitmap(resultUri, targetWidth, targetHeight)
         } catch (e: IOException) {
@@ -191,6 +402,7 @@ class WallpaperCropActivity : BaseActivity() {
         try {
             val name = "wallpaper_${System.currentTimeMillis()}.png"
             WallpaperManager.saveWallpaper(this, finalBitmap, name)
+            WallpaperManager.clearWallpaperCrop(this, name)
             WallpaperManager.setActive(this, name)
             window?.decorView?.rootView?.let { WallpaperManager.applyWallpaper(this, it) }
             InAppNotifier.show(this, getString(R.string.wallpaper_applied))
@@ -200,6 +412,27 @@ class WallpaperCropActivity : BaseActivity() {
             finalBitmap.recycle()
             finish()
         }
+    }
+
+    private fun extractNormalizedCrop(cropResult: CropImage.ActivityResult): WallpaperManager.WallpaperCrop? {
+        val wholeRect = cropResult.wholeImageRect ?: return null
+        if (wholeRect.width() <= 0 || wholeRect.height() <= 0) return null
+
+        val cropRect = cropResult.cropRect ?: return null
+        if (cropRect.width() <= 0 || cropRect.height() <= 0) return null
+
+        return wallpaperCropFromRects(cropRect, wholeRect)
+    }
+
+    private fun wallpaperCropFromRects(cropRect: Rect, wholeRect: Rect): WallpaperManager.WallpaperCrop {
+        val width = wholeRect.width().toFloat()
+        val height = wholeRect.height().toFloat()
+        return WallpaperManager.WallpaperCrop(
+            left = (cropRect.left - wholeRect.left) / width,
+            top = (cropRect.top - wholeRect.top) / height,
+            right = (cropRect.right - wholeRect.left) / width,
+            bottom = (cropRect.bottom - wholeRect.top) / height
+        ).normalized()
     }
 
     @Throws(IOException::class)
@@ -274,6 +507,69 @@ class WallpaperCropActivity : BaseActivity() {
         return "png"
     }
 
+    private fun normalizeVideoExtension(extension: String): String {
+        val normalized = extension.lowercase(Locale.US)
+        return if (VIDEO_EXTENSIONS.contains(normalized)) normalized else "mp4"
+    }
+
+    private fun isVideo(uri: Uri): Boolean {
+        val mime = contentResolver.getType(uri)?.lowercase(Locale.US).orEmpty()
+        if (mime.startsWith("video/")) return true
+        val extension = guessExtension(uri).lowercase(Locale.US)
+        if (VIDEO_EXTENSIONS.contains(extension)) return true
+        return isLikelyVideoByMetadata(uri)
+    }
+
+    private fun isLikelyVideoByMetadata(uri: Uri): Boolean {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                retriever.setDataSource(pfd.fileDescriptor)
+                val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+                hasVideo == "yes" || retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH) != null
+            } ?: false
+        } catch (_: RuntimeException) {
+            false
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: RuntimeException) {
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun extractVideoFrameToFile(videoUri: Uri, outputFile: File) {
+        val retriever = MediaMetadataRetriever()
+        val frame = try {
+            contentResolver.openFileDescriptor(videoUri, "r")?.use { pfd ->
+                retriever.setDataSource(pfd.fileDescriptor)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    retriever.getScaledFrameAtTime(
+                        0L,
+                        MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
+                        max(targetWidth, 1),
+                        max(targetHeight, 1)
+                    )
+                } else {
+                    retriever.getFrameAtTime(0L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                }
+            }
+        } catch (e: RuntimeException) {
+            throw IOException("Unable to extract video frame", e)
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: RuntimeException) {
+            }
+        } ?: throw IOException("Unable to decode video preview frame")
+
+        FileOutputStream(outputFile).use { output ->
+            frame.compress(Bitmap.CompressFormat.PNG, 100, output)
+        }
+        frame.recycle()
+    }
+
     private fun resolveTargetWallpaperSize(): Pair<Int, Int> {
         val orientation = resources.configuration.orientation
         val displayManager = getSystemService(DisplayManager::class.java)
@@ -343,8 +639,10 @@ class WallpaperCropActivity : BaseActivity() {
         outState.putInt(STATE_TARGET_WIDTH, targetWidth)
         outState.putInt(STATE_TARGET_HEIGHT, targetHeight)
         outState.putBoolean(STATE_CROP_LAUNCHED, cropLaunched)
+        outState.putBoolean(STATE_IS_VIDEO_SOURCE, isVideoSource)
         outState.putString(STATE_TEMP_SOURCE_PATH, tempSourceFile?.absolutePath)
         outState.putString(STATE_TEMP_OUTPUT_PATH, tempOutputFile?.absolutePath)
+        outState.putString(STATE_TEMP_VIDEO_FRAME_PATH, tempVideoFrameFile?.absolutePath)
     }
 
     override fun onDestroy() {
@@ -352,16 +650,24 @@ class WallpaperCropActivity : BaseActivity() {
         if (isFinishing) {
             tempSourceFile?.let { if (it.exists()) it.delete() }
             tempOutputFile?.let { if (it.exists()) it.delete() }
+            tempVideoFrameFile?.let { if (it.exists()) it.delete() }
         }
     }
 
     companion object {
+        private val VIDEO_EXTENSIONS = setOf(
+            "mp4", "m4v", "webm", "mkv", "mov", "avi", "3gp", "3gpp", "mpeg", "mpg", "ts", "m2ts", "mts"
+        )
+        private const val GIF_EXTENSION = "gif"
+        private const val WEBP_EXTENSION = "webp"
         private const val STATE_SOURCE_URI = "state_source_uri"
         private const val STATE_PREPARED_SOURCE_URI = "state_prepared_source_uri"
         private const val STATE_TARGET_WIDTH = "state_target_width"
         private const val STATE_TARGET_HEIGHT = "state_target_height"
         private const val STATE_CROP_LAUNCHED = "state_crop_launched"
+        private const val STATE_IS_VIDEO_SOURCE = "state_is_video_source"
         private const val STATE_TEMP_SOURCE_PATH = "state_temp_source_path"
         private const val STATE_TEMP_OUTPUT_PATH = "state_temp_output_path"
+        private const val STATE_TEMP_VIDEO_FRAME_PATH = "state_temp_video_frame_path"
     }
 }

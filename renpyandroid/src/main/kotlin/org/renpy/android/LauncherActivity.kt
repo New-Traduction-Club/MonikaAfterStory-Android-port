@@ -204,6 +204,11 @@ class LauncherActivity : BaseActivity() {
         WallpaperManager.advanceOnAppToggle(this)
     }
 
+    override fun onDestroy() {
+        WallpaperManager.clearVideoWallpaper(binding.root)
+        super.onDestroy()
+    }
+
     private fun handleShortcutIntent(intent: Intent?) {
         if (intent == null) return
         val action = intent.getStringExtra("shortcut_action")

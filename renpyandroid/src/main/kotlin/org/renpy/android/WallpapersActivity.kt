@@ -10,7 +10,6 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -23,9 +22,13 @@ class WallpapersActivity : GameWindowActivity() {
     private lateinit var adapter: WallpapersAdapter
 
     private val pickMediaLauncher = registerForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
+        ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
             val intent = Intent(this, WallpaperCropActivity::class.java)
             intent.putExtra("image_uri", uri.toString())
             startActivity(intent)
@@ -105,7 +108,7 @@ class WallpapersActivity : GameWindowActivity() {
 
     private fun pickImage() {
         pickMediaLauncher.launch(
-            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            arrayOf("image/*", "video/*")
         )
     }
 
