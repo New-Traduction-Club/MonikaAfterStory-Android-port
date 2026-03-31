@@ -19,8 +19,8 @@ android {
         applicationId "com.z.mas.portby.just6889"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 1757713318
-        versionName "1.6.5"
+        versionCode 1757713319
+        versionName "1.6.6"
     }
 
     dynamicFeatures = [":ff1"]
