@@ -1,16 +1,19 @@
 package org.renpy.android
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -245,6 +248,7 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
             zos.closeEntry()
         }
     }
+
     fun importZip(uri: android.net.Uri, context: android.content.Context) {
         val destDir = _currentDir.value ?: return
         
@@ -290,5 +294,142 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
                 if (tempZipObj.exists()) tempZipObj.delete()
             }
         }
+    }
+
+    fun importFolderTree(treeUri: Uri, context: Context) {
+        val destDir = _currentDir.value ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val rootDocId = DocumentsContract.getTreeDocumentId(treeUri)
+                val rootDocUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, rootDocId)
+                val rootNode = queryTreeNode(context, rootDocUri) ?: throw IOException("Cannot read source folder")
+                if (!rootNode.isDirectory) {
+                    throw IOException("Selected source is not a folder")
+                }
+
+                val rootName = sanitizeName(rootNode.name.ifBlank { "imported_folder" })
+                val targetRoot = File(destDir, rootName)
+                if (!targetRoot.exists() && !targetRoot.mkdirs()) {
+                    throw IOException("Cannot create destination folder")
+                }
+
+                copyTreeNode(context, treeUri, rootNode, targetRoot)
+                refreshCurrentDir()
+                postMessage(getString(R.string.import_folder_completed, rootName))
+            } catch (e: Exception) {
+                postMessage(getString(R.string.import_folder_failed, e.message ?: ""))
+            }
+        }
+    }
+
+    private data class TreeNode(
+        val uri: Uri,
+        val name: String,
+        val mimeType: String,
+        val isDirectory: Boolean
+    )
+
+    private fun copyTreeNode(context: Context, treeUri: Uri, node: TreeNode, target: File) {
+        if (node.isDirectory) {
+            if (!target.exists() && !target.mkdirs()) {
+                throw IOException("Cannot create folder: ${target.name}")
+            }
+
+            val children = listTreeChildren(context, treeUri, node.uri)
+            for (child in children) {
+                val childTarget = File(target, sanitizeName(child.name))
+                copyTreeNode(context, treeUri, child, childTarget)
+            }
+            return
+        }
+
+        target.parentFile?.let { parent ->
+            if (!parent.exists() && !parent.mkdirs()) {
+                throw IOException("Cannot create folder: ${parent.name}")
+            }
+        }
+        context.contentResolver.openInputStream(node.uri)?.use { input ->
+            FileOutputStream(target).use { output ->
+                input.copyTo(output, 1024 * 1024)
+            }
+        } ?: throw IOException("Cannot read source file: ${node.name}")
+    }
+
+    private fun queryTreeNode(context: Context, documentUri: Uri): TreeNode? {
+        return try {
+            val projection = arrayOf(
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE
+            )
+            context.contentResolver.query(documentUri, projection, null, null, null)?.use { cursor ->
+                if (!cursor.moveToFirst()) return null
+                val nameIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                val mimeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                val name = if (nameIdx >= 0 && !cursor.isNull(nameIdx)) {
+                    cursor.getString(nameIdx)
+                } else {
+                    "unknown"
+                }
+                val mimeType = if (mimeIdx >= 0 && !cursor.isNull(mimeIdx)) {
+                    cursor.getString(mimeIdx)
+                } else {
+                    ""
+                }
+                TreeNode(
+                    uri = documentUri,
+                    name = name,
+                    mimeType = mimeType,
+                    isDirectory = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+                )
+            }
+        } catch (_: SecurityException) {
+            null
+        }
+    }
+
+    private fun listTreeChildren(context: Context, treeUri: Uri, parentDocumentUri: Uri): List<TreeNode> {
+        val parentId = DocumentsContract.getDocumentId(parentDocumentUri)
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
+        val projection = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE
+        )
+        val results = mutableListOf<TreeNode>()
+        context.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val nameIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+            val mimeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+            while (cursor.moveToNext()) {
+                if (idIdx < 0 || cursor.isNull(idIdx)) continue
+                val childDocId = cursor.getString(idIdx)
+                val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, childDocId)
+                val childName = if (nameIdx >= 0 && !cursor.isNull(nameIdx)) {
+                    cursor.getString(nameIdx)
+                } else {
+                    "unknown"
+                }
+                val childMime = if (mimeIdx >= 0 && !cursor.isNull(mimeIdx)) {
+                    cursor.getString(mimeIdx)
+                } else {
+                    ""
+                }
+                results.add(
+                    TreeNode(
+                        uri = childUri,
+                        name = childName,
+                        mimeType = childMime,
+                        isDirectory = childMime == DocumentsContract.Document.MIME_TYPE_DIR
+                    )
+                )
+            }
+        }
+        return results
+    }
+
+    private fun sanitizeName(name: String): String {
+        val trimmed = name.trim().ifBlank { "unnamed" }
+        return trimmed.replace('/', '_').replace('\\', '_')
     }
 }

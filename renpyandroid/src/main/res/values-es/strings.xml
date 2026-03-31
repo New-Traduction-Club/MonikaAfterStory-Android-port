@@ -46,6 +46,7 @@
     <!-- File Explorer Strings -->
     <string name="import_title">Opciones de Importación</string>
     <string name="import_files">Importar Archivos</string>
+    <string name="import_folder">Importar carpeta</string>
     <string name="import_zip">Importar ZIP</string>
     <string name="create_folder">Crear Carpeta</string>
     <string name="create_file">Crear Archivo</string>
@@ -113,6 +114,7 @@
     <string name="file_type_image">Imagen</string>
     <string name="file_type_audio">Audio</string>
     <string name="file_type_archive">Archivo comprimido</string>
+    <string name="file_type_video">Video</string>
     <string name="file_type_generic">Archivo</string>
 
     <!-- LauncherActivity Strings -->
@@ -267,6 +269,9 @@
     <string name="viewer_error_unsupported">Vista previa no disponible para este tipo de archivo</string>
     <string name="viewer_error_read_failed">Error al leer el archivo: %1$s</string>
     <string name="viewer_error_audio_failed">Error al reproducir audio: %1$s</string>
+    <string name="viewer_error_video_failed">Error al reproducir video: %1$s</string>
+    <string name="import_folder_completed">Carpeta importada: %1$s</string>
+    <string name="import_folder_failed">Error al importar carpeta: %1$s</string>
 
     <!-- App Info Strings -->
     <string name="title_app_info">Información de la App</string>

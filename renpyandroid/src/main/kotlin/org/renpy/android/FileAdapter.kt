@@ -17,6 +17,21 @@ class FileAdapter(
     private val onItemLongClick: (File) -> Unit
 ) : ListAdapter<File, FileAdapter.FileViewHolder>(FileDiffCallback()) {
 
+    companion object {
+        private val CODE_EXTENSIONS = setOf(
+            "rpy", "py", "kt", "kts", "java", "js", "ts", "tsx", "jsx", "json", "xml", "html", "htm",
+            "css", "scss", "sass", "less", "yaml", "yml", "toml", "ini", "cfg", "conf", "properties",
+            "gradle", "md", "markdown", "txt", "csv", "log", "sh", "bat", "ps1", "lua", "rb", "php",
+            "go", "rs", "c", "h", "cpp", "hpp", "cc", "cs", "swift", "sql"
+        )
+        private val IMAGE_EXTENSIONS = setOf("png", "jpg", "jpeg", "webp", "bmp", "gif", "heic", "heif")
+        private val VIDEO_EXTENSIONS = setOf(
+            "mp4", "m4v", "webm", "mkv", "mov", "avi", "3gp", "3gpp", "mpeg", "mpg", "ts", "m2ts", "mts"
+        )
+        private val AUDIO_EXTENSIONS = setOf("mp3", "ogg", "wav", "m4a", "flac", "aac", "opus")
+        private val ARCHIVE_EXTENSIONS = setOf("zip", "rpa", "rpi", "rar", "7z", "tar", "gz", "bz2")
+    }
+
     val selectedFiles = mutableSetOf<File>()
     private var isSelectionMode = false
 
@@ -78,35 +93,28 @@ class FileAdapter(
                 binding.textType.text = itemView.context.getString(R.string.file_type_folder)
                 binding.textSize.text = "--"
             } else {
-                val ext = file.extension.lowercase()
-                val iconRes = when (ext) {
-                    "rpy", "py", "json", "txt", "log", "xml" -> R.drawable.ic_file_document
-                    "png", "jpg", "jpeg", "webp" -> R.drawable.ic_file_image
-                    "mp3", "ogg", "wav" -> R.drawable.ic_file_audio
-                    "zip", "rpa", "rpi" -> R.drawable.ic_file_archive
+                val ext = file.extension.lowercase(Locale.US)
+                val iconRes = when {
+                    ext in CODE_EXTENSIONS -> R.drawable.ic_file_document
+                    ext in IMAGE_EXTENSIONS -> R.drawable.ic_file_image
+                    ext in VIDEO_EXTENSIONS -> R.drawable.ic_file_image
+                    ext in AUDIO_EXTENSIONS -> R.drawable.ic_file_audio
+                    ext in ARCHIVE_EXTENSIONS -> R.drawable.ic_file_archive
                     else -> R.drawable.ic_file
                 }
                 binding.icon.setImageResource(iconRes)
                 binding.icon.setColorFilter(android.graphics.Color.parseColor("#DCEEFA"))
                 
-                binding.textType.text = when (ext) {
-                    "txt" -> itemView.context.getString(R.string.file_type_text)
-                    "rpy", "py" -> itemView.context.getString(R.string.file_type_script)
-                    "png", "jpg", "jpeg", "webp" -> itemView.context.getString(R.string.file_type_image)
-                    "mp3", "ogg", "wav" -> itemView.context.getString(R.string.file_type_audio)
-                    "zip", "rpa", "rpi" -> itemView.context.getString(R.string.file_type_archive)
-                    "sh" -> itemView.context.getString(R.string.file_type_generic)
+                binding.textType.text = when {
+                    ext in CODE_EXTENSIONS -> itemView.context.getString(R.string.file_type_script)
+                    ext in IMAGE_EXTENSIONS -> itemView.context.getString(R.string.file_type_image)
+                    ext in VIDEO_EXTENSIONS -> itemView.context.getString(R.string.file_type_video)
+                    ext in AUDIO_EXTENSIONS -> itemView.context.getString(R.string.file_type_audio)
+                    ext in ARCHIVE_EXTENSIONS -> itemView.context.getString(R.string.file_type_archive)
                     else -> itemView.context.getString(R.string.file_type_generic)
                 }
                 
-                val size = file.length()
-                if (size < 1024) {
-                    binding.textSize.text = "$size B"
-                } else if (size < 1024 * 1024) {
-                    binding.textSize.text = "${size / 1024} KB"
-                } else {
-                    binding.textSize.text = "${size / (1024 * 1024)} MB"
-                }
+                binding.textSize.text = formatSize(file.length())
             }
 
             val isSelected = selectedFiles.contains(file)
@@ -146,6 +154,18 @@ class FileAdapter(
         override fun areContentsTheSame(oldItem: File, newItem: File): Boolean {
             return oldItem.lastModified() == newItem.lastModified() && 
                 oldItem.length() == newItem.length()
+        }
+    }
+
+    private fun formatSize(size: Long): String {
+        val kb = 1024L
+        val mb = kb * 1024L
+        val gb = mb * 1024L
+        return when {
+            size < kb -> "$size B"
+            size < mb -> "${size / kb} KB"
+            size < gb -> String.format(Locale.US, "%.1f MB", size / mb.toDouble())
+            else -> String.format(Locale.US, "%.1f GB", size / gb.toDouble())
         }
     }
 }

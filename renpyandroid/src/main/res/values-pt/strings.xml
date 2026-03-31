@@ -46,6 +46,7 @@
     <!-- File Explorer Strings -->
     <string name="import_title">Importar</string>
     <string name="import_files">Importar arquivos</string>
+    <string name="import_folder">Importar pasta</string>
     <string name="import_zip">Importar ZIP</string>
     <string name="create_folder">Criar pasta</string>
     <string name="create_file">Criar Arquivo</string>
@@ -113,9 +114,10 @@
     <string name="file_type_folder">Pasta</string>
     <string name="file_type_text">Documento de texto</string>
     <string name="file_type_script">Arquivo de script</string>
-    <string name="file_type_image">Arquivo de imagem</string>
-    <string name="file_type_audio">Arquivo de áudio</string>
+    <string name="file_type_image">Imagem</string>
+    <string name="file_type_audio">Áudio</string>
     <string name="file_type_archive">Arquivo compactado</string>
+    <string name="file_type_video">Vídeo</string>
     <string name="file_type_generic">Arquivo</string>
 
     <!-- LauncherActivity Strings -->
@@ -270,6 +272,9 @@
     <string name="viewer_error_unsupported">Visualização não disponível para este tipo de arquivo</string>
     <string name="viewer_error_read_failed">Erro ao ler o arquivo: %1$s</string>
     <string name="viewer_error_audio_failed">Erro ao reproduzir áudio: %1$s</string>
+    <string name="viewer_error_video_failed">Erro ao reproduzir vídeo: %1$s</string>
+    <string name="import_folder_completed">Pasta importada: %1$s</string>
+    <string name="import_folder_failed">Falha ao importar pasta: %1$s</string>
 
     <!-- App Info Strings -->
     <string name="title_app_info">Informações do App</string>

@@ -52,6 +52,7 @@
     <!-- File Explorer Strings -->
     <string name="import_title">Import Options</string>
     <string name="import_files">Import Files</string>
+    <string name="import_folder">Import Folder</string>
     <string name="import_zip">Import ZIP</string>
     <string name="create_folder">Create Folder</string>
     <string name="create_file">Create File</string>
@@ -119,9 +120,10 @@
     <string name="file_type_folder">File Folder</string>
     <string name="file_type_text">Text document</string>
     <string name="file_type_script">Script file</string>
-    <string name="file_type_image">Image file</string>
-    <string name="file_type_audio">Audio file</string>
+    <string name="file_type_image">Image</string>
+    <string name="file_type_audio">Audio</string>
     <string name="file_type_archive">Archive</string>
+    <string name="file_type_video">Video</string>
     <string name="file_type_generic">File</string>
 
     <!-- LauncherActivity Strings -->
@@ -277,6 +279,9 @@
     <string name="viewer_error_unsupported">Preview not available for this file type</string>
     <string name="viewer_error_read_failed">Error reading file: %1$s</string>
     <string name="viewer_error_audio_failed">Error playing audio: %1$s</string>
+    <string name="viewer_error_video_failed">Error playing video: %1$s</string>
+    <string name="import_folder_completed">Folder imported: %1$s</string>
+    <string name="import_folder_failed">Folder import failed: %1$s</string>
 
     <!-- App Info Strings -->
     <string name="title_app_info">App Info</string>

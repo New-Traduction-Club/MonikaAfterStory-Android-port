@@ -12,8 +12,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.renpy.android.databinding.FileExplorerActivityBinding
 import java.io.File
-import java.io.FileOutputStream
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
 import android.app.ProgressDialog
 import androidx.lifecycle.lifecycleScope
@@ -301,15 +301,17 @@ class FileExplorerActivity : GameWindowActivity() {
             .setTitle(getString(R.string.import_title))
             .setItems(arrayOf(
                 getString(R.string.import_files),
+                getString(R.string.import_folder),
                 getString(R.string.import_zip),
                 getString(R.string.create_folder),
                 getString(R.string.create_file)
             )) { _, which ->
                 when (which) {
                     0 -> openImportSAFFile()
-                    1 -> openImportSAFZip()
-                    2 -> showCreateFolderDialog()
-                    3 -> showCreateFileDialog()
+                    1 -> openImportSAFFolder()
+                    2 -> openImportSAFZip()
+                    3 -> showCreateFolderDialog()
+                    4 -> showCreateFileDialog()
                 }
             }
             .setNegativeButton(getString(R.string.cancel), null)
@@ -375,6 +377,14 @@ class FileExplorerActivity : GameWindowActivity() {
         startActivityForResult(intent, REQUEST_CODE_IMPORT_ZIP)
     }
 
+    private fun openImportSAFFolder() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            putExtra("android.content.extra.SHOW_ADVANCED", true)
+            putExtra("android.content.extra.FANCY", true)
+        }
+        startActivityForResult(intent, REQUEST_CODE_IMPORT_FOLDER)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != android.app.Activity.RESULT_OK || data == null) return
@@ -397,6 +407,18 @@ class FileExplorerActivity : GameWindowActivity() {
                     viewModel.importZip(uri, applicationContext)
                 }
             }
+            REQUEST_CODE_IMPORT_FOLDER -> {
+                data.data?.let { uri ->
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    } catch (_: SecurityException) {
+                    }
+                    viewModel.importFolderTree(uri, applicationContext)
+                }
+            }
             REQUEST_CODE_EXPORT_SELECTION -> {
                 data.data?.let { uri ->
                     viewModel.finalizeExport(uri, applicationContext)
@@ -407,12 +429,12 @@ class FileExplorerActivity : GameWindowActivity() {
     
     private fun importUri(uri: Uri, destDir: File) {
         val name = getFileName(uri) ?: "imported_file"
-        val dest = File(destDir, name)
         Thread {
             try {
+                val dest = uniqueTargetFile(destDir, name)
                 contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(dest).use { output ->
-                        input.copyTo(output)
+                        input.copyTo(output, 1024 * 1024)
                     }
                 }
                 runOnUiThread { viewModel.loadDirectory(destDir.absolutePath) }
@@ -452,6 +474,24 @@ class FileExplorerActivity : GameWindowActivity() {
             e.printStackTrace()
             false
         }
+    }
+
+    private fun uniqueTargetFile(parent: File, fileName: String): File {
+        val sanitized = fileName.trim().ifBlank { "imported_file" }
+            .replace('/', '_')
+            .replace('\\', '_')
+        val dot = sanitized.lastIndexOf('.')
+        val hasExt = dot > 0 && dot < sanitized.length - 1
+        val base = if (hasExt) sanitized.substring(0, dot) else sanitized
+        val ext = if (hasExt) sanitized.substring(dot) else ""
+
+        var candidate = File(parent, sanitized)
+        var counter = 1
+        while (candidate.exists()) {
+            candidate = File(parent, "${base}_$counter$ext")
+            counter++
+        }
+        return candidate
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
