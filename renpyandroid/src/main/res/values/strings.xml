@@ -303,6 +303,11 @@
     <string name="wallpaper_applied">Wallpaper applied</string>
     <string name="wallpaper_crop_title">Adjust wallpaper</string>
     <string name="wallpaper_apply">Apply</string>
+    <string name="wallpaper_processing_opening">Preparing wallpaper…</string>
+    <string name="wallpaper_processing_applying">Applying wallpaper…</string>
+    <string name="wallpaper_video_too_large">This video file is too large for wallpaper use.</string>
+    <string name="wallpaper_video_resolution_too_high">This video resolution is too high for smooth wallpaper playback.</string>
+    <string name="wallpaper_video_bitrate_too_high">This video bitrate is too high for smooth wallpaper playback.</string>
     <string name="wallpaper_slideshow_status_off">Random wallpaper is off</string>
     <string name="wallpaper_slideshow_configure">Random wallpaper</string>
     <string name="wallpaper_slideshow_disable">Disable</string>

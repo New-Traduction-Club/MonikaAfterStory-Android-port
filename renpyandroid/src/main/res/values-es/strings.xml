@@ -293,6 +293,11 @@
     <string name="wallpaper_applied">Fondo aplicado</string>
     <string name="wallpaper_crop_title">Ajustar fondo</string>
     <string name="wallpaper_apply">Aplicar</string>
+    <string name="wallpaper_processing_opening">Preparando fondo…</string>
+    <string name="wallpaper_processing_applying">Aplicando fondo…</string>
+    <string name="wallpaper_video_too_large">Este video es demasiado grande para usarse como fondo.</string>
+    <string name="wallpaper_video_resolution_too_high">La resolución de este video es demasiado alta para reproducirse con fluidez como fondo.</string>
+    <string name="wallpaper_video_bitrate_too_high">El bitrate de este video es demasiado alto para reproducirse con fluidez como fondo.</string>
     <string name="wallpaper_slideshow_status_off">Fondo de Pantalla Aleatorio desactivado</string>
     <string name="wallpaper_slideshow_configure">Fondo de Pantalla Aleatorio</string>
     <string name="wallpaper_slideshow_disable">Desactivar</string>

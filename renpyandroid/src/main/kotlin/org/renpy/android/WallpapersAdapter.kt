@@ -2,12 +2,15 @@ package org.renpy.android
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.util.concurrent.Executors
 
 class WallpapersAdapter(
     private var items: List<String>,
@@ -20,9 +23,12 @@ class WallpapersAdapter(
     companion object {
         private const val TYPE_WALLPAPER = 0
         private const val TYPE_ADD = 1
+        private const val THUMBNAIL_TARGET_WIDTH = 200
     }
 
     private var currentActive = activeId
+    private val thumbnailExecutor = Executors.newFixedThreadPool(2)
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun getItemViewType(position: Int): Int {
         return if (position < items.size) TYPE_WALLPAPER else TYPE_ADD
@@ -44,6 +50,7 @@ class WallpapersAdapter(
             val isActive = id == currentActive
 
             vh.checkOverlay.visibility = if (isActive) View.VISIBLE else View.GONE
+            vh.itemView.tag = id
 
             if (id == "default") {
                 // Render default gradient as thumbnail
@@ -58,15 +65,36 @@ class WallpapersAdapter(
                 vh.thumbnail.setImageDrawable(gradient)
                 vh.thumbnail.scaleType = ImageView.ScaleType.FIT_XY
                 vh.label.text = context.getString(R.string.wallpaper_default)
+                vh.thumbnail.clearColorFilter()
+                vh.thumbnail.setBackgroundColor(Color.TRANSPARENT)
             } else {
-                val bitmap = WallpaperManager.loadThumbnail(context, id, 200)
-                if (bitmap != null) {
-                    vh.thumbnail.setImageBitmap(bitmap)
-                    vh.thumbnail.scaleType = ImageView.ScaleType.CENTER_CROP
-                } else {
-                    vh.thumbnail.setImageResource(R.drawable.ic_file)
-                }
+                vh.thumbnail.setImageDrawable(null)
+                vh.thumbnail.setImageResource(R.drawable.ic_file)
+                vh.thumbnail.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                vh.thumbnail.clearColorFilter()
+                vh.thumbnail.setBackgroundColor(Color.parseColor("#E8D4DE"))
                 vh.label.text = id
+
+                thumbnailExecutor.execute {
+                    val bitmap = WallpaperManager.loadThumbnail(context, id, THUMBNAIL_TARGET_WIDTH)
+                    mainHandler.post {
+                        val stillBoundToSameItem = vh.adapterPosition != RecyclerView.NO_POSITION &&
+                            vh.itemView.tag == id
+                        if (!stillBoundToSameItem) {
+                            bitmap?.recycle()
+                            return@post
+                        }
+
+                        if (bitmap != null) {
+                            vh.thumbnail.setImageBitmap(bitmap)
+                            vh.thumbnail.scaleType = ImageView.ScaleType.CENTER_CROP
+                            vh.thumbnail.setBackgroundColor(Color.TRANSPARENT)
+                        } else {
+                            vh.thumbnail.setImageResource(R.drawable.ic_file)
+                            vh.thumbnail.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                        }
+                    }
+                }
             }
 
             vh.itemView.setOnClickListener {
@@ -83,6 +111,7 @@ class WallpapersAdapter(
         } else {
             // "+" add tile
             vh.checkOverlay.visibility = View.GONE
+            vh.itemView.tag = null
             vh.thumbnail.setImageResource(android.R.drawable.ic_input_add)
             vh.thumbnail.scaleType = ImageView.ScaleType.CENTER_INSIDE
             vh.thumbnail.setBackgroundColor(Color.parseColor("#F5EEF0"))
@@ -105,6 +134,11 @@ class WallpapersAdapter(
         items = newItems
         currentActive = activeId
         notifyDataSetChanged()
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        thumbnailExecutor.shutdownNow()
     }
 
     class WallpaperViewHolder(view: View) : RecyclerView.ViewHolder(view) {

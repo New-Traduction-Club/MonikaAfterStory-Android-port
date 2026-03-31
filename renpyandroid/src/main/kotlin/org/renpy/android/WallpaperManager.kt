@@ -17,6 +17,7 @@ import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.util.LruCache
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
@@ -50,6 +51,19 @@ object WallpaperManager {
     private const val KEY_SLIDESHOW_LAST_CHANGE = "wallpaper_slideshow_last_change"
     private const val KEY_CROP_PREFIX = "wallpaper_crop_"
     private const val VIDEO_WALLPAPER_MARKER = "video_wallpaper_overlay"
+    private const val VIDEO_FRAME_THUMB_WIDTH = 512
+    private const val VIDEO_FRAME_THUMB_HEIGHT = 288
+    private const val VIDEO_LAYOUT_FPS_LIMIT_MS = 33L
+
+    private val thumbnailCache: LruCache<String, Bitmap> by lazy {
+        val maxMemoryKb = (Runtime.getRuntime().maxMemory() / 1024L).toInt()
+        val cacheSizeKb = max(1024, maxMemoryKb / 32)
+        object : LruCache<String, Bitmap>(cacheSizeKb) {
+            override fun sizeOf(key: String, value: Bitmap): Int {
+                return value.byteCount / 1024
+            }
+        }
+    }
 
     private val IMAGE_EXTENSIONS = setOf("png", "jpg", "jpeg", "webp", "gif")
     private val VIDEO_EXTENSIONS = setOf(
@@ -143,9 +157,10 @@ object WallpaperManager {
         val file = File(dir, name)
         context.contentResolver.openInputStream(sourceUri)?.use { input ->
             FileOutputStream(file).use { output ->
-                input.copyTo(output)
+                input.copyTo(output, 1024 * 1024)
             }
         } ?: throw IOException("Unable to read selected wallpaper source")
+        removeThumbnailsFor(name)
         return name
     }
 
@@ -155,11 +170,13 @@ object WallpaperManager {
         FileOutputStream(file).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 95, out)
         }
+        removeThumbnailsFor(name)
         return name
     }
 
     fun setWallpaperCrop(context: Context, id: String, crop: WallpaperCrop?) {
         if (id == DEFAULT_ID) return
+        removeThumbnailsFor(id)
         val editor = prefs(context).edit()
         if (crop == null) {
             editor.remove(cropPrefsKey(id)).apply()
@@ -178,6 +195,7 @@ object WallpaperManager {
 
     fun clearWallpaperCrop(context: Context, id: String) {
         if (id == DEFAULT_ID) return
+        removeThumbnailsFor(id)
         prefs(context).edit().remove(cropPrefsKey(id)).apply()
     }
 
@@ -198,6 +216,7 @@ object WallpaperManager {
         val file = File(getWallpapersDir(context), name)
         val deleted = file.delete()
         if (deleted) {
+            removeThumbnailsFor(name)
             clearWallpaperCrop(context, name)
             if (getActiveId(context) == name) {
                 setActive(context, DEFAULT_ID)
@@ -211,30 +230,45 @@ object WallpaperManager {
     }
 
     fun loadThumbnail(context: Context, name: String, targetWidth: Int): Bitmap? {
+        val cacheKey = "$name#$targetWidth"
+        thumbnailCache.get(cacheKey)?.let {
+            if (!it.isRecycled) return it.copy(it.config ?: Bitmap.Config.ARGB_8888, false)
+            thumbnailCache.remove(cacheKey)
+        }
+
         val file = File(getWallpapersDir(context), name)
         if (!file.exists()) return null
 
-        if (isVideoFile(file)) {
+        val result = if (isVideoFile(file)) {
             val frame = extractVideoFrame(file) ?: return null
-            val crop = getWallpaperCrop(context, name) ?: return frame
-            return applyCropToBitmap(frame, crop)
-        }
-
-        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(file.absolutePath, options)
-
-        val sampleSize = if (options.outWidth > 0 && targetWidth > 0) {
-            max(1, options.outWidth / targetWidth)
+            val crop = getWallpaperCrop(context, name)
+            if (crop == null) frame else applyCropToBitmap(frame, crop)
         } else {
-            1
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.absolutePath, options)
+
+            val sampleSize = if (options.outWidth > 0 && targetWidth > 0) {
+                max(1, options.outWidth / targetWidth)
+            } else {
+                1
+            }
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            val decoded = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return null
+            val crop = getWallpaperCrop(context, name)
+            if (crop == null) decoded else applyCropToBitmap(decoded, crop)
         }
-        val decodeOptions = BitmapFactory.Options().apply {
-            inSampleSize = sampleSize
-            inPreferredConfig = Bitmap.Config.ARGB_8888
-        }
-        val decoded = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return null
-        val crop = getWallpaperCrop(context, name) ?: return decoded
-        return applyCropToBitmap(decoded, crop)
+
+        thumbnailCache.put(cacheKey, result.copy(result.config ?: Bitmap.Config.ARGB_8888, false))
+        return result
+    }
+
+    private fun removeThumbnailsFor(name: String) {
+        val prefix = "$name#"
+        val keys = thumbnailCache.snapshot().keys.filter { it.startsWith(prefix) }
+        keys.forEach { thumbnailCache.remove(it) }
     }
 
     fun applyWallpaper(context: Context, rootView: View) {
@@ -497,8 +531,8 @@ object WallpaperManager {
                 retriever.getScaledFrameAtTime(
                     0L,
                     MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
-                    640,
-                    360
+                    VIDEO_FRAME_THUMB_WIDTH,
+                    VIDEO_FRAME_THUMB_HEIGHT
                 )
             } else {
                 retriever.getFrameAtTime(0L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
@@ -666,6 +700,10 @@ object WallpaperManager {
     }
 
     private fun applyVideoLayout(bundle: VideoWallpaperBundle) {
+        val now = System.currentTimeMillis()
+        if (now - bundle.lastLayoutApplyMs < VIDEO_LAYOUT_FPS_LIMIT_MS) return
+        bundle.lastLayoutApplyMs = now
+
         val textureView = bundle.textureView
         val videoWidth = bundle.videoWidth
         val videoHeight = bundle.videoHeight
@@ -882,5 +920,6 @@ object WallpaperManager {
         var videoWidth: Int = 0
         var videoHeight: Int = 0
         var layoutChangeListener: View.OnLayoutChangeListener? = null
+        var lastLayoutApplyMs: Long = 0L
     }
 }

@@ -296,6 +296,11 @@
     <string name="wallpaper_applied">Papel de parede aplicado</string>
     <string name="wallpaper_crop_title">Ajustar papel de parede</string>
     <string name="wallpaper_apply">Aplicar</string>
+    <string name="wallpaper_processing_opening">Preparando papel de parede…</string>
+    <string name="wallpaper_processing_applying">Aplicando papel de parede…</string>
+    <string name="wallpaper_video_too_large">Este vídeo é grande demais para usar como papel de parede.</string>
+    <string name="wallpaper_video_resolution_too_high">A resolução deste vídeo é alta demais para reprodução fluida como papel de parede.</string>
+    <string name="wallpaper_video_bitrate_too_high">O bitrate deste vídeo é alto demais para reprodução fluida como papel de parede.</string>
     <string name="wallpaper_slideshow_status_off">Fundo Aleatório desativado</string>
     <string name="wallpaper_slideshow_configure">Fundo de Tela Aleatório</string>
     <string name="wallpaper_slideshow_disable">Desativar</string>
