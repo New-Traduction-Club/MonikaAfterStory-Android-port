@@ -10,10 +10,10 @@
     <string name="setup_step_1_url">https://ddlc.moe/</string>
     <string name="setup_ddlc_sha256">SHA256: 2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e</string>
     <string name="setup_step_2_title">Passo 2: MASL - An After Story launcher</string>
-    <string name="setup_step_2_desc">Baixe a 0.12.15 Dlx versão do MAS.</string>
-    <string name="setup_step_2_url">https://github.com/Monika-After-Story/MonikaModDev/releases/tag/v0.12.15</string>
-    <string name="setup_mas_filename">Alvo: Monika_After_Story-0.12.15-Mod-Dlx.zip</string>
-    <string name="setup_mas_sha256">SHA256: 80925bccce56cc83f5a95fd2a196d1b26c755c771a7b5f853dd65b6c23caf1a1</string>
+    <string name="setup_step_2_desc">Baixe a 0.12.18 Dlx versão do MAS.</string>
+    <string name="setup_step_2_url">https://github.com/Monika-After-Story/MonikaModDev/releases/tag/v0.12.18</string>
+    <string name="setup_mas_filename">Alvo: Monika_After_Story-0.12.18-Mod-Dlx.zip</string>
+    <string name="setup_mas_sha256">SHA256: 1575791c114dcd2ed6a8868fe0f99abfa140d5d95045802a8de231026772c960</string>
     <string name="setup_btn_download">Baixar</string>
     <string name="setup_btn_download_manual">Baixar manualmente</string>
     <string name="setup_btn_download_auto">Baixar automaticamente</string>

@@ -59,8 +59,8 @@ class SetupActivity : BaseActivity() {
     private lateinit var tvCurrentLanguage: TextView
 
     private val CHECKSUM_DDLC = "2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e"
-    private val CHECKSUM_MAS = "80925bccce56cc83f5a95fd2a196d1b26c755c771a7b5f853dd65b6c23caf1a1"
-    private val MAS_DOWNLOAD_URL = "https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.15/Monika_After_Story-0.12.15-Mod-Dlx.zip"
+    private val CHECKSUM_MAS = "1575791c114dcd2ed6a8868fe0f99abfa140d5d95045802a8de231026772c960"
+    private val MAS_DOWNLOAD_URL = "https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.18/Monika_After_Story-0.12.18-Mod-Dlx.zip"
 
     companion object {
         private const val REQUEST_CODE_DDLC = 1001

@@ -74,6 +74,7 @@ class LauncherActivity : BaseActivity() {
     private lateinit var binding: LauncherActivityBinding
     private val viewModel: LauncherViewModel by viewModels()
     private var currentLanguage: String = ""
+    private var isUiInitialized = false
     
     private var progressDialog: AlertDialog? = null
     private var progressIndicator: android.widget.ProgressBar? = null
@@ -111,6 +112,7 @@ class LauncherActivity : BaseActivity() {
 
         binding = LauncherActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        isUiInitialized = true
 
         SoundEffects.initialize(this)
         
@@ -174,6 +176,7 @@ class LauncherActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (!isUiInitialized) return
         
         WallpaperManager.advanceOnAppToggle(this)
         WallpaperManager.maybeAdvanceByTime(this)
@@ -200,12 +203,15 @@ class LauncherActivity : BaseActivity() {
 
     override fun onPause() {
         super.onPause()
+        if (!isUiInitialized) return
         stopWallpaperRotation()
         WallpaperManager.advanceOnAppToggle(this)
     }
 
     override fun onDestroy() {
-        WallpaperManager.clearVideoWallpaper(binding.root)
+        if (isUiInitialized) {
+            WallpaperManager.clearVideoWallpaper(binding.root)
+        }
         super.onDestroy()
     }
 
