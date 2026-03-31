@@ -1,9 +1,11 @@
 package org.renpy.android
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.view.View
 import android.widget.EditText
 import android.widget.PopupMenu
@@ -32,6 +34,7 @@ class FileExplorerActivity : GameWindowActivity() {
     private lateinit var fileAdapter: FileAdapter
 
     private lateinit var rootDir: File
+    private var isInternalRoot = false
 
     private val REQUEST_CODE_IMPORT_FILE = 1002
     private val REQUEST_CODE_IMPORT_FOLDER = 1003
@@ -102,12 +105,18 @@ class FileExplorerActivity : GameWindowActivity() {
 
         val startPath = intent.getStringExtra("startPath") ?: filesDir.absolutePath
         rootDir = File(startPath)
+        isInternalRoot = isInternalRootPath(rootDir)
 
         val restoredPath = savedInstanceState?.getString(STATE_CURRENT_DIR_PATH)
         val initialPath = restoredPath?.takeIf { isRestorablePath(it) } ?: rootDir.absolutePath
         viewModel.loadDirectory(initialPath)
         
         binding.btnQuickAdd.setOnClickListener { SoundEffects.playClick(this); showImportDialog() }
+        binding.btnSystemFiles.visibility = if (isInternalRoot) View.VISIBLE else View.GONE
+        binding.btnSystemFiles.setOnClickListener {
+            SoundEffects.playClick(this)
+            openSystemInternalFiles()
+        }
 
         binding.btnNavUp.setOnClickListener {
             SoundEffects.playClick(this)
@@ -492,6 +501,56 @@ class FileExplorerActivity : GameWindowActivity() {
             counter++
         }
         return candidate
+    }
+
+    private fun isInternalRootPath(candidateRoot: File): Boolean {
+        return try {
+            candidateRoot.canonicalFile == filesDir.canonicalFile
+        } catch (e: IOException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    private fun openSystemInternalFiles() {
+        val authority = InternalStorageDocumentsProvider.authorityForPackage(packageName)
+        val rootUri = DocumentsContract.buildRootUri(authority, InternalStorageDocumentsProvider.ROOT_ID)
+        val treeUri = DocumentsContract.buildTreeDocumentUri(authority, "root")
+
+        val browseIntent = Intent(Intent.ACTION_VIEW).apply {
+            data = rootUri
+            addCategory(Intent.CATEGORY_DEFAULT)
+            putExtra(DocumentsContract.EXTRA_INITIAL_URI, treeUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        }
+
+        val fallbackIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            putExtra(DocumentsContract.EXTRA_INITIAL_URI, treeUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
+        }
+
+        val canOpenBrowse = browseIntent.resolveActivity(packageManager) != null
+        val canOpenFallback = fallbackIntent.resolveActivity(packageManager) != null
+        if (!canOpenBrowse && !canOpenFallback) {
+            InAppNotifier.show(this, R.string.documents_provider_open_unavailable)
+            return
+        }
+
+        try {
+            startActivity(browseIntent)
+        } catch (_: ActivityNotFoundException) {
+            try {
+                startActivity(fallbackIntent)
+            } catch (e: ActivityNotFoundException) {
+                InAppNotifier.show(this, R.string.documents_provider_open_unavailable)
+            } catch (e: SecurityException) {
+                InAppNotifier.show(this, getString(R.string.documents_provider_open_failed, e.message ?: ""))
+            }
+        } catch (e: SecurityException) {
+            InAppNotifier.show(this, getString(R.string.documents_provider_open_failed, e.message ?: ""))
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

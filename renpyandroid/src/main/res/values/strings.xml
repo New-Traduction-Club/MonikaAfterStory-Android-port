@@ -298,6 +298,11 @@
     <string name="app_info_commit">Latest commit: %1$s</string>
     <string name="app_info_version">Version: %1$s</string>
     <string name="launcher_app_info_desc">About this app</string>
+    <string name="documents_provider_root_title">MASL - An After Story launcher</string>
+    <string name="documents_provider_root_summary">MASL</string>
+    <string name="documents_provider_open_failed">Could not open system file explorer: %1$s</string>
+    <string name="documents_provider_open_unavailable">No compatible system file explorer is available.</string>
+    <string name="documents_provider_open_action">Open in system explorer</string>
 
     <!-- Wallpapers -->
     <string name="launcher_wallpapers">Wallpapers</string>

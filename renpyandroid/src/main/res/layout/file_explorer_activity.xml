@@ -36,6 +36,17 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             app:tint="#B45D85"
             android:contentDescription="@string/import_title"/>
+
+        <ImageButton
+            android:id="@+id/btnSystemFiles"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_folder"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="#B45D85"
+            android:contentDescription="@string/documents_provider_open_action"
+            android:visibility="gone" />
         
         <TextView
             android:layout_width="0dp"

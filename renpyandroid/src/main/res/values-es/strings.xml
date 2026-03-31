@@ -288,6 +288,11 @@
     <string name="app_info_commit">Último commit: %1$s</string>
     <string name="app_info_version">Versión: %1$s</string>
     <string name="launcher_app_info_desc">Acerca de esta app</string>
+    <string name="documents_provider_root_title">MASL - An After Story launcher</string>
+    <string name="documents_provider_root_summary">MASL</string>
+    <string name="documents_provider_open_failed">No se pudo abrir el explorador del sistema: %1$s</string>
+    <string name="documents_provider_open_unavailable">No hay un explorador del sistema compatible disponible.</string>
+    <string name="documents_provider_open_action">Abrir en explorador del sistema</string>
 
     <!-- Wallpapers -->
     <string name="launcher_wallpapers">Fondos de pantalla</string>
