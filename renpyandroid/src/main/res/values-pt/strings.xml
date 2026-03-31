@@ -88,6 +88,10 @@
     <string name="existing_file_message">O arquivo \'%1$s\' já existe. O que deseja fazer?</string>
     <string name="overwrite">Sobrescrever</string>
     <string name="rename">Renomear</string>
+    <string name="import_conflict_ignore">Ignorar</string>
+    <string name="import_conflict_copy_increment">Copiar com novo nome</string>
+    <string name="import_conflict_apply_all">Aplicar esta escolha a todos os conflitos</string>
+    <string name="import_summary_message">Importação concluída. Importados: %1$d • Ignorados: %2$d • Falharam: %3$d</string>
     <string name="parent_directory">..</string>
     <string name="directory_format">[%s]</string>
     <string name="failed_to_delete_some_files">Falha ao excluir alguns arquivos.</string>

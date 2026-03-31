@@ -2,11 +2,13 @@ package org.renpy.android
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.view.View
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.activity.viewModels
@@ -21,13 +23,27 @@ import android.app.ProgressDialog
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
 class FileExplorerActivity : GameWindowActivity() {
 
     companion object {
         private const val STATE_CURRENT_DIR_PATH = "state_current_dir_path"
     }
+
+    private enum class ImportConflictAction {
+        REPLACE,
+        IGNORE,
+        COPY_INCREMENT
+    }
+
+    private data class ImportConflictDecision(
+        val action: ImportConflictAction,
+        val applyToAll: Boolean
+    )
 
     private lateinit var binding: FileExplorerActivityBinding
     private val viewModel: FileExplorerViewModel by viewModels()
@@ -40,6 +56,9 @@ class FileExplorerActivity : GameWindowActivity() {
     private val REQUEST_CODE_IMPORT_FOLDER = 1003
     private val REQUEST_CODE_IMPORT_ZIP = 1004
     private val REQUEST_CODE_EXPORT_SELECTION = 2002
+
+    private var importOrientationLocked = false
+    private var previousRequestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -375,7 +394,16 @@ class FileExplorerActivity : GameWindowActivity() {
             type = "*/*"
             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         }
-        startActivityForResult(intent, REQUEST_CODE_IMPORT_FILE)
+        lockOrientationForImport()
+        try {
+            startActivityForResult(intent, REQUEST_CODE_IMPORT_FILE)
+        } catch (e: ActivityNotFoundException) {
+            unlockOrientationForImport()
+            InAppNotifier.show(this, getString(R.string.import_failed, e.message ?: ""))
+        } catch (e: SecurityException) {
+            unlockOrientationForImport()
+            InAppNotifier.show(this, getString(R.string.import_failed, e.message ?: ""))
+        }
     }
     
     private fun openImportSAFZip() {
@@ -396,20 +424,35 @@ class FileExplorerActivity : GameWindowActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_IMPORT_FILE && resultCode != android.app.Activity.RESULT_OK) {
+            unlockOrientationForImport()
+            return
+        }
         if (resultCode != android.app.Activity.RESULT_OK || data == null) return
-        
-        val currentDir = viewModel.currentDir.value ?: return
+
+        val currentDir = viewModel.currentDir.value
+        if (currentDir == null) {
+            if (requestCode == REQUEST_CODE_IMPORT_FILE) {
+                unlockOrientationForImport()
+            }
+            return
+        }
 
         when (requestCode) {
             REQUEST_CODE_IMPORT_FILE -> {
+                val uris = mutableListOf<Uri>()
                 if (data.clipData != null) {
                     for (i in 0 until data.clipData!!.itemCount) {
-                        importUri(data.clipData!!.getItemAt(i).uri, currentDir)
+                        uris.add(data.clipData!!.getItemAt(i).uri)
                     }
                 } else if (data.data != null) {
-                    importUri(data.data!!, currentDir)
+                    uris.add(data.data!!)
                 }
-                viewModel.loadDirectory(currentDir.absolutePath)
+                if (uris.isEmpty()) {
+                    unlockOrientationForImport()
+                    return
+                }
+                importUrisWithConflictResolution(uris, currentDir)
             }
             REQUEST_CODE_IMPORT_ZIP -> {
                 data.data?.let { uri ->
@@ -436,19 +479,172 @@ class FileExplorerActivity : GameWindowActivity() {
         }
     }
     
-    private fun importUri(uri: Uri, destDir: File) {
-        val name = getFileName(uri) ?: "imported_file"
-        Thread {
+    private fun importUrisWithConflictResolution(uris: List<Uri>, destDir: File) {
+        if (uris.isEmpty()) return
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            var importedCount = 0
+            var ignoredCount = 0
+            var failedCount = 0
+            var rememberedAction: ImportConflictAction? = null
+
             try {
-                val dest = uniqueTargetFile(destDir, name)
-                contentResolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(dest).use { output ->
-                        input.copyTo(output, 1024 * 1024)
+                for (uri in uris) {
+                    try {
+                        val originalName = sanitizeImportName(getFileName(uri) ?: "imported_file")
+                        var target = File(destDir, originalName)
+                        if (target.exists()) {
+                            val action = if (rememberedAction != null) {
+                                rememberedAction!!
+                            } else {
+                                val decision = askImportConflictDecision(target.name)
+                                if (decision == null) {
+                                    ignoredCount++
+                                    continue
+                                }
+                                if (decision.applyToAll) {
+                                    rememberedAction = decision.action
+                                }
+                                decision.action
+                            }
+
+                            when (action) {
+                                ImportConflictAction.REPLACE -> {
+                                    if (!deleteExistingTarget(target)) {
+                                        failedCount++
+                                        continue
+                                    }
+                                }
+                                ImportConflictAction.IGNORE -> {
+                                    ignoredCount++
+                                    continue
+                                }
+                                ImportConflictAction.COPY_INCREMENT -> {
+                                    target = uniqueTargetFile(destDir, originalName)
+                                }
+                            }
+                        }
+
+                        copyUriToFile(uri, target)
+                        importedCount++
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                        failedCount++
+                    } catch (e: SecurityException) {
+                        e.printStackTrace()
+                        failedCount++
                     }
                 }
-                runOnUiThread { viewModel.loadDirectory(destDir.absolutePath) }
-            } catch(e: Exception) { e.printStackTrace() }
-        }.start()
+
+                withContext(Dispatchers.Main) {
+                    viewModel.loadDirectory(destDir.absolutePath)
+                    val message = getString(
+                        R.string.import_summary_message,
+                        importedCount,
+                        ignoredCount,
+                        failedCount
+                    )
+                    InAppNotifier.show(this@FileExplorerActivity, message, failedCount > 0)
+                }
+            } finally {
+                withContext(NonCancellable + Dispatchers.Main) {
+                    unlockOrientationForImport()
+                }
+            }
+        }
+    }
+
+    private suspend fun askImportConflictDecision(fileName: String): ImportConflictDecision? {
+        return withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
+                val checkBox = CheckBox(this@FileExplorerActivity).apply {
+                    text = getString(R.string.import_conflict_apply_all)
+                    setTextColor(ContextCompat.getColor(this@FileExplorerActivity, R.color.colorTextPrimary))
+                }
+
+                val dialog = GameDialogBuilder(this@FileExplorerActivity)
+                    .setTitle(getString(R.string.existing_file))
+                    .setMessage(getString(R.string.existing_file_message, fileName))
+                    .setView(checkBox)
+                    .setPositiveButton(getString(R.string.overwrite)) { _, _ ->
+                        if (continuation.isActive) {
+                            continuation.resume(
+                                ImportConflictDecision(
+                                    action = ImportConflictAction.REPLACE,
+                                    applyToAll = checkBox.isChecked
+                                )
+                            )
+                        }
+                    }
+                    .setNegativeButton(getString(R.string.cancel)) { _, _ ->
+                        if (continuation.isActive) continuation.resume(null)
+                    }
+                    .setItems(
+                        arrayOf(
+                            getString(R.string.import_conflict_ignore),
+                            getString(R.string.import_conflict_copy_increment)
+                        )
+                    ) { _, which ->
+                        val action = when (which) {
+                            0 -> ImportConflictAction.IGNORE
+                            else -> ImportConflictAction.COPY_INCREMENT
+                        }
+                        if (continuation.isActive) {
+                            continuation.resume(
+                                ImportConflictDecision(
+                                    action = action,
+                                    applyToAll = checkBox.isChecked
+                                )
+                            )
+                        }
+                    }
+                    .create()
+
+                dialog.setOnCancelListener {
+                    if (continuation.isActive) continuation.resume(null)
+                }
+                dialog.show()
+                continuation.invokeOnCancellation { dialog.dismiss() }
+            }
+        }
+    }
+
+    private fun sanitizeImportName(name: String): String {
+        return name.trim().ifBlank { "imported_file" }
+            .replace('/', '_')
+            .replace('\\', '_')
+    }
+
+    private fun lockOrientationForImport() {
+        if (importOrientationLocked) return
+        previousRequestedOrientation = requestedOrientation
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        importOrientationLocked = true
+    }
+
+    private fun unlockOrientationForImport() {
+        if (!importOrientationLocked) return
+        requestedOrientation = previousRequestedOrientation
+        importOrientationLocked = false
+    }
+
+    @Throws(IOException::class)
+    private fun copyUriToFile(uri: Uri, dest: File) {
+        dest.parentFile?.mkdirs()
+        contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(dest).use { output ->
+                input.copyTo(output, 1024 * 1024)
+            }
+        } ?: throw IOException("Cannot open source stream")
+    }
+
+    private fun deleteExistingTarget(target: File): Boolean {
+        if (!target.exists()) return true
+        return if (target.isDirectory) {
+            target.deleteRecursively()
+        } else {
+            target.delete()
+        }
     }
     
     private fun getFileName(uri: Uri): String? {
@@ -497,7 +693,7 @@ class FileExplorerActivity : GameWindowActivity() {
         var candidate = File(parent, sanitized)
         var counter = 1
         while (candidate.exists()) {
-            candidate = File(parent, "${base}_$counter$ext")
+            candidate = File(parent, "$base ($counter)$ext")
             counter++
         }
         return candidate

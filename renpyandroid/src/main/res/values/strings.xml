@@ -94,6 +94,10 @@
     <string name="existing_file_message">The file \'%1$s\' already exists. What do you want to do?</string>
     <string name="overwrite">Overwrite</string>
     <string name="rename">Rename</string>
+    <string name="import_conflict_ignore">Ignore</string>
+    <string name="import_conflict_copy_increment">Copy with new name</string>
+    <string name="import_conflict_apply_all">Apply this choice to all files</string>
+    <string name="import_summary_message">Import finished. Imported: %1$d • Ignored: %2$d • Failed: %3$d</string>
     <string name="parent_directory">..</string>
     <string name="directory_format">[%s]</string>
     <string name="failed_to_delete_some_files">Failed to delete some files.</string>
