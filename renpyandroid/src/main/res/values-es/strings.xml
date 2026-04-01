@@ -35,9 +35,16 @@
     <string name="setup_progress_extracting_rpa">Desempaquetando archivos del juego (RPA)...</string>
     <string name="setup_progress_extracting_mas">Instalando Monika After Story...</string>
     <string name="setup_progress_finalizing">Finalizando instalación...</string>
-    <string name="setup_complete">¡Instalación Completada! Iniciando...</string>
+    <string name="setup_complete">¡Instalación completada!</string>
     <string name="setup_error">Error: %1$s</string>
     <string name="setup_error_checksum">Verificación de checksum fallida para %1$s. Por favor descarga el archivo correcto.</string>
+    <string name="setup_notifications_title">Activar notificaciones</string>
+    <string name="setup_notifications_description">Activa las notificaciones para que Monika pueda enviarte notificaciones cuando no estés en la app.</string>
+    <string name="setup_notifications_allow">Permitir notificaciones</string>
+    <string name="setup_notifications_skip">Omitir</string>
+    <string name="setup_notifications_continue">Continuar</string>
+    <string name="setup_notifications_enabled">¡Las notificaciones están activadas!</string>
+    <string name="setup_notifications_denied">Las notificaciones siguen desactivadas.</string>
 
     <!-- Installation Strings -->
     <string name="installing_language_data">Instalando datos para %1$s...</string>

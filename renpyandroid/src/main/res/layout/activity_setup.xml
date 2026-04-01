@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/setupRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     android:background="#121212">
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/setupContentScroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:background="#121212">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
 
         <LinearLayout
             android:id="@+id/btnLanguage"
@@ -205,19 +212,19 @@
                     android:layout_marginBottom="8dp">
 
                     <Button
-                        android:id="@+id/btnSelectMAS"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/setup_btn_select_file"
-                        android:layout_marginEnd="8dp"/>
-
-                    <Button
                         android:id="@+id/btnDownloadMAS"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/setup_btn_download_manual"/>
+                        android:text="@string/setup_btn_download_manual"
+                        android:layout_marginEnd="8dp"/>
+
+                    <Button
+                        android:id="@+id/btnSelectMAS"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/setup_btn_select_file"/>
                 </LinearLayout>
 
                 <Button
@@ -268,14 +275,120 @@
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btnInstall"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/setup_btn_continue"
-            android:textSize="18sp"
-            android:backgroundTint="@android:color/holo_blue_dark"
-            android:textColor="@android:color/white"/>
+            <Button
+                android:id="@+id/btnInstall"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="@string/setup_btn_continue"
+                android:textSize="18sp"
+                android:backgroundTint="@android:color/holo_blue_dark"
+                android:textColor="@android:color/white"/>
 
-    </LinearLayout>
-</ScrollView>
+        </LinearLayout>
+    </ScrollView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/notificationPermissionScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#121212"
+        android:paddingStart="24dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="24dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivNotificationPermissionIcon"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/ic_notifications"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="#90CAF9" />
+
+        <TextView
+            android:id="@+id/tvNotificationPermissionTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="@string/setup_notifications_title"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ivNotificationPermissionIcon" />
+
+        <TextView
+            android:id="@+id/tvNotificationPermissionDescription"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/setup_notifications_description"
+            android:textColor="#B0B0B0"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvNotificationPermissionTitle" />
+
+        <Button
+            android:id="@+id/btnGrantNotificationPermission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="@string/setup_notifications_allow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvNotificationPermissionDescription" />
+
+        <TextView
+            android:id="@+id/tvNotificationPermissionStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/setup_notifications_enabled"
+            android:textColor="#4CAF50"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnGrantNotificationPermission"
+            tools:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/notificationPermissionBottomActions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <Button
+                android:id="@+id/btnSkipNotificationPermission"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/setup_notifications_skip" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btnContinueAfterNotifications"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="@string/setup_notifications_continue" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

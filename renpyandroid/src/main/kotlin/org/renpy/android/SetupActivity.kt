@@ -12,6 +12,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +56,13 @@ class SetupActivity : BaseActivity() {
     private lateinit var tvProgress: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var btnInstall: Button
+    private lateinit var setupContentScroll: View
+    private lateinit var notificationPermissionScreen: View
+    private lateinit var btnGrantNotificationPermission: Button
+    private lateinit var btnSkipNotificationPermission: Button
+    private lateinit var btnContinueAfterNotifications: Button
+    private lateinit var tvNotificationPermissionStatus: TextView
+    private lateinit var notificationPermissionBottomActions: View
     
     private lateinit var btnLanguage: LinearLayout
     private lateinit var tvCurrentLanguage: TextView
@@ -65,14 +74,13 @@ class SetupActivity : BaseActivity() {
     companion object {
         private const val REQUEST_CODE_DDLC = 1001
         private const val REQUEST_CODE_MAS = 1002
-        private const val REQUEST_PERMISSION_NOTIFICATIONS = 1003
+        private const val REQUEST_PERMISSION_NOTIFICATIONS_DOWNLOAD = 1003
+        private const val REQUEST_PERMISSION_NOTIFICATIONS_SETUP = 1004
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         DynamicColors.applyIfAvailable(this)
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_setup)
-
         setContentView(R.layout.activity_setup)
 
         if (savedInstanceState != null) {
@@ -98,11 +106,19 @@ class SetupActivity : BaseActivity() {
         layoutProgress = findViewById(R.id.layoutProgress)
         tvProgress = findViewById(R.id.tvProgress)
         progressBar = findViewById(R.id.progressBar)
+        setupContentScroll = findViewById(R.id.setupContentScroll)
+        notificationPermissionScreen = findViewById(R.id.notificationPermissionScreen)
+        btnGrantNotificationPermission = findViewById(R.id.btnGrantNotificationPermission)
+        btnSkipNotificationPermission = findViewById(R.id.btnSkipNotificationPermission)
+        btnContinueAfterNotifications = findViewById(R.id.btnContinueAfterNotifications)
+        tvNotificationPermissionStatus = findViewById(R.id.tvNotificationPermissionStatus)
+        notificationPermissionBottomActions = findViewById(R.id.notificationPermissionBottomActions)
         
         btnLanguage = findViewById(R.id.btnLanguage)
         tvCurrentLanguage = findViewById(R.id.tvCurrentLanguage)
 
         setupLanguageUI()
+        setupNotificationPermissionScreenInsets()
 
         // DDLC
         btnDownloadDDLC.setOnClickListener {
@@ -211,7 +227,7 @@ class SetupActivity : BaseActivity() {
              onDownloadError(error)
         } else {
             // Idle or completed previously
-            if (masUri != null) {
+             if (masUri != null) {
                 val fileName = getFileName(masUri!!)
                 tvSelectedMAS.text = getString(R.string.setup_file_selected, fileName)
                 tvSelectedMAS.visibility = View.VISIBLE
@@ -219,6 +235,8 @@ class SetupActivity : BaseActivity() {
                 setUiEnabled(true)
             }
         }
+
+        refreshNotificationPermissionUi()
     }
 
     @Suppress("DEPRECATION")
@@ -356,10 +374,8 @@ class SetupActivity : BaseActivity() {
                 Toast.makeText(this@SetupActivity, getString(R.string.setup_complete), Toast.LENGTH_SHORT).show()
                 
                 kotlinx.coroutines.delay(1000)
-                
-                val intent = Intent(this@SetupActivity, LauncherActivity::class.java)
-                startActivity(intent)
-                finish()
+
+                proceedAfterSetupInstall()
 
             } catch (e: Exception) {
                 layoutProgress.visibility = View.GONE
@@ -389,6 +405,79 @@ class SetupActivity : BaseActivity() {
         findViewById<View>(R.id.btnSelectMAS).alpha = alpha
         findViewById<View>(R.id.btnAutoDownloadMAS).alpha = alpha
         findViewById<View>(R.id.btnLanguage).alpha = alpha
+    }
+
+    private fun setupNotificationPermissionScreenInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(notificationPermissionBottomActions) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, insets.bottom + 24)
+            windowInsets
+        }
+    }
+
+    private fun proceedAfterSetupInstall() {
+        if (hasNotificationPermission()) {
+            launchLauncher()
+            return
+        }
+
+        setupContentScroll.visibility = View.GONE
+        notificationPermissionScreen.visibility = View.VISIBLE
+        refreshNotificationPermissionUi()
+
+        btnGrantNotificationPermission.setOnClickListener {
+            requestNotificationPermissionFromSetup()
+        }
+
+        btnSkipNotificationPermission.setOnClickListener {
+            launchLauncher()
+        }
+
+        btnContinueAfterNotifications.setOnClickListener {
+            launchLauncher()
+        }
+    }
+
+    private fun refreshNotificationPermissionUi() {
+        val notificationsGranted = hasNotificationPermission()
+        if (notificationPermissionScreen.visibility != View.VISIBLE) {
+            return
+        }
+
+        btnContinueAfterNotifications.isEnabled = notificationsGranted
+        tvNotificationPermissionStatus.visibility = if (notificationsGranted) View.VISIBLE else View.GONE
+        tvNotificationPermissionStatus.text = getString(
+            if (notificationsGranted) R.string.setup_notifications_enabled
+            else R.string.setup_notifications_denied
+        )
+    }
+
+    private fun requestNotificationPermissionFromSetup() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            refreshNotificationPermissionUi()
+            return
+        }
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+            REQUEST_PERMISSION_NOTIFICATIONS_SETUP
+        )
+    }
+
+    private fun hasNotificationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return true
+        }
+        return ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun launchLauncher() {
+        val intent = Intent(this@SetupActivity, LauncherActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     private suspend fun processInstallation() {
@@ -536,7 +625,6 @@ class SetupActivity : BaseActivity() {
             assetTemp.delete()
             
         } catch (e: Exception) {
-        } catch (e: Exception) {
             android.util.Log.w("Setup", "py_scripts zip missing or error: ${e.message}")
         }
     }
@@ -563,7 +651,11 @@ class SetupActivity : BaseActivity() {
                     .setTitle(getString(R.string.permission_notification_title))
                     .setMessage(getString(R.string.permission_notification_message))
                     .setPositiveButton(getString(R.string.yes)) { _, _ ->
-                        ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_PERMISSION_NOTIFICATIONS)
+                        ActivityCompat.requestPermissions(
+                            this,
+                            arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                            REQUEST_PERMISSION_NOTIFICATIONS_DOWNLOAD
+                        )
                     }
                     .setNegativeButton(getString(R.string.no)) { _, _ ->
                         downloadMAS() // Proceed without notifications
@@ -577,8 +669,13 @@ class SetupActivity : BaseActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_PERMISSION_NOTIFICATIONS) {
-            downloadMAS()
+        when (requestCode) {
+            REQUEST_PERMISSION_NOTIFICATIONS_DOWNLOAD -> {
+                downloadMAS()
+            }
+            REQUEST_PERMISSION_NOTIFICATIONS_SETUP -> {
+                refreshNotificationPermissionUi()
+            }
         }
     }
 
