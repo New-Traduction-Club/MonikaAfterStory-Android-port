@@ -18,7 +18,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
 import java.io.File
@@ -96,7 +95,7 @@ class LauncherActivity : BaseActivity() {
             return
         }
 
-        WorkManager.getInstance(applicationContext).cancelAllWork()
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
         currentLanguage = prefs.getString("language", "English") ?: "English"
 
         val isFirstLaunch = prefs.getBoolean("is_first_launch", true)

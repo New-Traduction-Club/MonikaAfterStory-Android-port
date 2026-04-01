@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application>
+        <receiver
+            android:name=".NotificationSchedulerReceiver"
+            android:exported="false" />
+
         <service 
             android:name=".DownloadService"
             android:foregroundServiceType="dataSync"

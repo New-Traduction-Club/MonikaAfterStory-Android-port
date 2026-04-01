@@ -597,14 +597,7 @@ public class PythonSDLActivity extends SDLActivity {
         super.onResume();
         
         // Cancel all scheduled notifications when the user returns to the game
-        // WorkManager may not be auto-initialized in the :renpy process, so initialize it manually
-        try {
-            androidx.work.WorkManager.getInstance(this);
-        } catch (IllegalStateException e) {
-            // Not initialized yet in this process, do it manually
-            androidx.work.WorkManager.initialize(this, 
-                new androidx.work.Configuration.Builder().build());
-        }
+        // Routing is handled by NotificationSchedulerReceiver in the main process.
         NotificationWorker.cancelAllNotifications(this);
 
         long start = System.currentTimeMillis();

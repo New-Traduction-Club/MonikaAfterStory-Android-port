@@ -9,13 +9,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import androidx.work.Data
 import java.io.File
-import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
 /**
@@ -64,7 +60,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
         const val KEY_MESSAGE = "message"
         const val KEY_IMAGE_PATH = "image_path"
 
-        private const val WORK_TAG = "renpy_notification"
+        const val WORK_TAG = "renpy_notification"
 
         /**
          * Cancels all scheduled notifications tagged with WORK_TAG.
@@ -72,7 +68,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
          */
         @JvmStatic
         fun cancelAllNotifications(context: Context) {
-            WorkManager.getInstance(context).cancelAllWorkByTag(WORK_TAG)
+            NotificationSchedulerReceiver.cancelAll(context.applicationContext)
         }
 
         /**
@@ -93,21 +89,13 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
             message: String,
             imagePath: String?
         ) {
-            val data = Data.Builder()
-                .putString(KEY_TITLE, title)
-                .putString(KEY_MESSAGE, message)
-            
-            if (!imagePath.isNullOrEmpty()) {
-                data.putString(KEY_IMAGE_PATH, imagePath)
-            }
-
-            val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
-                .setInitialDelay(delaySeconds, TimeUnit.SECONDS)
-                .setInputData(data.build())
-                .addTag(WORK_TAG)
-                .build()
-
-            WorkManager.getInstance(context).enqueue(workRequest)
+            NotificationSchedulerReceiver.schedule(
+                context = context.applicationContext,
+                delaySeconds = delaySeconds,
+                title = title,
+                message = message,
+                imagePath = imagePath
+            )
         }
 
         /**
@@ -160,7 +148,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
             val builder = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(title)
                 .setContentText(message)
-                .setSmallIcon(android.R.drawable.sym_def_app_icon)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
