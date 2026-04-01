@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -132,7 +133,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val zipFile = File.createTempFile("saves_backup", ".zip", cacheDir)
-                zipDirectory(savesDir, zipFile)
+                val tempExportDir = createTempExportDir(cacheDir)
+
+                try {
+                    copyDirectoryForExport(savesDir, tempExportDir)
+                    applyPersistentExportRules(tempExportDir)
+                    zipDirectory(tempExportDir, zipFile)
+                } finally {
+                    if (tempExportDir.exists()) {
+                        tempExportDir.deleteRecursively()
+                    }
+                }
+
                 _exportComplete.postValue(zipFile)
                 _operationStatus.postValue(getApplication<Application>().getString(R.string.status_export_ready))
             } catch (e: Exception) {
@@ -152,28 +164,78 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    private fun createTempExportDir(cacheDir: File): File {
+        val tempFile = File.createTempFile("saves_export_tmp", "", cacheDir)
+        if (!tempFile.delete()) {
+            throw IOException("Failed to prepare temporary export directory")
+        }
+        if (!tempFile.mkdirs()) {
+            throw IOException("Failed to create temporary export directory")
+        }
+        return tempFile
+    }
+
+    private fun copyDirectoryForExport(sourceDir: File, tempDir: File) {
+        sourceDir.walkTopDown().forEach { file ->
+            if (!file.isFile) {
+                return@forEach
+            }
+
+            val relPath = file.relativeTo(sourceDir).path.replace("\\", "/")
+            if (shouldIgnoreForZip(relPath, file)) {
+                return@forEach
+            }
+
+            val outputFile = File(tempDir, relPath)
+            outputFile.parentFile?.mkdirs()
+            file.copyTo(outputFile, overwrite = true)
+        }
+    }
+
+    private fun applyPersistentExportRules(tempDir: File) {
+        tempDir.walkTopDown().forEach { file ->
+            if (file.isFile && file.name == "persistent" && !file.delete()) {
+                throw IOException("Failed to delete ${file.absolutePath}")
+            }
+        }
+
+        tempDir.walkTopDown().forEach { file ->
+            if (!file.isFile || file.name != "persistent_699") {
+                return@forEach
+            }
+
+            val renamedFile = File(file.parentFile, "persistent")
+            if (renamedFile.exists() && !renamedFile.delete()) {
+                throw IOException("Failed to replace ${renamedFile.absolutePath}")
+            }
+            if (!file.renameTo(renamedFile)) {
+                throw IOException("Failed to rename ${file.absolutePath} to ${renamedFile.absolutePath}")
+            }
+        }
+    }
+
+    private fun shouldIgnoreForZip(relPath: String, file: File): Boolean {
+        return relPath.startsWith("android/") ||
+            relPath.startsWith("sync/") ||
+            file.name == "persistent.migrated" ||
+            file.name.endsWith(".save")
+    }
+
     private fun zipDirectory(folder: File, zipFile: File) {
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             folder.walkTopDown().forEach { file ->
-                val relPath = file.relativeTo(folder).path.replace("\\", "/")
-                if (relPath.startsWith("android/") || relPath.startsWith("sync/") || file.name == "persistent.migrated" || file.name.endsWith(".save")) {
+                if (!file.isFile) {
                     return@forEach
                 }
-                if (file.isFile) {
-                    if (file.name == "persistent") {
-                        if (File(file.parentFile, "persistent699").exists()) {
-                            return@forEach
-                        }
-                    }
-                    var entryName = relPath
-                    if (file.name == "persistent699") {
-                        entryName = relPath.substring(0, relPath.length - 3)
-                    }
-                    
-                    zos.putNextEntry(ZipEntry(entryName))
-                    FileInputStream(file).use { fis -> fis.copyTo(zos) }
-                    zos.closeEntry()
+
+                val relPath = file.relativeTo(folder).path.replace("\\", "/")
+                if (shouldIgnoreForZip(relPath, file)) {
+                    return@forEach
                 }
+
+                zos.putNextEntry(ZipEntry(relPath))
+                FileInputStream(file).use { fis -> fis.copyTo(zos) }
+                zos.closeEntry()
             }
         }
     }
