@@ -14,8 +14,7 @@
     
     <activity
         android:name="org.renpy.android.LauncherActivity"
-        android:exported="true"
-        android:screenOrientation="sensorLandscape">
+        android:exported="true">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -24,8 +23,7 @@
     
     <activity
         android:name="org.renpy.android.SetupActivity"
-        android:exported="false"
-        android:screenOrientation="sensorPortrait" />
+        android:exported="false" />
     
     <activity
       android:name="org.renpy.android.FileExplorerActivity"
@@ -44,7 +42,6 @@
       android:alwaysRetainTaskState="true"
       android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
       android:launchMode="singleTop"
-      android:screenOrientation="sensorLandscape"
       android:supportsPictureInPicture="true" />
 
 
@@ -57,12 +54,10 @@
     <activity
         android:name="org.renpy.android.WallpaperCropActivity"
         android:exported="false"
-        android:screenOrientation="landscape"
         android:theme="@style/Theme.Material3.Light.Dialog" />
     <activity
         android:name="org.renpy.android.FullscreenCropImageActivity"
         android:exported="false"
-        android:screenOrientation="landscape"
         android:theme="@style/CropImageActivityTheme" />
 
     <service

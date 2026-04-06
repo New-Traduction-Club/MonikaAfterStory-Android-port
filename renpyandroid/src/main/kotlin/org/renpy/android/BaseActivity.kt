@@ -1,6 +1,7 @@
 package org.renpy.android
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.os.Build
 import android.view.WindowManager
@@ -11,8 +12,11 @@ import java.util.Locale
 
 abstract class BaseActivity : AppCompatActivity() {
 
+    protected open val preferredOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
     override fun onCreate(savedInstanceState: Bundle?) {
         applyUserNightMode(this)
+        OrientationPolicy.applyRequestedOrientation(this, preferredOrientation)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

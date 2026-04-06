@@ -5,6 +5,7 @@ import org.libsdl.app.SDLActivity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -321,6 +322,7 @@ public class PythonSDLActivity extends SDLActivity {
     protected void onCreate(Bundle savedInstanceState) {
         long startTime = System.currentTimeMillis();
         Log.v("python", "onCreate() started at " + startTime);
+        OrientationPolicy.applyRequestedOrientation(this, ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         super.onCreate(savedInstanceState);
 
         if (mLayout == null) {

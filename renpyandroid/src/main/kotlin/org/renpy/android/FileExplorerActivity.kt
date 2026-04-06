@@ -2,7 +2,6 @@ package org.renpy.android
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
@@ -56,9 +55,6 @@ class FileExplorerActivity : GameWindowActivity() {
     private val REQUEST_CODE_IMPORT_FOLDER = 1003
     private val REQUEST_CODE_IMPORT_ZIP = 1004
     private val REQUEST_CODE_EXPORT_SELECTION = 2002
-
-    private var importOrientationLocked = false
-    private var previousRequestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -615,18 +611,9 @@ class FileExplorerActivity : GameWindowActivity() {
             .replace('\\', '_')
     }
 
-    private fun lockOrientationForImport() {
-        if (importOrientationLocked) return
-        previousRequestedOrientation = requestedOrientation
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        importOrientationLocked = true
-    }
+    private fun lockOrientationForImport() = Unit
 
-    private fun unlockOrientationForImport() {
-        if (!importOrientationLocked) return
-        requestedOrientation = previousRequestedOrientation
-        importOrientationLocked = false
-    }
+    private fun unlockOrientationForImport() = Unit
 
     @Throws(IOException::class)
     private fun copyUriToFile(uri: Uri, dest: File) {

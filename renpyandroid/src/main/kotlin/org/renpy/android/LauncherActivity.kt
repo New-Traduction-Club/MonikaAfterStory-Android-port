@@ -9,6 +9,9 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.StatFs
+import android.os.SystemClock
+import android.text.format.Formatter
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +23,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
 import java.io.File
@@ -42,6 +46,10 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class LauncherActivity : BaseActivity() {
+
+    companion object {
+        private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
+    }
 
     // Fixed virtual DPI and font scale to keep the Taskbar consistent across all devices
     override fun attachBaseContext(newBase: Context) {
@@ -76,6 +84,7 @@ class LauncherActivity : BaseActivity() {
     private val viewModel: LauncherViewModel by viewModels()
     private var currentLanguage: String = ""
     private var isUiInitialized = false
+    private var bootSequenceCompleted = false
     
     private var progressDialog: AlertDialog? = null
     private var progressIndicator: android.widget.ProgressBar? = null
@@ -99,6 +108,7 @@ class LauncherActivity : BaseActivity() {
 
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
         currentLanguage = prefs.getString("language", "English") ?: "English"
+        bootSequenceCompleted = savedInstanceState?.getBoolean(STATE_BOOT_SEQUENCE_COMPLETED, false) ?: false
 
         val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
         val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
@@ -120,7 +130,7 @@ class LauncherActivity : BaseActivity() {
         
         setupObservers()
         
-        initializeDesktopGrid(savedInstanceState == null)
+        initializeDesktopGrid()
         startSystemClockWorker()
         setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         
@@ -228,6 +238,11 @@ class LauncherActivity : BaseActivity() {
         WallpaperManager.advanceOnAppToggle(this)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(STATE_BOOT_SEQUENCE_COMPLETED, bootSequenceCompleted)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
         if (isUiInitialized) {
             WallpaperManager.clearVideoWallpaper(binding.root)
@@ -313,12 +328,12 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun initializeDesktopGrid(isFirstStart: Boolean) {
+    private fun initializeDesktopGrid() {
         binding.desktopRecyclerView.layoutManager = LinearLayoutManager(this)
 
         updateStartMenuAdapter()
 
-        if (isFirstStart) {
+        if (!bootSequenceCompleted) {
             startBootSequence()
         } else {
             ensureStartMenuVisible()
@@ -326,9 +341,12 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun startBootSequence() {
+        bootSequenceCompleted = false
+        binding.bootScreenLayout.alpha = 1f
         binding.bootScreenLayout.visibility = View.VISIBLE
         binding.startMenuPanel.visibility = View.GONE
         binding.txtBiosConsole.text = ""
+        binding.txtBiosConsole.scrollTo(0, 0)
         
         val actManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
@@ -337,31 +355,85 @@ class LauncherActivity : BaseActivity() {
         val model = Build.MODEL
         val manufacturer = Build.MANUFACTURER
         val androidVersion = Build.VERSION.RELEASE
+        val kernelVersion = System.getProperty("os.version").orEmpty().ifBlank { "Unknown" }
         val arch = Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown"
+        val cpuCores = Runtime.getRuntime().availableProcessors()
+        val (screenWidth, screenHeight) = resolveScreenResolution()
+        val (totalStorageBytes, availableStorageBytes) = resolveInternalStorageStats()
+        val totalStorage = Formatter.formatFileSize(this, totalStorageBytes)
+        val availableStorage = Formatter.formatFileSize(this, availableStorageBytes)
         
         lifecycleScope.launch {
-            delay(800)
-            
-            appendBiosText("Traduction Club BIOS v0.1\n\n")
-            delay(500)
-            
-            appendBiosText("Board: $manufacturer $model\n")
-            appendBiosText("OS: Android $androidVersion\n")
-            appendBiosText("Architecture: $arch\n")
-            appendBiosText("Total RAM: ${totalRamMb}MB... OK\n\n")
-            
-            delay(800)
-            appendBiosText("WAIT")
-            for (i in 1..10) {
-                delay(400)
-                appendBiosText(".")
+            delay(1_500)
+
+            val consoleBuffer = StringBuilder()
+            var cursorVisible = true
+
+            fun renderBootConsole() {
+                val output = if (cursorVisible) {
+                    "${consoleBuffer}_"
+                } else {
+                    consoleBuffer.toString()
+                }
+                setBootConsoleText(output)
             }
-            delay(500)
+
+            fun appendBootText(text: String) {
+                consoleBuffer.append(text)
+                renderBootConsole()
+            }
+
+            val cursorJob = launch {
+                while (true) {
+                    delay(280)
+                    cursorVisible = !cursorVisible
+                    renderBootConsole()
+                }
+            }
+
+            val hexPhaseStart = SystemClock.elapsedRealtime()
+            val hexDurationMs = Random.nextLong(2_400L, 5_200L)
+            val hexLineIntervalMs = 100L
+
+            appendBootText("HEX DUMP START\n")
+            var offset = 0
+            while (SystemClock.elapsedRealtime() - hexPhaseStart < hexDurationMs) {
+                appendBootText("${generateHexDumpLine(offset)}\n")
+                offset += 16
+                delay(hexLineIntervalMs)
+            }
+
+            appendBootText("\nTraduction Club BIOS v0.2\n")
+            appendBootText("Kernel: $kernelVersion\n")
+            appendBootText("Board: $manufacturer $model\n")
+            appendBootText("OS: Android $androidVersion\n")
+            appendBootText("Architecture: $arch\n")
+            appendBootText("CPU Cores: $cpuCores\n")
+            appendBootText("Resolution: ${screenWidth}x${screenHeight}\n")
+            appendBootText("Storage: $totalStorage total / $availableStorage free\n")
+            appendBootText("Total RAM: ${totalRamMb}MB... OK\n\n")
+
+            appendBootText("WAIT")
+            val waitTargetEnd = hexPhaseStart + 8_000L
+            val dotCount = 10
+            repeat(dotCount) { index ->
+                val dotsRemaining = dotCount - index
+                val remainingTimeMs = (waitTargetEnd - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+                val dotDelayMs = if (dotsRemaining > 0) remainingTimeMs / dotsRemaining else 0L
+                delay(dotDelayMs)
+                appendBootText(".")
+            }
+
+            cursorJob.cancel()
+            cursorVisible = false
+            setBootConsoleText(consoleBuffer.toString())
+            delay(450)
             
             binding.bootScreenLayout.animate()
                 .alpha(0f)
                 .setDuration(600)
                 .withEndAction {
+                    bootSequenceCompleted = true
                     binding.bootScreenLayout.visibility = View.GONE
                     lifecycleScope.launch {
                         delay(1000)
@@ -372,11 +444,56 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun appendBiosText(text: String) {
-        binding.txtBiosConsole.append(text)
+    private fun generateHexDumpLine(offset: Int, bytesPerLine: Int = 16): String {
+        val values = IntArray(bytesPerLine) { Random.nextInt(0, 256) }
+        val hexBytes = values.joinToString(" ") { String.format(Locale.US, "%02X", it) }
+        val asciiPreview = values.joinToString(separator = "") { value ->
+            if (value in 32..126) value.toChar().toString() else "."
+        }
+        return String.format(Locale.US, "%04X  %s  |%s|", offset, hexBytes, asciiPreview)
+    }
+
+    private fun resolveScreenResolution(): Pair<Int, Int> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            bounds.width() to bounds.height()
+        } else {
+            val metrics = resources.displayMetrics
+            metrics.widthPixels to metrics.heightPixels
+        }
+    }
+
+    private fun resolveInternalStorageStats(): Pair<Long, Long> {
+        val statFs = StatFs(filesDir.absolutePath)
+        return statFs.totalBytes to statFs.availableBytes
+    }
+
+    private fun setBootConsoleText(text: String) {
+        val console = binding.txtBiosConsole
+        console.text = text
+        console.doOnPreDraw {
+            scrollBootConsoleIfNeeded()
+        }
+    }
+
+    private fun scrollBootConsoleIfNeeded() {
+        val console = binding.txtBiosConsole
+        val layout = console.layout ?: return
+        val lastLine = layout.lineCount - 1
+        if (lastLine < 0) return
+
+        val visibleHeight = console.height - console.paddingTop - console.paddingBottom
+        if (visibleHeight <= 0) return
+
+        val lastLineBottom = layout.getLineBottom(lastLine)
+        val overflow = lastLineBottom - visibleHeight
+        if (overflow > 0) {
+            console.scrollTo(0, overflow)
+        }
     }
 
     private fun ensureStartMenuVisible() {
+        bootSequenceCompleted = true
         binding.startMenuPanel.visibility = View.VISIBLE
         binding.startMenuPanel.translationY = 0f
         binding.startMenuPanel.bringToFront()

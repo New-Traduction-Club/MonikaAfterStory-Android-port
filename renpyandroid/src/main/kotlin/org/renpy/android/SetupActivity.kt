@@ -29,6 +29,7 @@ import java.io.BufferedInputStream
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
@@ -36,6 +37,8 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.color.DynamicColors
 
 class SetupActivity : BaseActivity() {
+
+    override val preferredOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
 
     private var ddlcUri: Uri? = null
     private var masUri: Uri? = null

@@ -1,5 +1,6 @@
 package org.renpy.android
 
+import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -12,6 +13,7 @@ import com.canhub.cropper.CropImageActivity
 class FullscreenCropImageActivity : CropImageActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        OrientationPolicy.applyRequestedOrientation(this, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         applyFullscreen()

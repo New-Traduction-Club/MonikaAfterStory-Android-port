@@ -2,6 +2,7 @@ package org.renpy.android
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
@@ -41,6 +42,8 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 class WallpaperCropActivity : BaseActivity() {
+
+    override val preferredOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
     private var sourceUri: Uri? = null
     private var tempOutputFile: File? = null
