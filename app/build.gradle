@@ -19,7 +19,7 @@ android {
         applicationId "com.z.mas.portby.just6889"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 1757713324
+        versionCode 1757713325
         versionName "2.0.2"
     }
 
@@ -54,6 +54,9 @@ android {
                 jniLibs {
                     useLegacyPackaging = true
                 }
+            }
+            ndk {
+                debugSymbolLevel 'FULL'
             }
         }
     }
