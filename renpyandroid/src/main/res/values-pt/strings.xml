@@ -267,6 +267,9 @@
     <string name="status_installing">Instalando...</string>
     <string name="download_failed_error">Falha no download: %1$s</string>
     <string name="wifi_only_label">Baixar apenas via Wi-Fi</string>
+    <string name="download_center_update_prompt_title">Atualizações disponíveis</string>
+    <string name="download_center_update_prompt_message_single">Há 1 pacote para atualizar no Centro de Downloads.</string>
+    <string name="download_center_update_prompt_message_multiple">Há %1$d pacotes para atualizar no Centro de Downloads.</string>
     <string name="data_warning_title">Uso de Dados Móveis</string>
     <string name="data_warning_message">Você está usando dados móveis. Este download (%1$s) pode gerar custos adicionais. Deseja continuar?</string>
     <string name="calculating_size">Calculando tamanho...</string>

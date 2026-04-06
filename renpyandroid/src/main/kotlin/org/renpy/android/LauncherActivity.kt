@@ -6,6 +6,8 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -49,6 +51,7 @@ class LauncherActivity : BaseActivity() {
 
     companion object {
         private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
+        private const val STATE_DOWNLOAD_CENTER_CHECK_COMPLETED = "state_download_center_check_completed"
     }
 
     // Fixed virtual DPI and font scale to keep the Taskbar consistent across all devices
@@ -85,6 +88,7 @@ class LauncherActivity : BaseActivity() {
     private var currentLanguage: String = ""
     private var isUiInitialized = false
     private var bootSequenceCompleted = false
+    private var downloadCenterCheckCompleted = false
     
     private var progressDialog: AlertDialog? = null
     private var progressIndicator: android.widget.ProgressBar? = null
@@ -109,6 +113,7 @@ class LauncherActivity : BaseActivity() {
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
         currentLanguage = prefs.getString("language", "English") ?: "English"
         bootSequenceCompleted = savedInstanceState?.getBoolean(STATE_BOOT_SEQUENCE_COMPLETED, false) ?: false
+        downloadCenterCheckCompleted = savedInstanceState?.getBoolean(STATE_DOWNLOAD_CENTER_CHECK_COMPLETED, false) ?: false
 
         val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
         val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
@@ -240,6 +245,7 @@ class LauncherActivity : BaseActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBoolean(STATE_BOOT_SEQUENCE_COMPLETED, bootSequenceCompleted)
+        outState.putBoolean(STATE_DOWNLOAD_CENTER_CHECK_COMPLETED, downloadCenterCheckCompleted)
         super.onSaveInstanceState(outState)
     }
 
@@ -337,6 +343,7 @@ class LauncherActivity : BaseActivity() {
             startBootSequence()
         } else {
             ensureStartMenuVisible()
+            checkDownloadCenterUpdatesAfterBootIfNeeded()
         }
     }
 
@@ -438,6 +445,7 @@ class LauncherActivity : BaseActivity() {
                     lifecycleScope.launch {
                         delay(1000)
                         showStartMenuAnimated()
+                        checkDownloadCenterUpdatesAfterBootIfNeeded()
                     }
                 }
                 .start()
@@ -466,6 +474,68 @@ class LauncherActivity : BaseActivity() {
     private fun resolveInternalStorageStats(): Pair<Long, Long> {
         val statFs = StatFs(filesDir.absolutePath)
         return statFs.totalBytes to statFs.availableBytes
+    }
+
+    private fun checkDownloadCenterUpdatesAfterBootIfNeeded() {
+        if (downloadCenterCheckCompleted || !isUiInitialized) return
+        downloadCenterCheckCompleted = true
+
+        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
+        val wifiOnly = prefs.getBoolean("wifi_only", false)
+        if (!isNetworkConnected()) return
+        if (wifiOnly && !isConnectedToWifi()) return
+
+        lifecycleScope.launch {
+            val updateManager = UpdateManager(this@LauncherActivity)
+            val updates = updateManager.fetchUpdates(getString(R.string.manifest_url))
+            val availableCount = updates.count { updateManager.isUpdateAvailable(it) }
+            if (availableCount > 0 && !isFinishing && !isDestroyed) {
+                showDownloadCenterUpdatePrompt(availableCount)
+            }
+        }
+    }
+
+    private fun showDownloadCenterUpdatePrompt(availableCount: Int) {
+        val message = if (availableCount == 1) {
+            getString(R.string.download_center_update_prompt_message_single)
+        } else {
+            getString(R.string.download_center_update_prompt_message_multiple, availableCount)
+        }
+
+        GameDialogBuilder(this)
+            .setTitle(getString(R.string.download_center_update_prompt_title))
+            .setMessage(message)
+            .setPositiveButton(getString(R.string.launcher_download_center)) { _, _ ->
+                returnFromWindow = true
+                startActivity(Intent(this, DownloadCenterActivity::class.java))
+            }
+            .setNegativeButton(getString(R.string.import_conflict_ignore), null)
+            .show()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun isNetworkConnected(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } else {
+            connectivityManager.activeNetworkInfo?.isConnected == true
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun isConnectedToWifi(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+        } else {
+            val activeNetwork = connectivityManager.activeNetworkInfo
+            activeNetwork?.isConnected == true && activeNetwork.type == ConnectivityManager.TYPE_WIFI
+        }
     }
 
     private fun setBootConsoleText(text: String) {

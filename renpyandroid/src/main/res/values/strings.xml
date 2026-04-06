@@ -274,6 +274,9 @@
     <string name="status_installing">Installing...</string>
     <string name="download_failed_error">Download failed: %1$s</string>
     <string name="wifi_only_label">Download only on Wi-Fi</string>
+    <string name="download_center_update_prompt_title">Updates available</string>
+    <string name="download_center_update_prompt_message_single">There is 1 package update available in Download Center.</string>
+    <string name="download_center_update_prompt_message_multiple">There are %1$d package updates available in Download Center.</string>
     <string name="data_warning_title">Mobile Data Usage</string>
     <string name="data_warning_message">You are using mobile data. This download (%1$s) may incur additional charges. Do you want to proceed?</string>
     <string name="calculating_size">Calculating size...</string>
