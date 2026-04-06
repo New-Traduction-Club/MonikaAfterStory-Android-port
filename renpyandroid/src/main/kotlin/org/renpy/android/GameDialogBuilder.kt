@@ -182,6 +182,7 @@ class GameDialogBuilder(private val context: Context) {
             if (hostWasFullscreen) {
                 keepDialogImmersiveIfNeeded(dialog, force = true)
             }
+            applyDialogWindowSize(dialog)
             constrainScrollableContentHeight(
                 dialogView = dialogView,
                 titleView = titleView,
@@ -263,7 +264,7 @@ class GameDialogBuilder(private val context: Context) {
             val availableWindowHeight = dialogView.rootView.height
                 .takeIf { it > 0 }
                 ?: context.resources.displayMetrics.heightPixels
-            val maxDialogHeight = (availableWindowHeight * 0.85f).toInt()
+            val maxDialogHeight = (availableWindowHeight * 0.90f).toInt()
             val fixedHeight = titleView.height + messageView.height + buttonRow.height +
                 dialogView.paddingTop + dialogView.paddingBottom
 
@@ -287,6 +288,16 @@ class GameDialogBuilder(private val context: Context) {
                 target.layoutParams = params
             }
         }
+    }
+
+    private fun applyDialogWindowSize(dialog: AlertDialog) {
+        val dialogWindow = dialog.window ?: return
+        val availableWidth = dialogWindow.decorView.rootView.width
+            .takeIf { it > 0 }
+            ?: context.resources.displayMetrics.widthPixels
+        val targetWidth = (availableWidth * 0.92f).toInt()
+            .coerceAtMost(availableWidth)
+        dialogWindow.setLayout(targetWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
     private fun keepDialogImmersiveIfNeeded(dialog: AlertDialog, force: Boolean = false) {
