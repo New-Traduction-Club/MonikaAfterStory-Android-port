@@ -2,6 +2,9 @@ package org.renpy.android
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Build
+import android.view.WindowManager
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import java.util.Locale
@@ -10,7 +13,13 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applyUserNightMode(this)
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+        }
     }
 
     override fun attachBaseContext(newBase: Context) {

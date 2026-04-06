@@ -8,7 +8,6 @@ import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.view.ViewCompat
@@ -57,15 +56,7 @@ abstract class GameWindowActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         
         supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
-        
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-        }
-        
-        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
-        insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        insetsController.hide(WindowInsetsCompat.Type.systemBars())
+        applyImmersiveFullscreen()
         
         // Let derived activities set their own content via setContentView()
         overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
@@ -84,32 +75,54 @@ abstract class GameWindowActivity : BaseActivity() {
         window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            applyImmersiveFullscreen()
+        }
+    }
+
+    private fun applyImmersiveFullscreen() {
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        insetsController.hide(WindowInsetsCompat.Type.systemBars())
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                )
+        }
+    }
+
     private fun setupWindowChrome(rootLayout: ViewGroup) {
         val headerLayout = rootLayout.findViewById<View>(R.id.headerLayout)
         val footerBar = rootLayout.findViewById<View>(R.id.footerBar)
         
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
-            val systemInsets = insets.getInsets(WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.systemBars())
-            val windowMode = getWindowMode()
+            val systemInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             
             val density = resources.displayMetrics.density
             val px16 = (16 * density).toInt()
             val px12 = (12 * density).toInt()
             val extraRightMargin = (24 * density).toInt()
-            val leftInset = if (windowMode == WindowMode.MAXIMIZED) systemInsets.left else 0
-            val rightInset = if (windowMode == WindowMode.MAXIMIZED) systemInsets.right else 0
             
             headerLayout.setPadding(
-                leftInset + px16,
-                systemInsets.top + px12,
-                rightInset + px16 + extraRightMargin,
+                px16,
+                px12,
+                px16 + extraRightMargin,
                 px12
             )
             
             contentContainer.setPadding(
-                leftInset,
                 0,
-                rightInset + extraRightMargin,
+                0,
+                extraRightMargin,
                 0
             )
             

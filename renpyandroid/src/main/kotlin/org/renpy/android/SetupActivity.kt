@@ -118,6 +118,7 @@ class SetupActivity : BaseActivity() {
         tvCurrentLanguage = findViewById(R.id.tvCurrentLanguage)
 
         setupLanguageUI()
+        setupEdgeToEdgeInsets()
         setupNotificationPermissionScreenInsets()
 
         // DDLC
@@ -405,6 +406,44 @@ class SetupActivity : BaseActivity() {
         findViewById<View>(R.id.btnSelectMAS).alpha = alpha
         findViewById<View>(R.id.btnAutoDownloadMAS).alpha = alpha
         findViewById<View>(R.id.btnLanguage).alpha = alpha
+    }
+
+    private fun setupEdgeToEdgeInsets() {
+        val setupScrollLeft = setupContentScroll.paddingLeft
+        val setupScrollTop = setupContentScroll.paddingTop
+        val setupScrollRight = setupContentScroll.paddingRight
+        val setupScrollBottom = setupContentScroll.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(setupContentScroll) { view, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(
+                setupScrollLeft + insets.left,
+                setupScrollTop + insets.top,
+                setupScrollRight + insets.right,
+                setupScrollBottom + insets.bottom
+            )
+            windowInsets
+        }
+
+        val permissionLeft = notificationPermissionScreen.paddingLeft
+        val permissionTop = notificationPermissionScreen.paddingTop
+        val permissionRight = notificationPermissionScreen.paddingRight
+        val permissionBottom = notificationPermissionScreen.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(notificationPermissionScreen) { view, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(
+                permissionLeft + insets.left,
+                permissionTop + insets.top,
+                permissionRight + insets.right,
+                permissionBottom
+            )
+            windowInsets
+        }
     }
 
     private fun setupNotificationPermissionScreenInsets() {

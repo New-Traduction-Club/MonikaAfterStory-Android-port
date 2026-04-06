@@ -18,6 +18,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
 import java.io.File
@@ -111,6 +113,7 @@ class LauncherActivity : BaseActivity() {
 
         binding = LauncherActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupEdgeToEdgeInsets()
         isUiInitialized = true
 
         SoundEffects.initialize(this)
@@ -132,6 +135,24 @@ class LauncherActivity : BaseActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             enableImmersiveFullscreen()
+        }
+    }
+
+    private fun setupEdgeToEdgeInsets() {
+        val initialLeft = binding.root.paddingLeft
+        val initialTop = binding.root.paddingTop
+        val initialRight = binding.root.paddingRight
+        val initialBottom = binding.root.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                initialLeft,
+                initialTop,
+                initialRight,
+                initialBottom + insets.bottom
+            )
+            windowInsets
         }
     }
 

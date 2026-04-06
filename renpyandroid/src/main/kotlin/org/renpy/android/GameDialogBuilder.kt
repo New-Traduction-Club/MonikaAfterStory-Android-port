@@ -1,19 +1,24 @@
 package org.renpy.android
 
-import android.app.Dialog
+import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 /**
  * Custom styled dialog builder that matches the launcher's visual theme.
@@ -112,6 +117,11 @@ class GameDialogBuilder(private val context: Context) {
 
         val dialog = builder.create()
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val hostWasFullscreen = hostIsFullscreen()
+
+        if (hostWasFullscreen) {
+            keepDialogImmersiveIfNeeded(dialog, force = true)
+        }
 
         // Title
         if (title != null) {
@@ -169,6 +179,9 @@ class GameDialogBuilder(private val context: Context) {
         }
 
         dialog.setOnShowListener {
+            if (hostWasFullscreen) {
+                keepDialogImmersiveIfNeeded(dialog, force = true)
+            }
             constrainScrollableContentHeight(
                 dialogView = dialogView,
                 titleView = titleView,
@@ -177,6 +190,11 @@ class GameDialogBuilder(private val context: Context) {
                 customContainer = customContainer,
                 listView = listView
             )
+        }
+        dialog.setOnDismissListener {
+            if (hostWasFullscreen) {
+                restoreHostImmersive()
+            }
         }
 
         return dialog
@@ -268,6 +286,75 @@ class GameDialogBuilder(private val context: Context) {
                 }
                 target.layoutParams = params
             }
+        }
+    }
+
+    private fun keepDialogImmersiveIfNeeded(dialog: AlertDialog, force: Boolean = false) {
+        if (!force && !hostIsFullscreen()) return
+        val dialogWindow = dialog.window ?: return
+
+        WindowCompat.setDecorFitsSystemWindows(dialogWindow, false)
+        val insetsController = WindowCompat.getInsetsController(dialogWindow, dialogWindow.decorView)
+        insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        insetsController.hide(WindowInsetsCompat.Type.systemBars())
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            @Suppress("DEPRECATION")
+            val immersiveFlags = (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                )
+            @Suppress("DEPRECATION")
+            dialogWindow.decorView.systemUiVisibility = immersiveFlags
+            @Suppress("DEPRECATION")
+            dialogWindow.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+                if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0 ||
+                    visibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0
+                ) {
+                    dialogWindow.decorView.systemUiVisibility = immersiveFlags
+                }
+            }
+        }
+    }
+
+    private fun restoreHostImmersive() {
+        val hostActivity = context as? Activity ?: return
+        hostActivity.window.decorView.post {
+            val hostWindow = hostActivity.window
+            WindowCompat.setDecorFitsSystemWindows(hostWindow, false)
+            val insetsController = WindowCompat.getInsetsController(hostWindow, hostWindow.decorView)
+            insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            insetsController.hide(WindowInsetsCompat.Type.systemBars())
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                @Suppress("DEPRECATION")
+                hostWindow.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    )
+            }
+        }
+    }
+
+    private fun hostIsFullscreen(): Boolean {
+        val hostActivity = context as? Activity ?: return false
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val rootInsets = hostActivity.window.decorView.rootWindowInsets ?: return false
+            !rootInsets.isVisible(WindowInsets.Type.statusBars()) ||
+                !rootInsets.isVisible(WindowInsets.Type.navigationBars())
+        } else {
+            @Suppress("DEPRECATION")
+            val flags = hostActivity.window.decorView.systemUiVisibility
+            (flags and View.SYSTEM_UI_FLAG_FULLSCREEN) != 0 ||
+                (flags and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) != 0
         }
     }
 

@@ -3,6 +3,7 @@ package org.renpy.android
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -11,6 +12,7 @@ import com.canhub.cropper.CropImageActivity
 class FullscreenCropImageActivity : CropImageActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         applyFullscreen()
     }
@@ -21,7 +23,6 @@ class FullscreenCropImageActivity : CropImageActivity() {
     }
 
     private fun applyFullscreen() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insetsController.hide(WindowInsetsCompat.Type.systemBars())

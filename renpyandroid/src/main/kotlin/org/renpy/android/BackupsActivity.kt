@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
@@ -22,9 +21,7 @@ class BackupsActivity : GameWindowActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         binding = ActivityBackupsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
@@ -34,7 +31,7 @@ class BackupsActivity : GameWindowActivity() {
         
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, insets.bottom)
             windowInsets
         }
         

@@ -1,5 +1,6 @@
 package org.libsdl.app;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -346,6 +347,7 @@ public class HIDDeviceManager {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void initializeBluetooth() {
         Log.d(TAG, "Initializing Bluetooth");
 
@@ -370,6 +372,12 @@ public class HIDDeviceManager {
         BluetoothAdapter btAdapter = mBluetoothManager.getAdapter();
         if (btAdapter == null) {
             // This device has Bluetooth support in the codebase, but has no available adapters.
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            mContext.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Couldn't initialize Bluetooth, missing android.permission.BLUETOOTH_CONNECT");
             return;
         }
 
@@ -414,8 +422,15 @@ public class HIDDeviceManager {
     // Chromebooks do not pass along ACTION_ACL_CONNECTED / ACTION_ACL_DISCONNECTED properly.
     // This function provides a sort of dummy version of that, watching for changes in the
     // connected devices and attempting to add controllers as things change.
+    @SuppressLint("MissingPermission")
     public void chromebookConnectionHandler() {
         if (!mIsChromebook) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            mContext.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Skipping Chromebook Bluetooth scan, missing android.permission.BLUETOOTH_CONNECT");
             return;
         }
 
@@ -488,9 +503,15 @@ public class HIDDeviceManager {
         }
     }
 
+    @SuppressLint("MissingPermission")
     public boolean isSteamController(BluetoothDevice bluetoothDevice) {
         // Sanity check.  If you pass in a null device, by definition it is never a Steam Controller.
         if (bluetoothDevice == null) {
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            mContext.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             return false;
         }
 

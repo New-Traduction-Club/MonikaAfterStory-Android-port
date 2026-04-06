@@ -1,5 +1,6 @@
 package org.libsdl.app;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -10,6 +11,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothGattService;
 import android.hardware.usb.UsbDevice;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -22,6 +24,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.UUID;
 
+@SuppressLint("MissingPermission")
 class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDevice {
 
     private static final String TAG = "hidapi";
@@ -60,16 +63,19 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
         UUID mUuid;
         byte[] mValue;
         BluetoothGatt mGatt;
+        Context mContext;
         boolean mResult = true;
 
-        private GattOperation(BluetoothGatt gatt, GattOperation.Operation operation, UUID uuid) {
+        private GattOperation(BluetoothGatt gatt, Context context, GattOperation.Operation operation, UUID uuid) {
             mGatt = gatt;
+            mContext = context;
             mOp = operation;
             mUuid = uuid;
         }
 
-        private GattOperation(BluetoothGatt gatt, GattOperation.Operation operation, UUID uuid, byte[] value) {
+        private GattOperation(BluetoothGatt gatt, Context context, GattOperation.Operation operation, UUID uuid, byte[] value) {
             mGatt = gatt;
+            mContext = context;
             mOp = operation;
             mUuid = uuid;
             mValue = value;
@@ -77,6 +83,13 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
 
         public void run() {
             // This is executed in main thread
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                (mContext == null || mContext.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED)) {
+                Log.w(TAG, "Missing BLUETOOTH_CONNECT permission for GATT operation " + mOp);
+                mResult = false;
+                return;
+            }
+
             BluetoothGattCharacteristic chr;
 
             switch (mOp) {
@@ -143,16 +156,16 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
             return valveService.getCharacteristic(uuid);
         }
 
-        static public GattOperation readCharacteristic(BluetoothGatt gatt, UUID uuid) {
-            return new GattOperation(gatt, Operation.CHR_READ, uuid);
+        static public GattOperation readCharacteristic(BluetoothGatt gatt, Context context, UUID uuid) {
+            return new GattOperation(gatt, context, Operation.CHR_READ, uuid);
         }
 
-        static public GattOperation writeCharacteristic(BluetoothGatt gatt, UUID uuid, byte[] value) {
-            return new GattOperation(gatt, Operation.CHR_WRITE, uuid, value);
+        static public GattOperation writeCharacteristic(BluetoothGatt gatt, Context context, UUID uuid, byte[] value) {
+            return new GattOperation(gatt, context, Operation.CHR_WRITE, uuid, value);
         }
 
-        static public GattOperation enableNotification(BluetoothGatt gatt, UUID uuid) {
-            return new GattOperation(gatt, Operation.ENABLE_NOTIFICATION, uuid);
+        static public GattOperation enableNotification(BluetoothGatt gatt, Context context, UUID uuid) {
+            return new GattOperation(gatt, context, Operation.ENABLE_NOTIFICATION, uuid);
         }
     }
 
@@ -397,17 +410,17 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     }
 
     private void enableNotification(UUID chrUuid) {
-        GattOperation op = HIDDeviceBLESteamController.GattOperation.enableNotification(mGatt, chrUuid);
+        GattOperation op = HIDDeviceBLESteamController.GattOperation.enableNotification(mGatt, mManager.getContext(), chrUuid);
         queueGattOperation(op);
     }
 
     public void writeCharacteristic(UUID uuid, byte[] value) {
-        GattOperation op = HIDDeviceBLESteamController.GattOperation.writeCharacteristic(mGatt, uuid, value);
+        GattOperation op = HIDDeviceBLESteamController.GattOperation.writeCharacteristic(mGatt, mManager.getContext(), uuid, value);
         queueGattOperation(op);
     }
 
     public void readCharacteristic(UUID uuid) {
-        GattOperation op = HIDDeviceBLESteamController.GattOperation.readCharacteristic(mGatt, uuid);
+        GattOperation op = HIDDeviceBLESteamController.GattOperation.readCharacteristic(mGatt, mManager.getContext(), uuid);
         queueGattOperation(op);
     }
 
@@ -647,4 +660,3 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     }
 
 }
-

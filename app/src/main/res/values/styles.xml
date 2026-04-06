@@ -18,8 +18,6 @@
         <item name="colorOnSurfaceVariant">@color/colorOnSurfaceVariant</item>
         <item name="colorOutline">@color/colorOutline</item>
 
-        <item name="android:statusBarColor">?attr/colorPrimary</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:windowBackground">@color/colorBackground</item>
     </style>
 
