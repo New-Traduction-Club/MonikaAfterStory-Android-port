@@ -242,7 +242,10 @@ class GameDialogBuilder(private val context: Context) {
         listView: ListView
     ) {
         dialogView.post {
-            val maxDialogHeight = (context.resources.displayMetrics.heightPixels * 0.85f).toInt()
+            val availableWindowHeight = dialogView.rootView.height
+                .takeIf { it > 0 }
+                ?: context.resources.displayMetrics.heightPixels
+            val maxDialogHeight = (availableWindowHeight * 0.85f).toInt()
             val fixedHeight = titleView.height + messageView.height + buttonRow.height +
                 dialogView.paddingTop + dialogView.paddingBottom
 

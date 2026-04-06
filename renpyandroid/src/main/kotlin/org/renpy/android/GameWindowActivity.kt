@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.widget.NestedScrollView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.cardview.widget.CardView
 import android.widget.LinearLayout
@@ -259,9 +260,21 @@ abstract class GameWindowActivity : BaseActivity() {
         recreateOnChange: Boolean,
         onApplied: (() -> Unit)?
     ) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_window_mode_choice, null)
-        val optionWindowed = dialogView.findViewById<LinearLayout>(R.id.optionWindowed)
-        val optionMaximized = dialogView.findViewById<LinearLayout>(R.id.optionMaximized)
+        val dialogContentView = layoutInflater.inflate(R.layout.dialog_window_mode_choice, null)
+        val optionWindowed = dialogContentView.findViewById<LinearLayout>(R.id.optionWindowed)
+        val optionMaximized = dialogContentView.findViewById<LinearLayout>(R.id.optionMaximized)
+
+        val scrollableDialogView = NestedScrollView(this).apply {
+            isFillViewport = true
+            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
+            addView(
+                dialogContentView,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            )
+        }
 
         var selected = getWindowMode()
 
@@ -286,7 +299,7 @@ abstract class GameWindowActivity : BaseActivity() {
 
         val builder = GameDialogBuilder(this)
             .setTitle(getString(R.string.window_mode_prompt_title))
-            .setView(dialogView)
+            .setView(scrollableDialogView)
             .setPositiveButton(getString(R.string.window_mode_apply), null)
 
         if (allowCancel) {
