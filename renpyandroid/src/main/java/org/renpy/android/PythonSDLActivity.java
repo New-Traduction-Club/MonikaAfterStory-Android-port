@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -93,6 +94,7 @@ public class PythonSDLActivity extends SDLActivity {
 
     private static final int REQUEST_CODE_OPEN_DOCUMENT_TREE = 1001;
     public static Uri safUri = null;
+    private volatile boolean mPendingPictureInPictureEnter = false;
 
     // Creates the IAP store, when needed. /////////////////////////////////////////
 
@@ -412,6 +414,13 @@ public class PythonSDLActivity extends SDLActivity {
         Log.v("python", "onStop() start.");
 
         super.onStop();
+        if (mPendingPictureInPictureEnter) {
+            boolean inPictureInPicture = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode();
+            if (!inPictureInPicture) {
+                DiscordRpcManager.stop();
+            }
+            mPendingPictureInPictureEnter = false;
+        }
         long startTime = System.currentTimeMillis();
 
         synchronized (this) {
@@ -569,6 +578,7 @@ public class PythonSDLActivity extends SDLActivity {
         super.onUserLeaveHint();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
+                mPendingPictureInPictureEnter = true;
                 PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder();
                 
                 Rational aspectRatio = new Rational(16, 9);
@@ -590,14 +600,25 @@ public class PythonSDLActivity extends SDLActivity {
 
                 enterPictureInPictureMode(builder.build());
             } catch (Exception e) {
+                mPendingPictureInPictureEnter = false;
                 Log.e("PythonSDLActivity", "Enter PiP failed", e);
             }
         }
     }
 
     @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        mPendingPictureInPictureEnter = false;
+        if (isInPictureInPictureMode) {
+            DiscordRpcManager.startIfEnabled(this);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        mPendingPictureInPictureEnter = false;
         DiscordRpcManager.startIfEnabled(this);
         
         // Cancel all scheduled notifications when the user returns to the game
@@ -614,7 +635,11 @@ public class PythonSDLActivity extends SDLActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        DiscordRpcManager.stop();
+        boolean inPictureInPicture =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode();
+        if (!inPictureInPicture && !mPendingPictureInPictureEnter) {
+            DiscordRpcManager.stop();
+        }
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         long start = prefs.getLong("last_session_start", 0);
         if (start > 0) {
