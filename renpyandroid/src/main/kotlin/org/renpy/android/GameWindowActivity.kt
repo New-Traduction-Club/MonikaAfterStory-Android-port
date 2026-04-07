@@ -259,9 +259,12 @@ abstract class GameWindowActivity : BaseActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         if (prefs.contains(KEY_WINDOW_MODE)) return
 
+        // Keep maximized as the default when the first-run prompt is dismissed
+        setWindowMode(WindowMode.MAXIMIZED)
+
         showWindowModeDialog(
             rootLayout,
-            allowCancel = false,
+            allowCancel = true,
             recreateOnChange = true,
             onApplied = null
         )
