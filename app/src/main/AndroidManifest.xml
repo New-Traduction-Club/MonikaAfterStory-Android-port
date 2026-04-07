@@ -24,6 +24,15 @@
     <activity
         android:name="org.renpy.android.SetupActivity"
         android:exported="false" />
+
+    <activity
+        android:name="org.renpy.android.DiscordLoginActivity"
+        android:exported="false" />
+
+    <activity
+        android:name="org.renpy.android.DiscordRpcActivity"
+        android:exported="false"
+        android:theme="@style/Theme.Material3.Light.Dialog" />
     
     <activity
       android:name="org.renpy.android.FileExplorerActivity"

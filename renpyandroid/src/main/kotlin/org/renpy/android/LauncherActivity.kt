@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -52,6 +53,8 @@ class LauncherActivity : BaseActivity() {
     companion object {
         private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
         private const val STATE_DOWNLOAD_CENTER_CHECK_COMPLETED = "state_download_center_check_completed"
+        private const val REQUEST_CODE_EXPORT_SAVES = 2001
+        private const val REQUEST_CODE_IMPORT_SAVES = 2002
     }
 
     // Fixed virtual DPI and font scale to keep the Taskbar consistent across all devices
@@ -315,6 +318,7 @@ class LauncherActivity : BaseActivity() {
         return listOf(
             DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
             DesktopShortcut(R.string.launcher_download_center, R.drawable.ic_launcher_download, "download_center"),
+            DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
             DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
             DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info")
@@ -637,6 +641,32 @@ class LauncherActivity : BaseActivity() {
             .start()
     }
 
+    private fun openDiscordRpcWindow() {
+        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
+        if (!prefs.getBoolean(DiscordRpcManager.PREF_DISCORD_RPC_WARNING_ACCEPTED, false)) {
+            showDiscordRpcWarningDialog(prefs)
+            return
+        }
+        returnFromWindow = true
+        startActivity(Intent(this, DiscordRpcActivity::class.java))
+    }
+
+    private fun showDiscordRpcWarningDialog(prefs: SharedPreferences) {
+        GameDialogBuilder(this)
+            .setTitle(getString(R.string.discord_rpc_warning_title))
+            .setMessage(getString(R.string.discord_rpc_warning_message))
+            .setPositiveButton(getString(R.string.launcher_proceed)) { _, _ ->
+                prefs.edit()
+                    .putBoolean(DiscordRpcManager.PREF_DISCORD_RPC_WARNING_ACCEPTED, true)
+                    .apply()
+                openDiscordRpcWindow()
+            }
+            .setNegativeButton(getString(R.string.cancel)) { _, _ ->
+                InAppNotifier.show(this, getString(R.string.discord_rpc_warning_denied), true)
+            }
+            .show()
+    }
+
     private fun handleShortcutExecution(shortcut: DesktopShortcut) {
         if (shortcut.actionId == "toggle_expand") {
             isStartMenuExpanded = !isStartMenuExpanded
@@ -674,7 +704,7 @@ class LauncherActivity : BaseActivity() {
                         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
                         intent.addCategory(Intent.CATEGORY_OPENABLE)
                         intent.type = "application/zip"
-                        startActivityForResult(intent, 2002)
+                        startActivityForResult(intent, REQUEST_CODE_IMPORT_SAVES)
                     }
                     .setNegativeButton(getString(R.string.cancel), null)
                     .show()
@@ -690,7 +720,7 @@ class LauncherActivity : BaseActivity() {
                         intent.addCategory(Intent.CATEGORY_OPENABLE)
                         intent.type = "application/zip"
                         intent.putExtra(Intent.EXTRA_TITLE, fileName)
-                        startActivityForResult(intent, 2001)
+                        startActivityForResult(intent, REQUEST_CODE_EXPORT_SAVES)
                     }
                     .setNegativeButton(getString(R.string.cancel), null)
                     .show()
@@ -708,6 +738,9 @@ class LauncherActivity : BaseActivity() {
             "download_center" -> {
                 returnFromWindow = true
                 startActivity(Intent(this, DownloadCenterActivity::class.java))
+            }
+            "discord_rpc" -> {
+                openDiscordRpcWindow()
             }
             "backups" -> {
                 returnFromWindow = true
@@ -906,11 +939,11 @@ class LauncherActivity : BaseActivity() {
         val uri = data.data!!
         val savesDir = File(getExternalFilesDir(null), "saves")
 
-        if (requestCode == 2001) {
+        if (requestCode == REQUEST_CODE_EXPORT_SAVES) {
             // Export
             pendingExportUri = uri
             viewModel.exportSaves(savesDir, cacheDir)
-        } else if (requestCode == 2002) {
+        } else if (requestCode == REQUEST_CODE_IMPORT_SAVES) {
             // Import
             Thread { 
                 try {

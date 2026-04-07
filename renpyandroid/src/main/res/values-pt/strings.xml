@@ -147,6 +147,7 @@
     <string name="launcher_browse_internal">Explorar arquivos internos</string>
     <string name="launcher_browse_external">Arquivos de Save</string>
     <string name="launcher_settings">Configurações</string>
+    <string name="launcher_discord_rpc">Discord RPC</string>
     <string name="launcher_backups">Backups</string>
     <string name="launcher_all_programs">Ver mais</string>
 
@@ -158,6 +159,32 @@
     <string name="launcher_settings_desc">Ajustes do launcher</string>
     <string name="launcher_download_desc">Obter atualizações</string>
     <string name="launcher_backups_desc">Gerenciar backups de dados</string>
+    <string name="discord_rpc_dialog_title">Discord RPC</string>
+    <string name="discord_rpc_dialog_message">Faça login com o Discord primeiro e depois ative o Rich Presence para a atividade no jogo.</string>
+    <string name="discord_rpc_warning_title">Aviso do Discord RPC</string>
+    <string name="discord_rpc_warning_message">Este recurso usa o Discord Gateway (não oficial). Use por sua conta e risco.</string>
+    <string name="discord_rpc_warning_denied">O Discord RPC não foi ativado porque você recusou o aviso.</string>
+    <string name="discord_rpc_login_with_discord">Entrar com Discord</string>
+    <string name="discord_rpc_login_title">Login do Discord</string>
+    <string name="discord_rpc_enable_label">Ativar Discord Rich Presence</string>
+    <string name="discord_rpc_enable_desc">Requer uma sessão iniciada no Discord.</string>
+    <string name="discord_rpc_login_status_connected">Sessão do Discord detectada.</string>
+    <string name="discord_rpc_login_status_disconnected">Você ainda não fez login.</string>
+    <string name="discord_rpc_session_valid">Sessão válida</string>
+    <string name="discord_rpc_logout">Encerrar sessão</string>
+    <string name="discord_rpc_logout_confirm_title">Encerrar sessão do Discord?</string>
+    <string name="discord_rpc_logout_confirm_message">Deseja encerrar a sessão do Discord usada para o RPC?</string>
+    <string name="discord_rpc_logout_success">Sessão do Discord removida.</string>
+    <string name="discord_rpc_login_required">Faça login com o Discord antes de ativar o RPC.</string>
+    <string name="discord_rpc_login_success">Login do Discord concluído. Token importado.</string>
+    <string name="discord_rpc_login_failed">Não foi possível obter o token do Discord pelo login.</string>
+    <string name="discord_rpc_saved_enabled">Discord RPC ativado. Ele iniciará ao abrir o jogo.</string>
+    <string name="discord_rpc_saved_disabled">Discord RPC desativado.</string>
+    <string name="discord_rpc_presence_name">Monika After Story Launcher</string>
+    <string name="discord_rpc_presence_state">In the spaceroom</string>
+    <string name="discord_rpc_presence_details">Unofficial Monika After Story Android port</string>
+    <string name="discord_rpc_button_play_store">Play Store</string>
+    <string name="discord_rpc_button_github_repo">Github Repo</string>
 
     <!-- SettingsActivity Strings -->
     <string name="settings_title">Configurações</string>

@@ -391,6 +391,7 @@ public class PythonSDLActivity extends SDLActivity {
     protected void onDestroy() {
         Log.v("python", "onDestroy()");
 
+        DiscordRpcManager.stop();
         super.onDestroy();
 
         if (mStore != null) {
@@ -597,6 +598,7 @@ public class PythonSDLActivity extends SDLActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        DiscordRpcManager.startIfEnabled(this);
         
         // Cancel all scheduled notifications when the user returns to the game
         // Routing is handled by NotificationSchedulerReceiver in the main process.
@@ -612,6 +614,7 @@ public class PythonSDLActivity extends SDLActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        DiscordRpcManager.stop();
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         long start = prefs.getLong("last_session_start", 0);
         if (start > 0) {
