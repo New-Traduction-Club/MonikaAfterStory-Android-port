@@ -32,6 +32,7 @@ import org.renpy.android.databinding.LauncherActivityBinding
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import kotlin.random.Random
@@ -827,13 +828,13 @@ class LauncherActivity : BaseActivity() {
                 is LauncherViewModel.LaunchState.LaunchGame -> {
                     dismissProgressDialog()
                     viewModel.consumeLaunchState()
-                    startActivity(Intent(this, PythonSDLActivity::class.java))
+                    launchPythonActivityWithSanitizedPackages()
                 }
                 is LauncherViewModel.LaunchState.Error -> {
                     dismissProgressDialog()
                     InAppNotifier.show(this, state.message, true)
                     viewModel.consumeLaunchState()
-                    startActivity(Intent(this, PythonSDLActivity::class.java))
+                    launchPythonActivityWithSanitizedPackages()
                 }
             }
         }
@@ -1028,6 +1029,65 @@ class LauncherActivity : BaseActivity() {
                 }
             }
         }
+    }
+
+    private fun removeUtf8CodingDeclarationsInPythonPackages() {
+        val pythonPackagesDir = File(filesDir, "game/python-packages")
+        if (!pythonPackagesDir.isDirectory) return
+
+        pythonPackagesDir.walkTopDown()
+            .filter { it.isFile && it.extension.equals("py", ignoreCase = true) }
+            .forEach { removeUtf8CodingDeclarationLine(it) }
+    }
+
+    private fun removeUtf8CodingDeclarationLine(file: File) {
+        val originalText = file.readText(Charsets.UTF_8)
+        val lineSeparator = if (originalText.contains("\r\n")) "\r\n" else "\n"
+        val hadTrailingLineBreak = originalText.endsWith("\n") || originalText.endsWith("\r\n")
+        val originalLines = originalText.lineSequence().toList()
+        val sanitizedLines = originalLines.filterNot { isUtf8CodingDeclaration(it) }
+
+        if (sanitizedLines.size == originalLines.size) return
+
+        val sanitizedText = buildString {
+            append(sanitizedLines.joinToString(lineSeparator))
+            if (hadTrailingLineBreak && sanitizedLines.isNotEmpty()) {
+                append(lineSeparator)
+            }
+        }
+
+        file.writeText(sanitizedText, Charsets.UTF_8)
+    }
+
+    private fun isUtf8CodingDeclaration(line: String): Boolean {
+        val normalized = line
+            .removePrefix("\uFEFF")
+            .trimStart()
+            .lowercase(Locale.US)
+        if (!normalized.startsWith("#")) return false
+        if (!normalized.contains("coding")) return false
+        if (!normalized.contains("utf8") && !normalized.contains("utf-8") && !normalized.contains("utf_8")) {
+            return false
+        }
+        return normalized.contains("coding:") || normalized.contains("coding=")
+    }
+
+    private fun launchPythonActivityWithSanitizedPackages() {
+        Thread {
+            var sanitizeError: IOException? = null
+            try {
+                removeUtf8CodingDeclarationsInPythonPackages()
+            } catch (e: IOException) {
+                sanitizeError = e
+            }
+
+            runOnUiThread {
+                sanitizeError?.let { error ->
+                    InAppNotifier.show(this@LauncherActivity, getString(R.string.install_error, error.message), true)
+                }
+                startActivity(Intent(this@LauncherActivity, PythonSDLActivity::class.java))
+            }
+        }.start()
     }
 
     private fun createLanguageFile(language: String) {
