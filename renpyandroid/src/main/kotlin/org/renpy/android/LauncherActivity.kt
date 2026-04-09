@@ -1076,6 +1076,7 @@ class LauncherActivity : BaseActivity() {
         Thread {
             var sanitizeError: IOException? = null
             try {
+                ensureAndroidMasbaseBootstrapScript()
                 removeUtf8CodingDeclarationsInPythonPackages()
             } catch (e: IOException) {
                 sanitizeError = e
@@ -1088,6 +1089,28 @@ class LauncherActivity : BaseActivity() {
                 startActivity(Intent(this@LauncherActivity, PythonSDLActivity::class.java))
             }
         }.start()
+    }
+
+    @Throws(IOException::class)
+    private fun ensureAndroidMasbaseBootstrapScript() {
+        val gameDir = File(filesDir, "game")
+        if (!gameDir.exists() && !gameDir.mkdirs()) {
+            throw IOException("Unable to create game directory")
+        }
+
+        val escapedBasePath = filesDir.absolutePath
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+        val bootstrapScript = """
+            init -1000 python:
+                import os
+                ANDROID_MASBASE = os.environ.get("ANDROID_MASBASE", os.environ.get("ANDROID_PRIVATE", "$escapedBasePath"))
+        """.trimIndent() + "\n"
+
+        val bootstrapFile = File(gameDir, "zz_android_masbase_bootstrap.rpy")
+        if (!bootstrapFile.exists() || bootstrapFile.readText(Charsets.UTF_8) != bootstrapScript) {
+            bootstrapFile.writeText(bootstrapScript, Charsets.UTF_8)
+        }
     }
 
     private fun createLanguageFile(language: String) {

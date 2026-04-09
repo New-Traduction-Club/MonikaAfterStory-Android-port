@@ -281,6 +281,7 @@ public class PythonSDLActivity extends SDLActivity {
         Log.v("python", "unpackData finished. Duration: " + (System.currentTimeMillis() - unpackStart) + "ms");
 
         nativeSetEnv("ANDROID_PRIVATE", getFilesDir().getAbsolutePath());
+        nativeSetEnv("ANDROID_MASBASE", getFilesDir().getAbsolutePath());
         nativeSetEnv("ANDROID_PUBLIC",  externalStorage.getAbsolutePath());
         nativeSetEnv("ANDROID_OLD_PUBLIC", oldExternalStorage.getAbsolutePath());
 
