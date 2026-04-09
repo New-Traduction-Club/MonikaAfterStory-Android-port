@@ -1,8 +1,10 @@
 package org.renpy.android
 
 import android.app.Activity
+import android.content.ClipData
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
@@ -48,6 +50,7 @@ class WallpaperCropActivity : BaseActivity() {
     private var sourceUri: Uri? = null
     private var tempOutputFile: File? = null
     private var tempVideoFrameFile: File? = null
+    private var tempImageSourceFile: File? = null
 
     private var targetWidth = 0
     private var targetHeight = 0
@@ -93,9 +96,11 @@ class WallpaperCropActivity : BaseActivity() {
         isVideoSource = savedInstanceState?.getBoolean(STATE_IS_VIDEO_SOURCE, false) ?: false
         savedInstanceState?.getString(STATE_TEMP_OUTPUT_PATH)?.let { tempOutputFile = File(it) }
         savedInstanceState?.getString(STATE_TEMP_VIDEO_FRAME_PATH)?.let { tempVideoFrameFile = File(it) }
+        savedInstanceState?.getString(STATE_TEMP_IMAGE_SOURCE_PATH)?.let { tempImageSourceFile = File(it) }
 
-        if (targetWidth <= 0 || targetHeight <= 0) {
-            val (resolvedWidth, resolvedHeight) = resolveTargetWallpaperSize()
+        val useLandscapeTargets = shouldUseLandscapeTargets()
+        if (!hasTargetWallpaperSizeFor(useLandscapeTargets)) {
+            val (resolvedWidth, resolvedHeight) = resolveTargetWallpaperSize(useLandscapeTargets)
             targetWidth = resolvedWidth
             targetHeight = resolvedHeight
         }
@@ -144,7 +149,13 @@ class WallpaperCropActivity : BaseActivity() {
         }
 
         if (!isVideoSource) {
-            return CropSourcePreparation.Ready(source)
+            return try {
+                CropSourcePreparation.Ready(ensureLocalImageSource(source))
+            } catch (e: IOException) {
+                CropSourcePreparation.Error(e)
+            } catch (e: SecurityException) {
+                CropSourcePreparation.Error(e)
+            }
         }
 
         val validationError = validateVideoForWallpaper(source)
@@ -171,10 +182,40 @@ class WallpaperCropActivity : BaseActivity() {
         return CropSourcePreparation.Ready(Uri.fromFile(frameFile))
     }
 
+    @Throws(IOException::class, SecurityException::class)
+    private fun ensureLocalImageSource(source: Uri): Uri {
+        if (source.scheme.equals("file", ignoreCase = true)) {
+            return source
+        }
+
+        val existing = tempImageSourceFile
+        if (existing != null && existing.exists() && existing.length() > 0L) {
+            return Uri.fromFile(existing)
+        }
+
+        val extension = guessExtension(source).ifBlank { "png" }.lowercase(Locale.US)
+        val imageFile = File(
+            cacheDir,
+            "wallpaper_image_source_${System.currentTimeMillis()}.$extension"
+        ).also { tempImageSourceFile = it }
+
+        contentResolver.openInputStream(source)?.use { input ->
+            FileOutputStream(imageFile).use { output ->
+                input.copyTo(output)
+            }
+        } ?: throw IOException("Unable to open image source URI")
+
+        return Uri.fromFile(imageFile)
+    }
+
     private fun launchCropIntent(cropSourceUri: Uri, outputUri: Uri) {
         val cropOptions = buildCropOptions(outputUri)
         cropLaunched = true
         val cropIntent = Intent(this, FullscreenCropImageActivity::class.java).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            if (cropSourceUri.scheme.equals("content", ignoreCase = true)) {
+                clipData = ClipData.newRawUri("crop_source", cropSourceUri)
+            }
             putExtra(
                 CropImage.CROP_IMAGE_EXTRA_BUNDLE,
                 Bundle(2).apply {
@@ -621,8 +662,7 @@ class WallpaperCropActivity : BaseActivity() {
         }
     }
 
-    private fun resolveTargetWallpaperSize(): Pair<Int, Int> {
-        val orientation = resources.configuration.orientation
+    private fun resolveTargetWallpaperSize(useLandscapeTargets: Boolean): Pair<Int, Int> {
         val displayManager = getSystemService(DisplayManager::class.java)
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             this.display ?: displayManager?.getDisplay(Display.DEFAULT_DISPLAY)
@@ -636,11 +676,7 @@ class WallpaperCropActivity : BaseActivity() {
                 val mode = display.mode
                 val longSide = max(mode.physicalWidth, mode.physicalHeight)
                 val shortSide = min(mode.physicalWidth, mode.physicalHeight)
-                return if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-                    Pair(max(longSide, 1), max(shortSide, 1))
-                } else {
-                    Pair(max(shortSide, 1), max(longSide, 1))
-                }
+                return sizeForOrientation(longSide, shortSide, useLandscapeTargets)
             }
 
             val realMetrics = DisplayMetrics()
@@ -648,23 +684,58 @@ class WallpaperCropActivity : BaseActivity() {
             display.getRealMetrics(realMetrics)
             val longSide = max(realMetrics.widthPixels, realMetrics.heightPixels)
             val shortSide = min(realMetrics.widthPixels, realMetrics.heightPixels)
-            return if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-                Pair(max(longSide, 1), max(shortSide, 1))
-            } else {
-                Pair(max(shortSide, 1), max(longSide, 1))
-            }
+            return sizeForOrientation(longSide, shortSide, useLandscapeTargets)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val bounds = windowManager.currentWindowMetrics.bounds
-            return Pair(max(bounds.width(), 1), max(bounds.height(), 1))
+            val longSide = max(bounds.width(), bounds.height())
+            val shortSide = min(bounds.width(), bounds.height())
+            return sizeForOrientation(longSide, shortSide, useLandscapeTargets)
         }
 
         @Suppress("DEPRECATION")
         val metrics = DisplayMetrics()
         @Suppress("DEPRECATION")
         windowManager.defaultDisplay.getRealMetrics(metrics)
-        return Pair(max(metrics.widthPixels, 1), max(metrics.heightPixels, 1))
+        val longSide = max(metrics.widthPixels, metrics.heightPixels)
+        val shortSide = min(metrics.widthPixels, metrics.heightPixels)
+        return sizeForOrientation(longSide, shortSide, useLandscapeTargets)
+    }
+
+    private fun hasTargetWallpaperSizeFor(useLandscapeTargets: Boolean): Boolean {
+        if (targetWidth <= 0 || targetHeight <= 0) return false
+        return if (useLandscapeTargets) {
+            targetWidth >= targetHeight
+        } else {
+            targetHeight >= targetWidth
+        }
+    }
+
+    private fun shouldUseLandscapeTargets(): Boolean {
+        return when (preferredOrientation) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE -> true
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT,
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
+            ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT -> false
+            else -> resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        }
+    }
+
+    private fun sizeForOrientation(
+        longSide: Int,
+        shortSide: Int,
+        useLandscapeTargets: Boolean
+    ): Pair<Int, Int> {
+        return if (useLandscapeTargets) {
+            Pair(max(longSide, 1), max(shortSide, 1))
+        } else {
+            Pair(max(shortSide, 1), max(longSide, 1))
+        }
     }
 
     private fun simplifyRatio(width: Int, height: Int): Pair<Int, Int> {
@@ -718,6 +789,7 @@ class WallpaperCropActivity : BaseActivity() {
         outState.putBoolean(STATE_IS_VIDEO_SOURCE, isVideoSource)
         outState.putString(STATE_TEMP_OUTPUT_PATH, tempOutputFile?.absolutePath)
         outState.putString(STATE_TEMP_VIDEO_FRAME_PATH, tempVideoFrameFile?.absolutePath)
+        outState.putString(STATE_TEMP_IMAGE_SOURCE_PATH, tempImageSourceFile?.absolutePath)
     }
 
     override fun onDestroy() {
@@ -727,6 +799,7 @@ class WallpaperCropActivity : BaseActivity() {
         if (isFinishing) {
             tempOutputFile?.let { if (it.exists()) it.delete() }
             tempVideoFrameFile?.let { if (it.exists()) it.delete() }
+            tempImageSourceFile?.let { if (it.exists()) it.delete() }
         }
         super.onDestroy()
     }
@@ -772,5 +845,6 @@ class WallpaperCropActivity : BaseActivity() {
         private const val STATE_IS_VIDEO_SOURCE = "state_is_video_source"
         private const val STATE_TEMP_OUTPUT_PATH = "state_temp_output_path"
         private const val STATE_TEMP_VIDEO_FRAME_PATH = "state_temp_video_frame_path"
+        private const val STATE_TEMP_IMAGE_SOURCE_PATH = "state_temp_image_source_path"
     }
 }

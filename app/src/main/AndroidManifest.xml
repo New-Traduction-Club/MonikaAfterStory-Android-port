@@ -63,10 +63,12 @@
     <activity
         android:name="org.renpy.android.WallpaperCropActivity"
         android:exported="false"
+        android:screenOrientation="landscape"
         android:theme="@style/Theme.Material3.Light.Dialog" />
     <activity
         android:name="org.renpy.android.FullscreenCropImageActivity"
         android:exported="false"
+        android:screenOrientation="landscape"
         android:theme="@style/CropImageActivityTheme" />
 
     <service

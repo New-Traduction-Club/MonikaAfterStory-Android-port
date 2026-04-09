@@ -24,8 +24,13 @@ object OrientationPolicy {
             lockedOrientation
         }
 
-        if (activity.requestedOrientation != targetOrientation) {
-            activity.requestedOrientation = targetOrientation
+        applyLockedOrientation(activity, targetOrientation)
+    }
+
+    @JvmStatic
+    fun applyLockedOrientation(activity: Activity, orientation: Int) {
+        if (activity.requestedOrientation != orientation) {
+            activity.requestedOrientation = orientation
         }
     }
 }
