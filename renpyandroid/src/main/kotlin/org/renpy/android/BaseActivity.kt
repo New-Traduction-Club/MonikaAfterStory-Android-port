@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.os.Build
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -19,9 +20,13 @@ abstract class BaseActivity : AppCompatActivity() {
         OrientationPolicy.applyRequestedOrientation(this, preferredOrientation)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.attributes = window.attributes.apply {
-                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !isChromeOsDevice()) {
+            try {
+                window.attributes = window.attributes.apply {
+                    layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                }
+            } catch (e: IllegalArgumentException) {
+                Log.w("BaseActivity", "Unable to apply display cutout mode", e)
             }
         }
     }
@@ -47,6 +52,11 @@ abstract class BaseActivity : AppCompatActivity() {
             "Português" -> Locale("pt")
             else -> Locale.ENGLISH
         }
+    }
+
+    protected fun isChromeOsDevice(): Boolean {
+        return packageManager.hasSystemFeature("org.chromium.arc") ||
+            packageManager.hasSystemFeature("org.chromium.arc.device_management")
     }
 
     companion object {

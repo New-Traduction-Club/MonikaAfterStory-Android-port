@@ -12,11 +12,13 @@ import android.graphics.Rect
 import android.hardware.display.DisplayManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.BadParcelableException
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.provider.OpenableColumns
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Display
 import android.view.LayoutInflater
 import android.webkit.MimeTypeMap
@@ -73,7 +75,9 @@ class WallpaperCropActivity : BaseActivity() {
         }
 
         dismissProcessingDialog()
-        if (error != null && error !is CropException.Cancellation) {
+        if (result.resultCode == Activity.RESULT_OK && cropResult == null) {
+            showCropError(IllegalStateException("Invalid crop result payload"))
+        } else if (error != null && error !is CropException.Cancellation) {
             showCropError(error)
         }
         finish()
@@ -266,7 +270,19 @@ class WallpaperCropActivity : BaseActivity() {
 
     private fun extractCropResult(data: Intent?): CropImage.ActivityResult? {
         if (data == null) return null
-        return data.parcelableCompat(CropImage.CROP_IMAGE_EXTRA_RESULT)
+        data.setExtrasClassLoader(CropImage.ActivityResult::class.java.classLoader)
+        return try {
+            data.parcelableCompat(CropImage.CROP_IMAGE_EXTRA_RESULT)
+        } catch (e: BadParcelableException) {
+            Log.w(TAG, "Failed to parse crop result parcelable.", e)
+            null
+        } catch (e: ClassCastException) {
+            Log.w(TAG, "Failed to cast crop result parcelable.", e)
+            null
+        } catch (e: NullPointerException) {
+            Log.w(TAG, "Null parcelable creator while parsing crop result.", e)
+            null
+        }
     }
 
     private inline fun <reified T : Parcelable> Intent.parcelableCompat(key: String): T? {
@@ -823,6 +839,7 @@ class WallpaperCropActivity : BaseActivity() {
     )
 
     companion object {
+        private const val TAG = "WallpaperCropActivity"
         private val VIDEO_EXTENSIONS = setOf(
             "mp4", "m4v", "webm", "mkv", "mov", "avi", "3gp", "3gpp", "mpeg", "mpg", "ts", "m2ts", "mts"
         )

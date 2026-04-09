@@ -176,6 +176,7 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun enableImmersiveFullscreen() {
+        if (isChromeOsDevice() || !window.decorView.isAttachedToWindow) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let { controller ->
                 controller.hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())

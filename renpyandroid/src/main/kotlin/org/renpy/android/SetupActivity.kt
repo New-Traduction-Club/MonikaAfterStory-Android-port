@@ -32,6 +32,8 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.OpenableColumns
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.color.DynamicColors
@@ -75,6 +77,7 @@ class SetupActivity : BaseActivity() {
     private val MAS_DOWNLOAD_URL = "https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.18/Monika_After_Story-0.12.18-Mod-Dlx.zip"
 
     companion object {
+        private const val TAG = "SetupActivity"
         private const val REQUEST_CODE_DDLC = 1001
         private const val REQUEST_CODE_MAS = 1002
         private const val REQUEST_PERMISSION_NOTIFICATIONS_DOWNLOAD = 1003
@@ -330,28 +333,35 @@ class SetupActivity : BaseActivity() {
     }
 
     private fun getFileName(uri: Uri): String {
-        var result: String? = null
         if (uri.scheme == "content") {
-            val cursor = contentResolver.query(uri, null, null, null, null)
             try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    if (index >= 0) {
-                        result = cursor.getString(index)
+                contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (index >= 0) {
+                            val displayName = cursor.getString(index)
+                            if (!displayName.isNullOrBlank()) {
+                                return displayName
+                            }
+                        }
                     }
                 }
-            } finally {
-                cursor?.close()
+            } catch (e: SecurityException) {
+                Log.w(TAG, "No permission to query filename for uri: $uri", e)
             }
         }
-        if (result == null) {
-            result = uri.path
-            val cut = result?.lastIndexOf('/')
-            if (cut != null && cut != -1) {
-                result = result?.substring(cut + 1)
-            }
+
+        val lastPathSegment = uri.lastPathSegment
+        if (!lastPathSegment.isNullOrBlank()) {
+            return lastPathSegment
         }
-        return result ?: "unknown.zip"
+
+        val path = uri.path
+        if (!path.isNullOrBlank()) {
+            return path.substringAfterLast('/')
+        }
+
+        return "unknown.zip"
     }
 
     private fun startInstallation() {

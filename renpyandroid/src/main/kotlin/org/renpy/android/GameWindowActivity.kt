@@ -83,6 +83,7 @@ abstract class GameWindowActivity : BaseActivity() {
     }
 
     private fun applyImmersiveFullscreen() {
+        if (isChromeOsDevice() || !window.decorView.isAttachedToWindow) return
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insetsController.hide(WindowInsetsCompat.Type.systemBars())
