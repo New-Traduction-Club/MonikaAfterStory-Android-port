@@ -118,6 +118,83 @@ object SpritepackInstallerUtils {
     }
 
     @Throws(IOException::class)
+    fun findGiftFileNamesInArchive(
+        context: Context,
+        archiveUri: Uri,
+        fileNameHint: String? = null
+    ): List<String> {
+        val displayName = fileNameHint ?: resolveDisplayName(context, archiveUri)
+        val archiveFormat = detectArchiveFormat(context, archiveUri, displayName)
+        val workspaceDir = createWorkspace(context.filesDir)
+        val archiveCopy = File(workspaceDir, "spritepack_source.${archiveFormat.extension}")
+        val extractedDir = File(workspaceDir, "extracted")
+
+        if (!extractedDir.mkdirs()) {
+            workspaceDir.deleteRecursively()
+            throw IOException("Cannot create temporary extraction directory")
+        }
+
+        try {
+            copyUriToFile(context, archiveUri, archiveCopy)
+            return when (archiveFormat) {
+                ArchiveFormat.ZIP -> collectZipGiftFileNames(archiveCopy)
+                ArchiveFormat.RAR -> {
+                    val extractor = rarExtractor
+                        ?: throw UnsupportedArchiveException("RAR extraction is not configured.")
+                    extractor.extract(archiveCopy, extractedDir)
+                    collectGiftFilesFromDirectory(extractedDir)
+                        .map { it.name }
+                        .distinct()
+                        .sorted()
+                }
+            }
+        } finally {
+            workspaceDir.deleteRecursively()
+        }
+    }
+
+    @Throws(IOException::class)
+    fun importGiftFilesToCharacters(
+        context: Context,
+        archiveUri: Uri,
+        fileNameHint: String? = null
+    ): Int {
+        val displayName = fileNameHint ?: resolveDisplayName(context, archiveUri)
+        val archiveFormat = detectArchiveFormat(context, archiveUri, displayName)
+        val destinationDir = File(context.filesDir, "characters")
+        if (destinationDir.exists() && !destinationDir.isDirectory) {
+            throw IOException("characters path is not a directory")
+        }
+        if (!destinationDir.exists() && !destinationDir.mkdirs()) {
+            throw IOException("Cannot create characters directory")
+        }
+
+        val workspaceDir = createWorkspace(context.filesDir)
+        val archiveCopy = File(workspaceDir, "spritepack_source.${archiveFormat.extension}")
+        val extractedDir = File(workspaceDir, "extracted")
+
+        if (!extractedDir.mkdirs()) {
+            workspaceDir.deleteRecursively()
+            throw IOException("Cannot create temporary extraction directory")
+        }
+
+        try {
+            copyUriToFile(context, archiveUri, archiveCopy)
+            return when (archiveFormat) {
+                ArchiveFormat.ZIP -> importZipGiftFiles(archiveCopy, destinationDir)
+                ArchiveFormat.RAR -> {
+                    val extractor = rarExtractor
+                        ?: throw UnsupportedArchiveException("RAR extraction is not configured.")
+                    extractor.extract(archiveCopy, extractedDir)
+                    importGiftFilesFromExtractedDirectory(extractedDir, destinationDir)
+                }
+            }
+        } finally {
+            workspaceDir.deleteRecursively()
+        }
+    }
+
+    @Throws(IOException::class)
     private fun extractArchive(archiveFile: File, outputDir: File, format: ArchiveFormat) {
         when (format) {
             ArchiveFormat.ZIP -> extractZip(archiveFile, outputDir)
@@ -315,6 +392,74 @@ object SpritepackInstallerUtils {
                 input.copyTo(output, DEFAULT_BUFFER_SIZE)
             }
         } ?: throw IOException("Cannot open source stream for URI: $uri")
+    }
+
+    private fun collectZipGiftFileNames(archiveFile: File): List<String> {
+        val giftFiles = mutableSetOf<String>()
+        ZipInputStream(BufferedInputStream(FileInputStream(archiveFile))).use { zip ->
+            var entry = zip.nextEntry
+            while (entry != null) {
+                if (!entry.isDirectory) {
+                    val normalized = entry.name.replace('\\', '/')
+                    val fileName = normalized.substringAfterLast('/')
+                    if (fileName.isNotBlank() && isGiftFileName(fileName)) {
+                        giftFiles.add(fileName)
+                    }
+                }
+                zip.closeEntry()
+                entry = zip.nextEntry
+            }
+        }
+        return giftFiles.sorted()
+    }
+
+    private fun importZipGiftFiles(archiveFile: File, destinationDir: File): Int {
+        var imported = 0
+        ZipInputStream(BufferedInputStream(FileInputStream(archiveFile))).use { zip ->
+            var entry = zip.nextEntry
+            while (entry != null) {
+                if (!entry.isDirectory) {
+                    val normalized = entry.name.replace('\\', '/')
+                    val fileName = normalized.substringAfterLast('/')
+                    if (fileName.isNotBlank() && isGiftFileName(fileName)) {
+                        val target = File(destinationDir, fileName)
+                        if (target.exists() && target.isDirectory) {
+                            throw IOException("Gift file collides with directory: ${target.absolutePath}")
+                        }
+                        FileOutputStream(target).use { output ->
+                            zip.copyTo(output, DEFAULT_BUFFER_SIZE)
+                        }
+                        imported++
+                    }
+                }
+                zip.closeEntry()
+                entry = zip.nextEntry
+            }
+        }
+        return imported
+    }
+
+    private fun collectGiftFilesFromDirectory(rootDir: File): List<File> {
+        return rootDir.walkTopDown()
+            .filter { it.isFile && isGiftFileName(it.name) }
+            .toList()
+    }
+
+    private fun importGiftFilesFromExtractedDirectory(extractedDir: File, destinationDir: File): Int {
+        var imported = 0
+        collectGiftFilesFromDirectory(extractedDir).forEach { giftFile ->
+            val target = File(destinationDir, giftFile.name)
+            if (target.exists() && target.isDirectory) {
+                throw IOException("Gift file collides with directory: ${target.absolutePath}")
+            }
+            giftFile.copyTo(target, overwrite = true)
+            imported++
+        }
+        return imported
+    }
+
+    private fun isGiftFileName(fileName: String): Boolean {
+        return fileName.substringAfterLast('.', "").equals("gift", ignoreCase = true)
     }
 
     private fun resolveDisplayName(context: Context, uri: Uri): String? {
