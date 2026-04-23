@@ -56,6 +56,7 @@ abstract class GameWindowActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         
         supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         applyImmersiveFullscreen()
         
         // Let derived activities set their own content via setContentView()
@@ -73,6 +74,12 @@ abstract class GameWindowActivity : BaseActivity() {
         super.onStart()
         window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         window?.setBackgroundDrawableResource(android.R.color.transparent)
+        applyImmersiveFullscreen()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyImmersiveFullscreen()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -83,7 +90,8 @@ abstract class GameWindowActivity : BaseActivity() {
     }
 
     private fun applyImmersiveFullscreen() {
-        if (isChromeOsDevice() || !window.decorView.isAttachedToWindow) return
+        if (isChromeOsDevice()) return
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insetsController.hide(WindowInsetsCompat.Type.systemBars())
