@@ -33,6 +33,7 @@
     <string name="setup_download_error">Download error: %1$s</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="action_ok">Ok</string>
     <string name="setup_btn_continue">Install &amp; Continue</string>
     <string name="setup_file_selected">Selected: %1$s</string>
     <string name="setup_error_missing_files">Please select both the DDLC zip and the MAS zip to continue.</string>
@@ -155,6 +156,7 @@
     <string name="launcher_settings">Settings</string>
     <string name="launcher_discord_rpc">Discord RPC</string>
     <string name="launcher_backups">Backups</string>
+    <string name="launcher_add_extra_content">Add Extra Content</string>
     <string name="launcher_all_programs">See more</string>
     
     <!-- Launcher Button Subtitles -->
@@ -288,6 +290,26 @@
     <string name="extraction_completed">Extraction completed</string>
     <string name="extraction_error">Extraction error: %1$s</string>
     <string name="launcher_download_center">Download Center</string>
+    <string name="extra_content_title">Extra Content</string>
+    <string name="extra_content_prompt">What would you like to install?</string>
+    <string name="extra_content_option_install_sprites">Install Sprites</string>
+    <string name="spritepack_installer_title">Install Sprites</string>
+    <string name="spritepack_installer_info">Select the compressed file (.zip or .rar) you downloaded. Don\'t worry about extracting anything; MASL will place all folders in the correct location automatically.</string>
+    <string name="spritepack_select_archive">Select File</string>
+    <string name="spritepack_progress_analyzing">Analyzing file...</string>
+    <string name="spritepack_progress_merging">Placing files...</string>
+    <string name="spritepack_success_title">Installation successful!</string>
+    <string name="spritepack_success_message">The new sprites were added correctly. They will be available the next time you launch the game.</string>
+    <string name="spritepack_incompatible_title">Incompatible file</string>
+    <string name="spritepack_incompatible_message">This file doesn\'t appear to have a valid spritepack structure or may be corrupted. Please check that you selected the correct file.</string>
+    <string name="spritepack_retry">Try again</string>
+    <string name="spritepack_install_success_toast">Spritepack installed successfully.</string>
+    <string name="spritepack_unexpected_error">Installation failed: %1$s</string>
+    <string name="spritepack_gift_prompt_title">Gift files detected</string>
+    <string name="spritepack_gift_prompt_message">.gift files were detected. Do you want to place them in the characters/ folder?</string>
+    <string name="spritepack_gift_progress">Importing .gift files...</string>
+    <string name="spritepack_gift_import_success">%1$d .gift files were moved to characters/.</string>
+    <string name="spritepack_gift_import_error">Failed to import .gift files: %1$s</string>
     
     <!-- Download Center Strings -->
     <string name="manifest_url">https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-updates/refs/heads/main/launcher_updates.json</string>

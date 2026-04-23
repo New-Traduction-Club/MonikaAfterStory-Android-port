@@ -36,6 +36,7 @@ import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import kotlin.random.Random
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.lifecycle.lifecycleScope
 import android.app.ActivityManager
@@ -56,6 +57,8 @@ class LauncherActivity : BaseActivity() {
         private const val STATE_DOWNLOAD_CENTER_CHECK_COMPLETED = "state_download_center_check_completed"
         private const val REQUEST_CODE_EXPORT_SAVES = 2001
         private const val REQUEST_CODE_IMPORT_SAVES = 2002
+        private const val MAX_EXPANDED_ITEMS_PER_COLUMN = 6
+        private const val EXPANDED_MENU_COLUMN_WIDTH_DP = 240
     }
 
     // Fixed virtual DPI and font scale to keep the Taskbar consistent across all devices
@@ -320,6 +323,7 @@ class LauncherActivity : BaseActivity() {
         return listOf(
             DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
             DesktopShortcut(R.string.launcher_download_center, R.drawable.ic_launcher_download, "download_center"),
+            DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
             DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
             DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
@@ -332,12 +336,35 @@ class LauncherActivity : BaseActivity() {
             SoundEffects.playClick(this)
             handleShortcutExecution(clickedItem)
         }
-        
-        binding.expandedRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.expandedRecyclerView.adapter = DesktopItemAdapter(getExpandedItems()) { clickedItem ->
-            SoundEffects.playClick(this)
-            handleShortcutExecution(clickedItem)
+
+        val expandedItems = getExpandedItems()
+        val columnWidthPx = dpToPx(EXPANDED_MENU_COLUMN_WIDTH_DP)
+        binding.expandedRecyclerView.layoutManager = GridLayoutManager(
+            this,
+            MAX_EXPANDED_ITEMS_PER_COLUMN,
+            GridLayoutManager.HORIZONTAL,
+            false
+        )
+        binding.expandedRecyclerView.adapter = DesktopItemAdapter(
+            expandedItems,
+            itemWidthPx = columnWidthPx
+        ) { clickedItem ->
+                SoundEffects.playClick(this)
+                handleShortcutExecution(clickedItem)
+            }
+        updateExpandedPanelWidth(expandedItems.size, columnWidthPx)
+    }
+
+    private fun updateExpandedPanelWidth(itemsCount: Int, columnWidthPx: Int) {
+        val columns = ((itemsCount + MAX_EXPANDED_ITEMS_PER_COLUMN - 1) / MAX_EXPANDED_ITEMS_PER_COLUMN)
+            .coerceAtLeast(1)
+        binding.expandedProgramsPanel.layoutParams = binding.expandedProgramsPanel.layoutParams.apply {
+            width = columns * columnWidthPx
         }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun initializeDesktopGrid() {
@@ -610,8 +637,11 @@ class LauncherActivity : BaseActivity() {
         panel.visibility = View.INVISIBLE
         panel.alpha = 1f
         panel.post {
-            val width = panel.width.takeIf { it > 0 }?.toFloat() ?: binding.startMenuPanel.width.toFloat()
-            panel.translationX = -width
+            val slideDistance = binding.startMenuPanel.width
+                .takeIf { it > 0 }
+                ?.toFloat()
+                ?: dpToPx(EXPANDED_MENU_COLUMN_WIDTH_DP).toFloat()
+            panel.translationX = -slideDistance
             binding.startMenuPanel.bringToFront()
             panel.visibility = View.VISIBLE
             panel.animate()
@@ -631,9 +661,12 @@ class LauncherActivity : BaseActivity() {
         }
 
         panel.clearAnimation()
-        val width = panel.width.takeIf { it > 0 }?.toFloat() ?: binding.startMenuPanel.width.toFloat()
+        val slideDistance = binding.startMenuPanel.width
+            .takeIf { it > 0 }
+            ?.toFloat()
+            ?: dpToPx(EXPANDED_MENU_COLUMN_WIDTH_DP).toFloat()
         panel.animate()
-            .translationX(-width)
+            .translationX(-slideDistance)
             .setDuration(220)
             .setInterpolator(DecelerateInterpolator())
             .withEndAction {
@@ -740,6 +773,10 @@ class LauncherActivity : BaseActivity() {
             "download_center" -> {
                 returnFromWindow = true
                 startActivity(Intent(this, DownloadCenterActivity::class.java))
+            }
+            "extra_content" -> {
+                returnFromWindow = true
+                startActivity(Intent(this, ExtraContentActivity::class.java))
             }
             "discord_rpc" -> {
                 openDiscordRpcWindow()

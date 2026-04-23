@@ -9,6 +9,7 @@ data class DesktopShortcut(val titleResId: Int, val iconResId: Int, val actionId
 
 class DesktopItemAdapter(
     private val items: List<DesktopShortcut>,
+    private val itemWidthPx: Int? = null,
     private val onItemClick: (DesktopShortcut) -> Unit
 ) : RecyclerView.Adapter<DesktopItemAdapter.ViewHolder>() {
 
@@ -22,6 +23,9 @@ class DesktopItemAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemDesktopShortcutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        itemWidthPx?.let { width ->
+            binding.root.layoutParams = RecyclerView.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
         return ViewHolder(binding)
     }
 

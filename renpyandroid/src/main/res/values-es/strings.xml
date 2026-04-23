@@ -24,6 +24,7 @@
     <string name="setup_download_error">Error de descarga: %1$s</string>
     <string name="yes">Sí</string>
     <string name="no">No</string>
+    <string name="action_ok">Vale</string>
     <string name="setup_btn_continue">Instalar y Continuar</string>
     <string name="setup_file_selected">Seleccionado: %1$s</string>
     <string name="setup_error_missing_files">Por favor selecciona ambos archivos ZIP para continuar.</string>
@@ -146,6 +147,7 @@
     <string name="launcher_settings">Ajustes</string>
     <string name="launcher_discord_rpc">Discord RPC</string>
     <string name="launcher_backups">Copias de Seguridad</string>
+    <string name="launcher_add_extra_content">Añadir Contenido Extra</string>
     <string name="launcher_all_programs">Ver más</string>
 
     <!-- Launcher Button Subtitles -->
@@ -279,6 +281,26 @@
     <string name="extraction_completed">Extracción completada</string>
     <string name="extraction_error">Error de extracción: %1$s</string>
     <string name="launcher_download_center">Centro de Descargas</string>
+    <string name="extra_content_title">Contenido Extra</string>
+    <string name="extra_content_prompt">¿Qué deseas instalar?</string>
+    <string name="extra_content_option_install_sprites">Instalar Sprites</string>
+    <string name="spritepack_installer_title">Instalar Sprites</string>
+    <string name="spritepack_installer_info">Selecciona el archivo comprimido (.zip o .rar) que descargaste. No te preocupes por extraer nada, MASL se encarga de acomodar todas las carpetas en su lugar automáticamente.</string>
+    <string name="spritepack_select_archive">Seleccionar Archivo</string>
+    <string name="spritepack_progress_analyzing">Analizando archivo...</string>
+    <string name="spritepack_progress_merging">Acomodando archivos...</string>
+    <string name="spritepack_success_title">¡Instalación Exitosa!</string>
+    <string name="spritepack_success_message">Los nuevos sprites se han añadido correctamente. Estarán disponibles la próxima vez que inicies el juego.</string>
+    <string name="spritepack_incompatible_title">Archivo no compatible</string>
+    <string name="spritepack_incompatible_message">Parece que este archivo no tiene la estructura de un spritepack válido o está dañado. Revisa que sea el archivo correcto.</string>
+    <string name="spritepack_retry">Volver a intentar</string>
+    <string name="spritepack_install_success_toast">Spritepack instalado correctamente.</string>
+    <string name="spritepack_unexpected_error">Falló la instalación: %1$s</string>
+    <string name="spritepack_gift_prompt_title">Archivos gift detectados</string>
+    <string name="spritepack_gift_prompt_message">Se detectaron archivos .gift. ¿Quieres colocarlos en la carpeta characters/?</string>
+    <string name="spritepack_gift_progress">Importando archivos .gift...</string>
+    <string name="spritepack_gift_import_success">Se movieron %1$d archivos .gift a characters/.</string>
+    <string name="spritepack_gift_import_error">Error al importar archivos .gift: %1$s</string>
     
     <!-- Download Center Strings -->
     <string name="download_center_title">Centro de Descargas</string>
