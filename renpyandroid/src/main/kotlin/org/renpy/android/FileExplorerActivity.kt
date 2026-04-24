@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.renpy.android.databinding.FileExplorerActivityBinding
 import java.io.File
@@ -22,7 +23,9 @@ import android.app.ProgressDialog
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
@@ -31,6 +34,7 @@ class FileExplorerActivity : GameWindowActivity() {
 
     companion object {
         private const val STATE_CURRENT_DIR_PATH = "state_current_dir_path"
+        private const val SEARCH_DEBOUNCE_MS = 300L
     }
 
     private enum class ImportConflictAction {
@@ -50,6 +54,8 @@ class FileExplorerActivity : GameWindowActivity() {
 
     private lateinit var rootDir: File
     private var isInternalRoot = false
+    private var isSearchMode = false
+    private var searchDebounceJob: Job? = null
 
     private val REQUEST_CODE_IMPORT_FILE = 1002
     private val REQUEST_CODE_IMPORT_FOLDER = 1003
@@ -70,6 +76,9 @@ class FileExplorerActivity : GameWindowActivity() {
             onItemClick = { file ->
                 SoundEffects.playClick(this)
                 if (file.isDirectory) {
+                    if (isSearchMode) {
+                        exitSearchMode(restoreDirectory = false)
+                    }
                     viewModel.loadDirectory(file.absolutePath)
                 } else {
                     val viewIntent = Intent(this, FileViewerActivity::class.java)
@@ -92,6 +101,10 @@ class FileExplorerActivity : GameWindowActivity() {
         
         viewModel.currentDir.observe(this) { dir ->
             setTitle(dir.name.lowercase())
+            if (isSearchMode) {
+                fileAdapter.setSearchContext(enabled = true, rootDir = dir)
+                triggerSearch(binding.etSearchQuery.text?.toString().orEmpty(), debounce = false)
+            }
         }
 
         viewModel.statusMessage.observe(this) { msg ->
@@ -127,6 +140,22 @@ class FileExplorerActivity : GameWindowActivity() {
         viewModel.loadDirectory(initialPath)
         
         binding.btnQuickAdd.setOnClickListener { SoundEffects.playClick(this); showImportDialog() }
+        binding.btnSearch.setOnClickListener {
+            SoundEffects.playClick(this)
+            if (isSearchMode) {
+                exitSearchMode()
+            } else {
+                enterSearchMode()
+            }
+        }
+        binding.btnSearchClose.setOnClickListener {
+            SoundEffects.playClick(this)
+            exitSearchMode()
+        }
+        binding.etSearchQuery.doOnTextChanged { text, _, _, _ ->
+            if (!isSearchMode) return@doOnTextChanged
+            triggerSearch(text?.toString().orEmpty(), debounce = true)
+        }
         binding.btnSystemFiles.visibility = if (isInternalRoot) View.VISIBLE else View.GONE
         binding.btnSystemFiles.setOnClickListener {
             SoundEffects.playClick(this)
@@ -168,10 +197,30 @@ class FileExplorerActivity : GameWindowActivity() {
     
     private fun updateActionUI() {
         val selectionCount = fileAdapter.getSelectedCount()
+        var showExtract = false
+        if (selectionCount == 1) {
+            val file = fileAdapter.selectedFiles.first()
+            if (file.isFile && (file.name.endsWith(".rpa") || file.name.endsWith(".rpi"))) {
+                showExtract = true
+            }
+        }
+
+        if (isSearchMode) {
+            val hasSelection = selectionCount > 0
+            binding.actionContainer.visibility = if (hasSelection) View.VISIBLE else View.GONE
+            binding.bottomAppBar.visibility = if (hasSelection) View.VISIBLE else View.GONE
+            binding.btnMenu.visibility = View.GONE
+            binding.btnExtract.visibility = if (showExtract) View.VISIBLE else View.GONE
+            binding.btnRename.visibility = if (selectionCount == 1) View.VISIBLE else View.GONE
+            binding.fabPaste.visibility = View.GONE
+            return
+        }
+
         val hasSelection = selectionCount > 0
         val hasClipboard = viewModel.hasClipboard.value == true
         
         binding.actionContainer.visibility = if (hasSelection) View.VISIBLE else View.GONE
+        binding.btnMenu.visibility = View.VISIBLE
         
         if (hasClipboard) {
             binding.fabPaste.setImageResource(R.drawable.ic_paste)
@@ -188,15 +237,81 @@ class FileExplorerActivity : GameWindowActivity() {
             binding.bottomAppBar.visibility = View.GONE
         }
         
-        var showExtract = false
-        if (selectionCount == 1) {
-            val file = fileAdapter.selectedFiles.first()
-            if (file.isFile && (file.name.endsWith(".rpa") || file.name.endsWith(".rpi"))) {
-                showExtract = true
-            }
-        }
         binding.btnExtract.visibility = if (showExtract) View.VISIBLE else View.GONE
         binding.btnRename.visibility = if (selectionCount == 1) View.VISIBLE else View.GONE
+    }
+
+    private fun enterSearchMode() {
+        if (isSearchMode) return
+        isSearchMode = true
+        fileAdapter.setSearchContext(enabled = true, rootDir = viewModel.currentDir.value)
+        fileAdapter.clearSelection()
+        updateActionUI()
+
+        searchDebounceJob?.cancel()
+
+        binding.etSearchQuery.setText("")
+        binding.headerColumnsRow.animate()
+            .alpha(0f)
+            .setDuration(140)
+            .withEndAction {
+                binding.headerColumnsRow.visibility = View.GONE
+                binding.headerColumnsRow.alpha = 1f
+                binding.searchActionContainer.alpha = 0f
+                binding.searchActionContainer.visibility = View.VISIBLE
+                binding.searchActionContainer.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .start()
+            }
+            .start()
+
+        binding.recyclerView.animate()
+            .alpha(0f)
+            .setDuration(120)
+            .withEndAction {
+                viewModel.searchFromCurrentDir("")
+                binding.recyclerView.animate().alpha(1f).setDuration(120).start()
+            }
+            .start()
+    }
+
+    private fun exitSearchMode(restoreDirectory: Boolean = true) {
+        if (!isSearchMode) return
+        isSearchMode = false
+        fileAdapter.setSearchContext(enabled = false, rootDir = null)
+        searchDebounceJob?.cancel()
+        searchDebounceJob = null
+
+        binding.etSearchQuery.setText("")
+        binding.searchActionContainer.animate()
+            .alpha(0f)
+            .setDuration(120)
+            .withEndAction {
+                binding.searchActionContainer.visibility = View.GONE
+                binding.searchActionContainer.alpha = 1f
+                binding.headerColumnsRow.alpha = 0f
+                binding.headerColumnsRow.visibility = View.VISIBLE
+                binding.headerColumnsRow.animate().alpha(1f).setDuration(140).start()
+            }
+            .start()
+
+        if (restoreDirectory) {
+            viewModel.currentDir.value?.let { current ->
+                viewModel.loadDirectory(current.absolutePath)
+            }
+        }
+        updateActionUI()
+    }
+
+    private fun triggerSearch(query: String, debounce: Boolean) {
+        searchDebounceJob?.cancel()
+        searchDebounceJob = lifecycleScope.launch {
+            if (debounce) {
+                delay(SEARCH_DEBOUNCE_MS)
+            }
+            viewModel.searchFromCurrentDir(query)
+        }
     }
 
     private fun showRenameDialog() {
@@ -743,8 +858,16 @@ class FileExplorerActivity : GameWindowActivity() {
         }
     }
 
+    override fun onDestroy() {
+        searchDebounceJob?.cancel()
+        searchDebounceJob = null
+        super.onDestroy()
+    }
+
     override fun onBackPressed() {
-        if (fileAdapter.getSelectedCount() > 0) {
+        if (isSearchMode) {
+            exitSearchMode()
+        } else if (fileAdapter.getSelectedCount() > 0) {
             fileAdapter.clearSelection()
             updateActionUI()
         } else {

@@ -126,6 +126,8 @@
 
     <!-- File Explorer Content Descriptions -->
     <string name="file_nav_up">Go Up</string>
+    <string name="file_explorer_search">Search files</string>
+    <string name="file_explorer_search_hint">Search in this folder...</string>
     <string name="file_menu">Menu</string>
 
     <!-- File Type Labels -->

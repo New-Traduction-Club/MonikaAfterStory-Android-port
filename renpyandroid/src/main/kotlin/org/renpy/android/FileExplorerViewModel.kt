@@ -36,6 +36,8 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
     private var isCutOperation: Boolean = false
     private val _hasClipboard = MutableLiveData<Boolean>(false)
     val hasClipboard: LiveData<Boolean> = _hasClipboard
+    @Volatile
+    private var activeSearchToken: Long = 0L
 
     fun loadDirectory(path: String) {
         val file = File(path)
@@ -54,6 +56,29 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
         val current = _currentDir.value ?: return
         if (current.absolutePath != rootDirPath) {
             current.parentFile?.let { loadDirectory(it.absolutePath) }
+        }
+    }
+
+    fun searchFromCurrentDir(query: String) {
+        val current = _currentDir.value ?: return
+        val normalizedQuery = query.trim().lowercase()
+        val token = System.nanoTime().also { activeSearchToken = it }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val results = if (normalizedQuery.isEmpty()) {
+                emptyList()
+            } else {
+                current.walkTopDown()
+                    .filter { node ->
+                        node != current && node.name.lowercase().contains(normalizedQuery)
+                    }
+                    .sortedWith(compareBy<File>({ !it.isDirectory }, { it.name.lowercase() }))
+                    .toList()
+            }
+
+            if (activeSearchToken == token) {
+                _files.postValue(results)
+            }
         }
     }
     

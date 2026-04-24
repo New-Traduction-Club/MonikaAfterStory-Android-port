@@ -9,6 +9,7 @@
 
     <!-- Header columns -->
     <LinearLayout
+        android:id="@+id/headerColumnsRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -36,6 +37,16 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             app:tint="#B45D85"
             android:contentDescription="@string/import_title"/>
+
+        <ImageButton
+            android:id="@+id/btnSearch"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_search"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="#B45D85"
+            android:contentDescription="@string/file_explorer_search"/>
 
         <ImageButton
             android:id="@+id/btnSystemFiles"
@@ -89,6 +100,41 @@
             android:textColor="#B45D85"
             android:textStyle="bold"
             android:textSize="12sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/searchActionContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etSearchQuery"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:hint="@string/file_explorer_search_hint"
+            android:singleLine="true"
+            android:imeOptions="actionSearch"
+            android:paddingHorizontal="12dp"
+            android:background="@android:color/transparent"
+            android:textColor="@color/colorOnSurface"
+            android:textColorHint="@color/colorTextSecondary" />
+
+        <ImageButton
+            android:id="@+id/btnSearchClose"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="@color/colorIconTint"
+            android:contentDescription="@string/piano_close"/>
     </LinearLayout>
     
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CC7295" android:layout_marginBottom="4dp"/>

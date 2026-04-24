@@ -120,6 +120,8 @@
 
     <!-- File Explorer Content Descriptions -->
     <string name="file_nav_up">Subir</string>
+    <string name="file_explorer_search">Buscar arquivos</string>
+    <string name="file_explorer_search_hint">Buscar nesta pasta...</string>
     <string name="file_menu">Menu</string>
 
     <!-- File Type Labels -->

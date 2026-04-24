@@ -34,6 +34,8 @@ class FileAdapter(
 
     val selectedFiles = mutableSetOf<File>()
     private var isSelectionMode = false
+    private var showSearchLocation = false
+    private var searchRootDir: File? = null
 
     override fun submitList(list: List<File>?) {
         super.submitList(list?.let { ArrayList(it) })
@@ -66,6 +68,12 @@ class FileAdapter(
         isSelectionMode = enabled
         if (!enabled) clearSelection()
     }
+
+    fun setSearchContext(enabled: Boolean, rootDir: File?) {
+        showSearchLocation = enabled
+        searchRootDir = rootDir
+        notifyDataSetChanged()
+    }
     
     fun getSelectedCount(): Int = selectedFiles.size
 
@@ -82,6 +90,12 @@ class FileAdapter(
         
         fun bind(file: File) {
             binding.textName.text = file.name
+            if (showSearchLocation) {
+                binding.textPath.visibility = View.VISIBLE
+                binding.textPath.text = buildLocationSubtitle(file)
+            } else {
+                binding.textPath.visibility = View.GONE
+            }
             
             val dateFormat = SimpleDateFormat("MM-dd-yyyy HH:mm", Locale.getDefault())
             val lastModified = dateFormat.format(Date(file.lastModified()))
@@ -167,5 +181,16 @@ class FileAdapter(
             size < gb -> String.format(Locale.US, "%.1f MB", size / mb.toDouble())
             else -> String.format(Locale.US, "%.1f GB", size / gb.toDouble())
         }
+    }
+
+    private fun buildLocationSubtitle(file: File): String {
+        val parentPath = file.parentFile?.absolutePath ?: file.absolutePath
+        val rootPath = searchRootDir?.absolutePath ?: return parentPath
+        if (!parentPath.startsWith(rootPath)) return parentPath
+
+        val relative = parentPath
+            .removePrefix(rootPath)
+            .trimStart(File.separatorChar)
+        return if (relative.isEmpty()) File.separator else "${File.separator}$relative"
     }
 }

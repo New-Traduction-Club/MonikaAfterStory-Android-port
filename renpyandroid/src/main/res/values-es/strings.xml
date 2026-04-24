@@ -117,6 +117,8 @@
 
     <!-- File Explorer Content Descriptions -->
     <string name="file_nav_up">Subir</string>
+    <string name="file_explorer_search">Buscar archivos</string>
+    <string name="file_explorer_search_hint">Buscar en esta carpeta...</string>
     <string name="file_menu">Menú</string>
 
     <!-- File Type Labels -->
