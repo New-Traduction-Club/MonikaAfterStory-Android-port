@@ -59,6 +59,7 @@
     <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.ExtraContentActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.SpritepackInstallerActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.SubmodInstallerActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
     <activity android:name="org.renpy.android.WallpapersActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>

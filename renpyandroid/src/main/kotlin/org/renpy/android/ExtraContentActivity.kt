@@ -21,14 +21,24 @@ class ExtraContentActivity : GameWindowActivity() {
                 R.string.extra_content_option_install_sprites,
                 android.R.drawable.ic_input_add,
                 "install_sprites"
+            ),
+            DesktopShortcut(
+                R.string.extra_content_option_install_submods,
+                android.R.drawable.ic_input_add,
+                "install_submods"
             )
         )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = DesktopItemAdapter(items) { shortcut ->
             SoundEffects.playClick(this)
-            if (shortcut.actionId == "install_sprites") {
-                startActivity(Intent(this, SpritepackInstallerActivity::class.java))
+            when (shortcut.actionId) {
+                "install_sprites" -> {
+                    startActivity(Intent(this, SpritepackInstallerActivity::class.java))
+                }
+                "install_submods" -> {
+                    startActivity(Intent(this, SubmodInstallerActivity::class.java))
+                }
             }
         }
     }

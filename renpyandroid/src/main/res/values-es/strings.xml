@@ -286,6 +286,7 @@
     <string name="extra_content_title">Contenido Extra</string>
     <string name="extra_content_prompt">¿Qué deseas instalar?</string>
     <string name="extra_content_option_install_sprites">Instalar Sprites</string>
+    <string name="extra_content_option_install_submods">Instalar Submods</string>
     <string name="spritepack_installer_title">Instalar Sprites</string>
     <string name="spritepack_installer_info">Selecciona el archivo comprimido (.zip o .rar) que descargaste. No te preocupes por extraer nada, MASL se encarga de acomodar todas las carpetas en su lugar automáticamente.</string>
     <string name="spritepack_select_archive">Seleccionar Archivo</string>
@@ -303,6 +304,18 @@
     <string name="spritepack_gift_progress">Importando archivos .gift...</string>
     <string name="spritepack_gift_import_success">Se movieron %1$d archivos .gift a characters/.</string>
     <string name="spritepack_gift_import_error">Error al importar archivos .gift: %1$s</string>
+    <string name="submod_installer_title">Instalar Submods</string>
+    <string name="submod_installer_info">Selecciona el archivo comprimido (.zip o .rar) que descargaste. MASL validará y colocará automáticamente los archivos del submod en la ruta correcta.</string>
+    <string name="submod_select_archive">Seleccionar Archivo</string>
+    <string name="submod_progress_analyzing">Analizando archivo...</string>
+    <string name="submod_progress_merging">Acomodando archivos...</string>
+    <string name="submod_success_title">¡Instalación Exitosa!</string>
+    <string name="submod_success_message">Los archivos del submod se añadieron correctamente. Estarán disponibles la próxima vez que inicies el juego.</string>
+    <string name="submod_incompatible_title">Archivo no compatible</string>
+    <string name="submod_incompatible_message">Este archivo no parece ser un Submod válido. Si intentas instalar ropa o accesorios, utiliza el Instalador de Sprites.</string>
+    <string name="submod_retry">Volver a intentar</string>
+    <string name="submod_install_success_toast">Submod instalado correctamente.</string>
+    <string name="submod_unexpected_error">Falló la instalación: %1$s</string>
     
     <!-- Download Center Strings -->
     <string name="download_center_title">Centro de Descargas</string>

@@ -295,6 +295,7 @@
     <string name="extra_content_title">Extra Content</string>
     <string name="extra_content_prompt">What would you like to install?</string>
     <string name="extra_content_option_install_sprites">Install Sprites</string>
+    <string name="extra_content_option_install_submods">Install Submods</string>
     <string name="spritepack_installer_title">Install Sprites</string>
     <string name="spritepack_installer_info">Select the compressed file (.zip or .rar) you downloaded. Don\'t worry about extracting anything; MASL will place all folders in the correct location automatically.</string>
     <string name="spritepack_select_archive">Select File</string>
@@ -312,6 +313,18 @@
     <string name="spritepack_gift_progress">Importing .gift files...</string>
     <string name="spritepack_gift_import_success">%1$d .gift files were moved to characters/.</string>
     <string name="spritepack_gift_import_error">Failed to import .gift files: %1$s</string>
+    <string name="submod_installer_title">Install Submods</string>
+    <string name="submod_installer_info">Select the compressed file (.zip or .rar) you downloaded. MASL will validate and place your submod files in the correct location automatically.</string>
+    <string name="submod_select_archive">Select File</string>
+    <string name="submod_progress_analyzing">Analyzing file...</string>
+    <string name="submod_progress_merging">Placing files...</string>
+    <string name="submod_success_title">Installation successful!</string>
+    <string name="submod_success_message">The submod files were added correctly. They will be available the next time you launch the game.</string>
+    <string name="submod_incompatible_title">Incompatible file</string>
+    <string name="submod_incompatible_message">This file does not look like a valid Submod. If you are trying to install clothes or accessories, use the Sprite Installer.</string>
+    <string name="submod_retry">Try again</string>
+    <string name="submod_install_success_toast">Submod installed successfully.</string>
+    <string name="submod_unexpected_error">Installation failed: %1$s</string>
     
     <!-- Download Center Strings -->
     <string name="manifest_url">https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-updates/refs/heads/main/launcher_updates.json</string>
