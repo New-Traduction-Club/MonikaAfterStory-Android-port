@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.renpy.android.databinding.FileExplorerActivityBinding
+import android.widget.TextView
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -101,6 +102,7 @@ class FileExplorerActivity : GameWindowActivity() {
         
         viewModel.currentDir.observe(this) { dir ->
             setTitle(dir.name.lowercase())
+            updateBreadcrumbs(dir)
             if (isSearchMode) {
                 fileAdapter.setSearchContext(enabled = true, rootDir = dir)
                 triggerSearch(binding.etSearchQuery.text?.toString().orEmpty(), debounce = false)
@@ -850,6 +852,57 @@ class FileExplorerActivity : GameWindowActivity() {
             InAppNotifier.show(this, getString(R.string.documents_provider_open_failed, e.message ?: ""))
         }
     }
+
+    private fun updateBreadcrumbs(currentDir: File) {
+        val container = binding.breadcrumbContainer
+        container.removeAllViews()
+
+        val pathParts = mutableListOf<File>()
+        var temp: File? = currentDir
+        while (temp != null) {
+            pathParts.add(0, temp)
+            if (temp.absolutePath == rootDir.absolutePath) break
+            temp = temp.parentFile
+        }
+
+        pathParts.forEachIndexed { index, file ->
+            val isLast = index == pathParts.size - 1
+            
+            val textView = TextView(this).apply {
+                text = if (file.absolutePath == rootDir.absolutePath) {
+                    "files"
+                } else {
+                    file.name.lowercase()
+                }
+                textSize = 14f
+                setTextColor(if (isLast) 0xFFB45D85.toInt() else 0xCC7295B4.toInt())
+                setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
+                if (!isLast) {
+                    setOnClickListener {
+                        SoundEffects.playClick(this@FileExplorerActivity)
+                        viewModel.loadDirectory(file.absolutePath)
+                    }
+                }
+            }
+            container.addView(textView)
+
+            if (!isLast) {
+                val separator = TextView(this).apply {
+                    text = ">"
+                    textSize = 12f
+                    setTextColor(0x88B45D85.toInt())
+                }
+                container.addView(separator)
+            }
+        }
+        
+        binding.breadcrumbScroll.post {
+            binding.breadcrumbScroll.fullScroll(View.FOCUS_RIGHT)
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+    private val Int.sp get() = this.toFloat()
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)

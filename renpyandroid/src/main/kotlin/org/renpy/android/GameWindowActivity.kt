@@ -60,14 +60,14 @@ abstract class GameWindowActivity : BaseActivity() {
         applyImmersiveFullscreen()
         
         // Let derived activities set their own content via setContentView()
-        overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
+        overridePendingTransition(R.anim.window_scale_in, R.anim.window_fade_out)
 
         SoundEffects.initialize(this)
     }
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
+        overridePendingTransition(R.anim.window_fade_in, R.anim.window_scale_out)
     }
 
     override fun onStart() {

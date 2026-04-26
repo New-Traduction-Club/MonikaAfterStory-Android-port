@@ -7,7 +7,7 @@
     android:background="@android:color/transparent"
     android:orientation="vertical">
 
-    <!-- Header columns -->
+    <!-- Header columns / Breadcrumbs -->
     <LinearLayout
         android:id="@+id/headerColumnsRow"
         android:layout_width="match_parent"
@@ -27,6 +27,21 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             app:tint="#B45D85"
             android:contentDescription="@string/file_nav_up"/>
+
+        <HorizontalScrollView
+            android:id="@+id/breadcrumbScroll"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/breadcrumbContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
+        </HorizontalScrollView>
 
         <ImageButton
             android:id="@+id/btnQuickAdd"
@@ -58,7 +73,19 @@
             app:tint="#B45D85"
             android:contentDescription="@string/documents_provider_open_action"
             android:visibility="gone" />
-        
+    </LinearLayout>
+
+    <!-- Column Headers -->
+    <LinearLayout
+        android:id="@+id/columnHeadersRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="56dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="4dp"
+        android:gravity="center_vertical">
+
         <TextView
             android:layout_width="0dp"
             android:layout_weight="1.5"
@@ -67,9 +94,9 @@
             android:textColor="#B45D85"
             android:textStyle="bold"
             android:textSize="12sp"/>
-            
+
         <View android:layout_width="1dp" android:layout_height="12dp" android:background="#CC7295" android:layout_marginHorizontal="4dp"/>
-            
+
         <TextView
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -78,7 +105,7 @@
             android:textColor="#B45D85"
             android:textStyle="bold"
             android:textSize="12sp"/>
-            
+
         <View android:layout_width="1dp" android:layout_height="12dp" android:background="#CC7295" android:layout_marginHorizontal="4dp"/>
 
         <TextView
@@ -89,7 +116,7 @@
             android:textColor="#B45D85"
             android:textStyle="bold"
             android:textSize="12sp"/>
-            
+
         <View android:layout_width="1dp" android:layout_height="12dp" android:background="#CC7295" android:layout_marginHorizontal="4dp"/>
 
         <TextView
