@@ -166,12 +166,11 @@ public class PythonSDLActivity extends SDLActivity {
      * This determines if unpacking one the zip files included in
      * the .apk is necessary. If it is, the zip file is unpacked.
      */
-    public void unpackData(final String resource, File target) {
+    public void unpackData(final String resource, File target, String data_version) {
 
         boolean shouldUnpack = false;
 
         // The version of data in memory and on disk.
-        String data_version = resourceManager.getString(resource + "_version");
         String disk_version = null;
 
         String filesDir = target.getAbsolutePath();
@@ -277,7 +276,10 @@ public class PythonSDLActivity extends SDLActivity {
         }
 
         long unpackStart = System.currentTimeMillis();
-        unpackData("private", getFilesDir());
+        String privateVersion = resourceManager.getString("private_version");
+        if (privateVersion != null) {
+            unpackData("private", getFilesDir(), privateVersion);
+        }
         Log.v("python", "unpackData finished. Duration: " + (System.currentTimeMillis() - unpackStart) + "ms");
 
         nativeSetEnv("ANDROID_PRIVATE", getFilesDir().getAbsolutePath());
@@ -309,7 +311,11 @@ public class PythonSDLActivity extends SDLActivity {
     Bitmap getBitmap(String assetName) {
         try {
             InputStream is = getAssets().open(assetName);
-            Bitmap rv = BitmapFactory.decodeStream(is);
+            
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            
+            Bitmap rv = BitmapFactory.decodeStream(is, null, options);
             is.close();
 
             return rv;

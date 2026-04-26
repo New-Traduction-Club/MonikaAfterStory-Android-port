@@ -38,10 +38,29 @@ abstract class BaseActivity : AppCompatActivity() {
     private fun updateBaseContextLocale(context: Context): Context {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val language = prefs.getString("language", "English") ?: "English"
-        val locale = getLocaleFromLanguage(language)
-        Locale.setDefault(locale)
+        
+        val locale = if (cachedLanguage == language && cachedLocale != null) {
+            cachedLocale!!
+        } else {
+            val l = getLocaleFromLanguage(language)
+            cachedLanguage = language
+            cachedLocale = l
+            Locale.setDefault(l)
+            l
+        }
 
         val config = context.resources.configuration
+        val currentLocale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            config.locales[0]
+        } else {
+            @Suppress("DEPRECATION")
+            config.locale
+        }
+
+        if (currentLocale == locale) {
+            return context
+        }
+
         config.setLocale(locale)
         return context.createConfigurationContext(config)
     }
@@ -64,11 +83,27 @@ abstract class BaseActivity : AppCompatActivity() {
         const val KEY_DARK_MODE = "dark_mode_enabled"
         const val KEY_WINDOW_MODE = "window_mode"
 
+        private var cachedLanguage: String? = null
+        private var cachedLocale: Locale? = null
+        private var cachedDarkMode: Boolean? = null
+
         fun applyUserNightMode(context: Context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val isDark = prefs.getBoolean(KEY_DARK_MODE, false)
+            
+            if (cachedDarkMode == isDark) return
+            cachedDarkMode = isDark
+            
             val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-            AppCompatDelegate.setDefaultNightMode(mode)
+            if (AppCompatDelegate.getDefaultNightMode() != mode) {
+                AppCompatDelegate.setDefaultNightMode(mode)
+            }
+        }
+        
+        fun clearCache() {
+            cachedLanguage = null
+            cachedLocale = null
+            cachedDarkMode = null
         }
     }
 }

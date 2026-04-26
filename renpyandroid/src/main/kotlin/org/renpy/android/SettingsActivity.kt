@@ -54,6 +54,7 @@ class SettingsActivity : GameWindowActivity() {
 
         binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(BaseActivity.KEY_DARK_MODE, isChecked).apply()
+            BaseActivity.clearCache()
             BaseActivity.applyUserNightMode(this)
             delegate.applyDayNight()
             recreate()
@@ -123,6 +124,7 @@ class SettingsActivity : GameWindowActivity() {
                         .putString("language", selectedLang)
                         .apply()
                     
+                    BaseActivity.clearCache()
                     createLanguageFile(selectedLang)
                     currentLanguage = selectedLang
                     binding.txtCurrentLanguage.text = currentLanguage
