@@ -1,14 +1,10 @@
 # MASL: An After Story Launcher (Unofficial Android Port)
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Platform](https://img.shields.io/badge/platform-Android-blue.svg)]()
-[![License](https://img.shields.io/badge/license-Custom-orange.svg)]()
-
-> [!CAUTION]
+> [!IMPORTANT]
 > **STRICT LEGAL DISCLAIMER & IMPORTANT NOTICE**
-> 1. **NO ASSETS INCLUDED:** This repository does **not** contain any game assets, artwork, or music from *Doki Doki Literature Club!* (DDLC) or the *Monika After Story* (MAS) modification.
+> 1. **NO ASSETS INCLUDED:** This repository does **not** contain any game assets, artwork, or music from *Doki Doki Literature Club!* (DDLC) or the *Monika After Story* (MAS) mod.
 > 2. **UNOFFICIAL PROJECT:** This is a strictly unofficial, fan-made Android wrapper/launcher. It is not affiliated with, endorsed by, or associated with Team Salvato or the official Monika After Story development team.
-> 3. **SCOPE:** This repository solely contains the Android project structure, the Ren'Py engine wrapper, and custom tools designed to facilitate the execution of legally obtained mod files on Android devices.
+> 3. **SCOPE:** This repository solely contains the Android project structure, the Ren'Py engine wrapper, and other tools designed to facilitate the execution of legally obtained mod files on Android devices.
 
 ---
 
