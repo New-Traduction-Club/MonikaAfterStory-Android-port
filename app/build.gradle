@@ -11,16 +11,16 @@ def localProperties = new Properties()
 localProperties.load(new FileInputStream(localPropertiesFile))
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion 37
 
     namespace "com.z.mas.portby.just6889"
 
     defaultConfig {
         applicationId "com.z.mas.portby.just6889"
         minSdkVersion 21
-        targetSdkVersion 35
-        versionCode 1757713332
-        versionName "2.0.9"
+        targetSdkVersion 37
+        versionCode 1757713334
+        versionName "2.0.10"
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
         }
