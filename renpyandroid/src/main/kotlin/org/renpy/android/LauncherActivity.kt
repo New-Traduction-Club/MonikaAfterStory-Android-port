@@ -112,11 +112,11 @@ class LauncherActivity : BaseActivity() {
     private var currentLanguage: String = ""
     private var isUiInitialized = false
     private var bootSequenceCompleted = false
-    
+
     private var progressDialog: AlertDialog? = null
     private var progressIndicator: android.widget.ProgressBar? = null
     private var progressText: android.widget.TextView? = null
-    
+
     private var pendingExportUri: Uri? = null
     private var wallpaperRotationJob: Job? = null
 
@@ -248,7 +248,10 @@ class LauncherActivity : BaseActivity() {
 
         for (id in runningIds) {
             if (id != lastFocusedAppId) {
-                if (id.startsWith("org.renpy.android.PythonSDLActivity") || ActiveActivityRegistry.activeActivities.contains(id)) {
+                if (id.startsWith("org.renpy.android.PythonSDLActivity") || ActiveActivityRegistry.activeActivities.contains(
+                        id
+                    )
+                ) {
                     bringToFront(id)
                 }
             }
@@ -256,7 +259,10 @@ class LauncherActivity : BaseActivity() {
 
         lastFocusedAppId?.let { id ->
             if (runningIds.contains(id)) {
-                if (id.startsWith("org.renpy.android.PythonSDLActivity") || ActiveActivityRegistry.activeActivities.contains(id)) {
+                if (id.startsWith("org.renpy.android.PythonSDLActivity") || ActiveActivityRegistry.activeActivities.contains(
+                        id
+                    )
+                ) {
                     bringToFront(id)
                 }
             }
@@ -294,9 +300,14 @@ class LauncherActivity : BaseActivity() {
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
                 setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
-                
+
                 if (app.state == "MINIMIZED") {
-                    setTextColor(androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorTaskbarTint))
+                    setTextColor(
+                        androidx.core.content.ContextCompat.getColor(
+                            this@LauncherActivity,
+                            R.color.colorTaskbarTint
+                        )
+                    )
                     setBackgroundResource(R.drawable.bg_taskbar)
                     alpha = 0.5f
                 } else {
@@ -332,7 +343,7 @@ class LauncherActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        
+
         // Check if Setup is completed
         val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
         if (!isSetupCompleted) {
@@ -347,7 +358,7 @@ class LauncherActivity : BaseActivity() {
 
         val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
         val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
-        
+
         if (isFirstLaunch && !setupConfirmed) {
             showLanguageSelectionDialog()
         }
@@ -366,11 +377,13 @@ class LauncherActivity : BaseActivity() {
                 override fun onActivityResumed(activity: android.app.Activity) {
                     ActiveActivityRegistry.currentActivity = activity
                 }
+
                 override fun onActivityPaused(activity: android.app.Activity) {
                     if (ActiveActivityRegistry.currentActivity === activity) {
                         ActiveActivityRegistry.currentActivity = null
                     }
                 }
+
                 override fun onActivityStopped(activity: android.app.Activity) {}
                 override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: Bundle) {}
                 override fun onActivityDestroyed(activity: android.app.Activity) {}
@@ -378,16 +391,16 @@ class LauncherActivity : BaseActivity() {
         )
 
         SoundEffects.initialize(this)
-        
+
         setupObservers()
-        
+
         initializeDesktopGrid()
         startSystemClockWorker()
         setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         setupDesktopSelection()
-        
+
         startBootCrtAnimations()
-        
+
         createNotificationChannel()
 
         // Register window state broadcast receiver
@@ -444,7 +457,7 @@ class LauncherActivity : BaseActivity() {
         }
 
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-        
+
         handleShortcutIntent(intent)
     }
 
@@ -460,6 +473,7 @@ class LauncherActivity : BaseActivity() {
                     binding.desktopSelectionView.updateSelection(null)
                     true
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     val rect = RectF(
                         Math.min(selectionStartX, event.x),
@@ -470,10 +484,12 @@ class LauncherActivity : BaseActivity() {
                     binding.desktopSelectionView.updateSelection(rect)
                     true
                 }
+
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     binding.desktopSelectionView.updateSelection(null)
                     true
                 }
+
                 else -> false
             }
         }
@@ -510,15 +526,16 @@ class LauncherActivity : BaseActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let { controller ->
                 controller.hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
-                controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            )
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    )
         }
     }
 
@@ -542,18 +559,18 @@ class LauncherActivity : BaseActivity() {
         handleShortcutIntent(intent)
     }
 
-    
+
     private var returnFromWindow = false
 
     override fun onResume() {
         super.onResume()
         if (!isUiInitialized) return
-        
+
         WallpaperManager.advanceOnAppToggle(this)
         WallpaperManager.maybeAdvanceByTime(this)
         WallpaperManager.applyWallpaper(this, binding.root)
         startWallpaperRotation()
-        
+
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val savedLang = prefs.getString("language", "English") ?: ""
         if (currentLanguage != savedLang) {
@@ -562,7 +579,7 @@ class LauncherActivity : BaseActivity() {
         }
 
         SoundEffects.initialize(this)
-        
+
         if (returnFromWindow) {
             returnFromWindow = false
             lifecycleScope.launch {
@@ -610,12 +627,24 @@ class LauncherActivity : BaseActivity() {
         if (intent == null) return
         val action = intent.getStringExtra("shortcut_action")
         if (action == "start_game") {
-            handleShortcutExecution(DesktopShortcut(R.string.launcher_start_game, android.R.drawable.ic_media_play, "start_game"))
+            handleShortcutExecution(
+                DesktopShortcut(
+                    R.string.launcher_start_game,
+                    android.R.drawable.ic_media_play,
+                    "start_game"
+                )
+            )
         } else if (action == "export_persistent") {
-            handleShortcutExecution(DesktopShortcut(R.string.launcher_export_button, R.drawable.ic_launcher_export, "export"))
+            handleShortcutExecution(
+                DesktopShortcut(
+                    R.string.launcher_export_button,
+                    R.drawable.ic_launcher_export,
+                    "export"
+                )
+            )
         }
     }
-    
+
     private fun setupDynamicShortcuts(isSetupCompleted: Boolean) {
         if (!isSetupCompleted) {
             ShortcutManagerCompat.removeAllDynamicShortcuts(this)
@@ -632,7 +661,7 @@ class LauncherActivity : BaseActivity() {
             .setIcon(IconCompat.createWithResource(this, android.R.drawable.ic_media_play))
             .setIntent(startGameIntent)
             .build()
-            
+
         // Export Persistent Shortcut
         val exportIntent = Intent(this, LauncherActivity::class.java).apply {
             action = Intent.ACTION_VIEW
@@ -643,11 +672,11 @@ class LauncherActivity : BaseActivity() {
             .setIcon(IconCompat.createWithResource(this, R.drawable.ic_launcher_export)) // uses our new modern SVG
             .setIntent(exportIntent)
             .build()
-            
+
         ShortcutManagerCompat.pushDynamicShortcut(this, startGameShortcut)
         ShortcutManagerCompat.pushDynamicShortcut(this, exportShortcut)
     }
-    
+
     private var isStartMenuExpanded = false
 
     private fun getPinnedItems(): List<DesktopShortcut> {
@@ -665,9 +694,8 @@ class LauncherActivity : BaseActivity() {
         return listOf(
             DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
             DesktopShortcut(R.string.launcher_update_game, R.drawable.ic_launcher_export, "update_game"),
-            // TODO: maybe edit this to support JY submods
-            // DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
-            // DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
+            DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
+            DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
             DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
             DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
@@ -693,9 +721,9 @@ class LauncherActivity : BaseActivity() {
             expandedItems,
             itemWidthPx = columnWidthPx
         ) { clickedItem ->
-                SoundEffects.playClick(this)
-                handleShortcutExecution(clickedItem)
-            }
+            SoundEffects.playClick(this)
+            handleShortcutExecution(clickedItem)
+        }
         updateExpandedPanelWidth(expandedItems.size, columnWidthPx)
     }
 
@@ -730,7 +758,7 @@ class LauncherActivity : BaseActivity() {
         binding.startMenuPanel.visibility = View.GONE
         binding.txtBiosConsole.text = ""
         binding.txtBiosConsole.scrollTo(0, 0)
-        
+
         val actManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
         actManager.getMemoryInfo(memInfo)
@@ -745,7 +773,7 @@ class LauncherActivity : BaseActivity() {
         val (totalStorageBytes, availableStorageBytes) = resolveInternalStorageStats()
         val totalStorage = Formatter.formatFileSize(this, totalStorageBytes)
         val availableStorage = Formatter.formatFileSize(this, availableStorageBytes)
-        
+
         lifecycleScope.launch {
             delay(1_500)
 
@@ -811,7 +839,7 @@ class LauncherActivity : BaseActivity() {
             cursorVisible = false
             setBootConsoleText(consoleBuffer.toString())
             delay(450)
-            
+
             binding.bootScreenLayout.animate()
                 .alpha(0f)
                 .setDuration(600)
@@ -1026,19 +1054,19 @@ class LauncherActivity : BaseActivity() {
             "Português" -> "Aviso de idioma"
             else -> "Language Warning"
         }
-        
+
         val messageText = when (language) {
             "Español" -> "Aviso: El soporte para español en MAS se limita a lo básico, si encuentras contenido en inglés, favor de no reportarlo. Usar la versión de MASL de la Play Store si tu prioridad es la traducción y no el uso de Ren'Py 6.99 de esta edición de MASL.\n\nPodrás cambiar el idioma dentro del juego en el apartado de Ajustes."
             "Português" -> "Aviso: O MASL 6.99 não possui suporte nativo para português na sua versão do MAS. Por favor, considere mudar para o MASL da Play Store ou instalar a tradução em português do MAS Brasil usando a função Experimentos."
             else -> ""
         }
-        
+
         val checkBoxText = when (language) {
             "Español" -> "No volver a mostrar"
             "Português" -> "Não mostrar novamente"
             else -> "Don't show again"
         }
-        
+
         val okButtonText = when (language) {
             "Español" -> "Vale"
             "Português" -> "Entendido"
@@ -1076,7 +1104,10 @@ class LauncherActivity : BaseActivity() {
             setTextColor(androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorTextPrimary))
             textSize = 14f
             val tintColor = androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorPrimary)
-            androidx.core.widget.CompoundButtonCompat.setButtonTintList(this, android.content.res.ColorStateList.valueOf(tintColor))
+            androidx.core.widget.CompoundButtonCompat.setButtonTintList(
+                this,
+                android.content.res.ColorStateList.valueOf(tintColor)
+            )
         }
         container.addView(checkBox)
 
@@ -1105,14 +1136,16 @@ class LauncherActivity : BaseActivity() {
             }
             return
         }
-        
+
         when (shortcut.actionId) {
             "start_game" -> {
                 checkLanguageAndStartGame()
             }
+
             "update_game" -> {
                 handleUpdateGame()
             }
+
             "import" -> {
                 GameDialogBuilder(this)
                     .setTitle(getString(R.string.launcher_import_title))
@@ -1126,6 +1159,7 @@ class LauncherActivity : BaseActivity() {
                     .setNegativeButton(getString(R.string.cancel), null)
                     .show()
             }
+
             "export" -> {
                 GameDialogBuilder(this)
                     .setTitle(getString(R.string.launcher_export_title))
@@ -1142,6 +1176,7 @@ class LauncherActivity : BaseActivity() {
                     .setNegativeButton(getString(R.string.cancel), null)
                     .show()
             }
+
             "internal_files" -> {
                 val intent = Intent(this, FileExplorerActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
@@ -1149,33 +1184,39 @@ class LauncherActivity : BaseActivity() {
                 }
                 launchActivityWindow(intent, FileExplorerActivity::class.java.name)
             }
+
             "settings" -> {
                 val intent = Intent(this, SettingsActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 }
                 launchActivityWindow(intent, SettingsActivity::class.java.name)
             }
+
             "extra_content" -> {
                 val intent = Intent(this, ExtraContentActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 }
                 launchActivityWindow(intent, ExtraContentActivity::class.java.name)
             }
+
             "discord_rpc" -> {
                 openDiscordRpcWindow()
             }
+
             "backups" -> {
                 val intent = Intent(this, BackupsActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 }
                 launchActivityWindow(intent, BackupsActivity::class.java.name)
             }
+
             "wallpapers" -> {
                 val intent = Intent(this, WallpapersActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 }
                 launchActivityWindow(intent, WallpapersActivity::class.java.name)
             }
+
             "external_files" -> {
                 val externalPath = getExternalFilesDir(null)?.absolutePath
                 if (externalPath != null) {
@@ -1186,12 +1227,14 @@ class LauncherActivity : BaseActivity() {
                     launchActivityWindow(intent, FileExplorerActivity::class.java.name)
                 }
             }
+
             "app_info" -> {
                 val intent = Intent(this, AppInfoActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 }
                 launchActivityWindow(intent, AppInfoActivity::class.java.name)
             }
+
             "experiments" -> {
                 val intent = Intent(this, ExperimentsActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
@@ -1205,13 +1248,14 @@ class LauncherActivity : BaseActivity() {
         val scanlineBitmap = Bitmap.createBitmap(1, 2, Bitmap.Config.ARGB_8888)
         scanlineBitmap.setPixel(0, 0, Color.TRANSPARENT)
         scanlineBitmap.setPixel(0, 1, Color.argb(45, 0, 0, 0))
-        
+
         val scanlineDrawable = BitmapDrawable(resources, scanlineBitmap)
         scanlineDrawable.tileModeY = Shader.TileMode.REPEAT
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             binding.crtOverlay.foreground = scanlineDrawable
-        } else {}
+        } else {
+        }
 
         val rollingLine = binding.bootRollingLine
         rollingLine.post {
@@ -1270,18 +1314,20 @@ class LauncherActivity : BaseActivity() {
         wallpaperRotationJob?.cancel()
         wallpaperRotationJob = null
     }
-    
+
     private fun setupObservers() {
         viewModel.launchState.observe(this) { state ->
-            when(state) {
+            when (state) {
                 is LauncherViewModel.LaunchState.Idle -> {
                     dismissProgressDialog()
                 }
+
                 is LauncherViewModel.LaunchState.LaunchGame -> {
                     dismissProgressDialog()
                     viewModel.consumeLaunchState()
                     launchPythonActivityWithSanitizedPackages()
                 }
+
                 is LauncherViewModel.LaunchState.Error -> {
                     dismissProgressDialog()
                     InAppNotifier.show(this, state.message, true)
@@ -1290,11 +1336,11 @@ class LauncherActivity : BaseActivity() {
                 }
             }
         }
-        
+
         viewModel.operationStatus.observe(this) { msg ->
             InAppNotifier.show(this, msg)
         }
-        
+
         viewModel.exportComplete.observe(this) { zipFile ->
             if (zipFile != null && pendingExportUri != null) {
                 try {
@@ -1313,7 +1359,7 @@ class LauncherActivity : BaseActivity() {
             }
         }
     }
-    
+
     private fun dismissProgressDialog() {
         progressDialog?.dismiss()
         progressDialog = null
@@ -1333,7 +1379,7 @@ class LauncherActivity : BaseActivity() {
                     .putString("language", selectedLang)
                     .putBoolean("is_first_launch", false)
                     .apply()
-                
+
                 createLanguageFile(selectedLang)
                 recreate()
             }
@@ -1344,7 +1390,7 @@ class LauncherActivity : BaseActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != RESULT_OK || data == null || data.data == null) return
-        
+
         val uri = data.data!!
         val savesDir = File(getExternalFilesDir(null), "saves")
 
@@ -1354,14 +1400,14 @@ class LauncherActivity : BaseActivity() {
             viewModel.exportSaves(savesDir, cacheDir)
         } else if (requestCode == REQUEST_CODE_IMPORT_SAVES) {
             // Import
-            Thread { 
+            Thread {
                 try {
                     val tempZip = File.createTempFile("import_saves", ".zip", cacheDir)
                     contentResolver.openInputStream(uri)?.use { input ->
                         FileOutputStream(tempZip).use { output -> input.copyTo(output) }
                     }
-                    runOnUiThread { 
-                        viewModel.importSaves(tempZip, savesDir) 
+                    runOnUiThread {
+                        viewModel.importSaves(tempZip, savesDir)
                     }
                 } catch (e: Exception) {
                     runOnUiThread { InAppNotifier.show(this, "Import preparation failed") }
@@ -1439,7 +1485,7 @@ class LauncherActivity : BaseActivity() {
         try {
             val certFile = File(filesDir, "monikaafterstory-masl-edition/game/python-packages/certifi/cacert.pem")
             certFile.parentFile?.mkdirs()
-            
+
             assets.open("cacert.pem").use { input ->
                 FileOutputStream(certFile).use { output ->
                     input.copyTo(output)
@@ -1483,7 +1529,7 @@ class LauncherActivity : BaseActivity() {
             gameDir.listFiles { file -> file.name.startsWith("language_") && file.name.endsWith(".txt") }
                 ?.forEach { it.delete() }
 
-            val langParam = when(language) {
+            val langParam = when (language) {
                 "Español" -> "spanish"
                 "Português" -> "portuguese"
                 else -> "english"
@@ -1545,8 +1591,9 @@ class LauncherActivity : BaseActivity() {
 
     private fun showNotificationToast(title: String, message: String, imagePath: String?) {
         val activeActivity = ActiveActivityRegistry.currentActivity
-        val targetActivity: android.app.Activity = if (activeActivity != null && !activeActivity.isFinishing && 
-            (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !activeActivity.isDestroyed)) {
+        val targetActivity: android.app.Activity = if (activeActivity != null && !activeActivity.isFinishing &&
+            (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !activeActivity.isDestroyed)
+        ) {
             activeActivity
         } else {
             this
@@ -1577,7 +1624,7 @@ class LauncherActivity : BaseActivity() {
             val item = items[position]
             holder.txtTitle.text = item.title
             holder.txtMessage.text = item.message
-            
+
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
             holder.txtTime.text = sdf.format(Date(item.timestamp))
 
