@@ -6,12 +6,16 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_desktop_mas">
 
+    <org.renpy.android.DesktopSelectionView
+        android:id="@+id/desktopSelectionView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <!-- Start Menu Panel (hidden by default) -->
     <androidx.cardview.widget.CardView
         android:id="@+id/startMenuPanel"
         android:layout_width="240dp"
-        android:layout_height="0dp"
-        app:layout_constraintHeight_default="wrap"
+        android:layout_height="wrap_content"
         app:layout_constraintHeight_max="@dimen/start_menu_collapsed_height"
         app:layout_constrainedHeight="true"
         android:layout_marginStart="32dp"
@@ -61,8 +65,8 @@
     <!-- Taskbar -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/taskbarLayout"
-        android:layout_width="0dp"
-        android:layout_height="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
         android:background="@color/colorTaskbarBackground"
         android:elevation="12dp"
         android:paddingStart="32dp"
@@ -71,19 +75,193 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Start Button -->
         <TextView
-            android:id="@+id/txtSystemClock"
+            android:id="@+id/btnStartMenu"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="40dp"
+            android:layout_height="match_parent"
+            android:text="@string/btn_start"
             android:textColor="@color/colorTaskbarTint"
-            android:textStyle="bold"
             android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Container for Running Apps -->
+        <LinearLayout
+            android:id="@+id/runningAppsContainer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toEndOf="@id/btnStartMenu"
+            app:layout_constraintEnd_toStartOf="@id/systemTrayLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- System Tray - Clock + Notifications Center Button -->
+        <LinearLayout
+            android:id="@+id/systemTrayLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:id="@+id/txtSystemClock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorTaskbarTint"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
+            <FrameLayout
+                android:id="@+id/btnNotificationCenter"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
+
+                <ImageView
+                    android:id="@+id/imgBell"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_notifications"
+                    app:tint="@color/colorTaskbarTint"/>
+
+                <TextView
+                    android:id="@+id/txtNotificationBadge"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="2dp"
+                    android:background="@drawable/badge_notification_red"
+                    android:textColor="#FFFFFF"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:visibility="gone"/>
+
+            </FrameLayout>
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Toast Popup Container -->
+    <LinearLayout
+        android:id="@+id/toastContainer"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="bottom"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="16dp"
+        app:layout_constraintBottom_toTopOf="@id/taskbarLayout"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Notification Center Flyout Menu -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/notificationCenterPanel"
+        android:layout_width="320dp"
+        android:layout_height="360dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="12dp"
+        app:cardBackgroundColor="@color/colorWindowBackground"
+        android:visibility="gone"
+        android:elevation="14dp"
+        app:layout_constraintBottom_toTopOf="@id/taskbarLayout"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Header -->
+            <TextView
+                android:id="@+id/lblNotifications"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/notification_title_notifications"
+                android:textColor="@color/colorTextPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <TextView
+                android:id="@+id/btnClearAllNotifications"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="@string/notification_clear_all"
+                android:textColor="@color/colorTaskbarTint"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/lblNotifications"
+                app:layout_constraintBottom_toBottomOf="@id/lblNotifications"/>
+
+            <View
+                android:id="@+id/notifHeaderDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider"
+                android:layout_marginTop="12dp"
+                app:layout_constraintTop_toBottomOf="@id/lblNotifications"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <!-- List -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvNotifications"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:clipToPadding="false"
+                android:paddingBottom="16dp"
+                app:layout_constraintTop_toBottomOf="@id/notifHeaderDivider"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <!-- Empty State -->
+            <TextView
+                android:id="@+id/txtNoNotifications"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notification_no_new_notifications"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/notifHeaderDivider"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
 
     <!-- Boot Sequence Overlay -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -103,11 +281,32 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="24dp"
-            android:textColor="#FFFFFF"
+            android:textColor="#00FF00"
             android:textSize="14sp"
             android:typeface="monospace" 
+            android:shadowColor="#00FF00"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="4"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <View
+            android:id="@+id/crtOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/crt_vignette"
+            android:alpha="0.8" />
+
+        <View
+            android:id="@+id/bootRollingLine"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="@drawable/crt_rolling_line"
+            android:alpha="0.25"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

@@ -9,19 +9,22 @@
     <string name="setup_step_1_desc">Descarga la versión oficial de DDLC para Windows.</string>
     <string name="setup_step_1_url">https://ddlc.moe/</string>
     <string name="setup_ddlc_sha256">SHA256: 2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e</string>
-    <string name="setup_step_2_title">Paso 2: MASL</string>
-    <string name="setup_step_2_desc">Descarga la versión 0.12.18 Dlx de MAS.</string>
-    <string name="setup_step_2_url">https://github.com/Monika-After-Story/MonikaModDev/releases/tag/v0.12.18</string>
-    <string name="setup_mas_filename">Objetivo: Monika_After_Story-0.12.18-Mod-Dlx.zip</string>
-    <string name="setup_mas_sha256">SHA256: 1575791c114dcd2ed6a8868fe0f99abfa140d5d95045802a8de231026772c960</string>
+    <string name="setup_step_2_title">Paso 2: Monika After Story Mod</string>
+    <string name="setup_step_2_desc">Descarga la última versión del Mod Monika After Story.</string>
+    <string name="setup_step_2_url">https://github.com/New-Traduction-Club/</string>
+    <string name="setup_mod_sha256">SHA256: %1$s</string>
     <string name="setup_btn_download">Descargar</string>
     <string name="setup_btn_download_manual">Descargar manualmente</string>
-    <string name="setup_btn_download_auto">Descargar automáticamente</string>
+    <string name="setup_btn_download_auto">Descargar desde GitHub</string>
     <string name="setup_btn_select_file">Seleccionar Archivo</string>
     <string name="setup_confirm_delete_zip_title">¿Eliminar ZIP?</string>
     <string name="setup_confirm_delete_zip_message">¿Quieres eliminar el archivo ZIP después de la instalación para ahorrar espacio?</string>
-    <string name="setup_downloading_mas">Descargando MAS...</string>
+    <string name="setup_downloading_mod">Descargando mod...</string>
     <string name="setup_download_error">Error de descarga: %1$s</string>
+    <string name="setup_select_version_title">Seleccionar Versión</string>
+    <string name="setup_error_incompatible_version">Esta versión requiere una versión más reciente de la app (v%1$d). Por favor actualiza el launcher.</string>
+    <string name="setup_fetching_packages">Obteniendo versiones disponibles...</string>
+    <string name="setup_error_fetching_packages">No se pudieron obtener las versiones disponibles.</string>
     <string name="yes">Sí</string>
     <string name="no">No</string>
     <string name="action_ok">Vale</string>
@@ -77,6 +80,8 @@
     <string name="no_files_export">Ningún archivo seleccionado para exportar</string>
     <string name="import_failed">Importación fallida: %1$s</string>
     <string name="error_pasting">Error al pegar: %1$s</string>
+    <string name="rename_title">Renombrar</string>
+    <string name="rename_hint">Nuevo nombre</string>
     <string name="failed_to_create_folder">Fallo al crear carpeta.</string>
     <string name="delete_files">Eliminar archivos</string>
     <string name="confirm_delete_message">¿Estás seguro de que quieres eliminar los archivos seleccionados?</string>
@@ -142,6 +147,7 @@
 
     <!-- Launcher Strings -->
     <string name="launcher_start_game">Iniciar juego</string>
+    <string name="launcher_update_game">Actualizar juego</string>
     <string name="launcher_export_button">Exportar persistente</string>
     <string name="launcher_import_button">Importar persistente</string>
     <string name="launcher_browse_internal">Explorar archivos internos</string>
@@ -183,7 +189,7 @@
     <string name="discord_rpc_saved_disabled">Discord RPC desactivado.</string>
     <string name="discord_rpc_presence_name">Monika After Story Launcher</string>
     <string name="discord_rpc_presence_state">In the spaceroom</string>
-    <string name="discord_rpc_presence_details">Unofficial Monika After Story Android port</string>
+    <string name="discord_rpc_presence_details">Unofficial Monika After Story port</string>
     <string name="discord_rpc_button_play_store">Play Store</string>
     <string name="discord_rpc_button_github_repo">Github Repo</string>
 
@@ -264,12 +270,13 @@
     <!-- Notification Strings -->
     <string name="notification_channel_name">Descargas</string>
     <string name="notification_channel_description">Notificaciones para descargas de archivos</string>
-    <string name="notification_download_title">Descargando MAS</string>
+    <string name="notification_download_title">Descargando mod</string>
     <string name="notification_download_complete">Descarga Completada</string>
     <string name="notification_download_failed">Descarga Fallida</string>
     <string name="notification_download_progress">Velocidad: %1$s/s • Estimado: %2$s</string>
     <string name="firebase_notification_default_title">Nueva actualización</string>
     <string name="firebase_notification_default_body">Hay un nuevo paquete disponible para descargar.</string>
+
     <string name="setup_download_progress_full">%1$d%% • %2$s / %3$s • %4$s • ETA: %5$s</string>
     <string name="setup_download_progress_indeterminate">%1$s • %2$s</string>
     <string name="permission_notification_title">¿Activar Notificaciones?</string>
@@ -424,4 +431,49 @@
     <string name="window_mode_maximized_desc">Ventana a tamaño completo.</string>
     <string name="settings_window_mode_title">Modo de ventana</string>
     <string name="settings_window_mode_desc">Cambiar entre Ventana o Maximizado.</string>
+
+    <!-- Update Feature Strings -->
+    <string name="update_window_title">Gestor de Actualizaciones</string>
+    <string name="update_status_initializing">Iniciando actualización...</string>
+    <string name="update_status_downloading">Descargando actualización...</string>
+    <string name="update_status_verifying">Verificando actualización...</string>
+    <string name="update_status_installing">Instalando actualización...</string>
+    <string name="update_status_complete">¡Actualización completada!</string>
+    <string name="update_status_failed">Actualización fallida</string>
+    <string name="update_progress_percent">%1$d%%</string>
+    <string name="update_progress_error">Error</string>
+    <string name="update_desc_wait">Por favor, no cierres esta ventana hasta que la actualización haya terminado.</string>
+    <string name="update_desc_finished">El juego ha sido actualizado. Ya puedes cerrar esta ventana.</string>
+    <string name="update_error_no_package">Error: No se proporcionó información del paquete</string>
+    <string name="update_error_checksum">La verificación de la suma de comprobación falló. La descarga podría estar corrupta.</string>
+    <string name="update_error_file_not_found">Archivo de actualización no encontrado</string>
+    <string name="update_dialog_title">Actualización en curso</string>
+    <string name="update_dialog_warning">La actualización se está ejecutando. Cerrar esta ventana ahora podría corromper los archivos del juego. Por favor, espera a que termine.</string>
+    <string name="update_select_version_title">Seleccionar versión de actualización</string>
+    <string name="update_error_fetch_failed">No se pudieron obtener las actualizaciones disponibles.</string>
+
+    <!-- Toolbox -->
+    <string name="toolbox_title">Afterbox</string>
+    <string name="tool_virtual_keyboard">Teclado Virtual</string>
+
+    <string name="btn_start">Inicio</string>
+    <string name="toolbox_swipe_tip">Consejo: Desliza desde el borde izquierdo para abrir la Afterbox</string>
+    <string name="tool_window_controller">Ventana</string>
+    <string name="renpy_window_mode_title">Modo de Ventana</string>
+    <string name="renpy_window_mode_windowed">Ventana</string>
+    <string name="renpy_window_mode_fullscreen">Pantalla completa</string>
+
+    <string name="notification_title_notifications">Notificaciones</string>
+    <string name="notification_clear_all">Borrar todo</string>
+    <string name="notification_no_new_notifications">Sin notificaciones</string>
+    <string name="game_notification_channel_name">Notificaciones de MAS</string>
+    <string name="game_notification_channel_desc">Notificaciones de Monika</string>
+    <string name="game_notification_default_title">Monika</string>
+    <string name="game_notification_default_message">Monika está esperando...</string>
+
+    <!-- Experiments Panel -->
+    <string name="title_experiments">Experimentos</string>
+    <string name="experiments_description">Ejecuta otros juegos de Ren\'Py.</string>
+    <string name="experiments_no_games">No se detectaron otros juegos. Coloca las carpetas del juego en ArchivosInternos/&lt;carpeta&gt;/game/</string>
+    <string name="experiments_launch">Ejecutar</string>
 </resources>

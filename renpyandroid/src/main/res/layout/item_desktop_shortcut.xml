@@ -17,14 +17,14 @@
         android:layout_height="24dp"
         android:layout_marginEnd="16dp"
         android:src="@drawable/ic_launcher_settings"
-        app:tint="#D25C7E" />
+        android:contentDescription="@null"
+        app:tint="@color/colorIconTint" />
 
     <TextView
         android:id="@+id/textDesktop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#D25C7E"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="14sp" />
         
 </LinearLayout>

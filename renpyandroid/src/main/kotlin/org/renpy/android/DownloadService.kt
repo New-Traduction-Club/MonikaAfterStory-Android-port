@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -20,10 +21,10 @@ class DownloadService : Service() {
         const val ACTION_START_DOWNLOAD = "org.renpy.android.action.START_DOWNLOAD"
         const val ACTION_DOWNLOAD_PROGRESS = "org.renpy.android.action.DOWNLOAD_PROGRESS"
         const val ACTION_DOWNLOAD_COMPLETE = "org.renpy.android.action.DOWNLOAD_COMPLETE"
-        
+
         const val EXTRA_URL = "extra_url"
         const val EXTRA_DEST_PATH = "extra_dest_path"
-        
+
         const val EXTRA_PROGRESS = "extra_progress"
         const val EXTRA_SPEED = "extra_speed"
         const val EXTRA_ETA = "extra_eta"
@@ -38,7 +39,7 @@ class DownloadService : Service() {
         const val PREFS_NAME = "download_prefs"
         const val KEY_STATUS = "status"
         const val KEY_ERROR = "error_message"
-        
+
         const val STATUS_IDLE = 0
         const val STATUS_RUNNING = 1
         const val STATUS_COMPLETE = 2
@@ -55,7 +56,7 @@ class DownloadService : Service() {
         if (intent?.action == ACTION_START_DOWNLOAD) {
             val url = intent.getStringExtra(EXTRA_URL)
             val destPath = intent.getStringExtra(EXTRA_DEST_PATH)
-            
+
             if (url != null && destPath != null && !isDownloading) {
                 updateStatus(STATUS_RUNNING)
                 startForegroundService()
@@ -69,21 +70,25 @@ class DownloadService : Service() {
         createNotificationChannel()
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(getString(R.string.notification_download_title))
-            .setContentText(getString(R.string.setup_downloading_mas))
+            .setContentText(getString(R.string.setup_downloading_mod))
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
-            .setProgress(100, 0, true)
+            .setProgress(100, 0, false)
             .build()
 
-        startForeground(NOTIFICATION_ID, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.notification_channel_name)
             val descriptionText = getString(R.string.notification_channel_description)
-            val importance = NotificationManager.IMPORTANCE_LOW
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
@@ -97,7 +102,7 @@ class DownloadService : Service() {
             .setContentTitle(getString(R.string.notification_download_title))
             .setContentText(getString(R.string.notification_download_progress, speed, eta))
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
             .setProgress(100, progress, false)
             .setOnlyAlertOnce(true)
@@ -111,6 +116,7 @@ class DownloadService : Service() {
         isDownloading = true
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                updateNotification(0, "...", "...")
                 val url = java.net.URL(urlString)
                 val connection = url.openConnection() as java.net.HttpURLConnection
                 connection.connect()
@@ -130,9 +136,6 @@ class DownloadService : Service() {
                 var lastUpdate = 0L
                 val startTime = System.currentTimeMillis()
 
-                // Initial notification
-                updateNotification(0, "...", "...")
-
                 while (input.read(data).also { count = it } != -1) {
                     total += count
                     output.write(data, 0, count)
@@ -141,7 +144,7 @@ class DownloadService : Service() {
                     if (now - lastUpdate > 200) {
                         lastUpdate = now
                         val progress = if (fileLength > 0) (total * 100 / fileLength).toInt() else 0
-                        
+
                         val elapsedMs = now - startTime
                         val speedBytesPerSec = if (elapsedMs > 0) total * 1000 / elapsedMs else 0
                         val speed = formatSpeed(speedBytesPerSec)
@@ -159,7 +162,7 @@ class DownloadService : Service() {
 
                 updateStatus(STATUS_COMPLETE)
                 sendCompleteBroadcast(true)
-                showCompleteNotification(true)  
+                showCompleteNotification(true)
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -177,7 +180,7 @@ class DownloadService : Service() {
     private fun showCompleteNotification(success: Boolean) {
         val title = if (success) getString(R.string.notification_download_complete) else getString(R.string.notification_download_failed)
         val icon = if (success) android.R.drawable.stat_sys_download_done else android.R.drawable.stat_notify_error
-        
+
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(title)
             .setSmallIcon(icon)

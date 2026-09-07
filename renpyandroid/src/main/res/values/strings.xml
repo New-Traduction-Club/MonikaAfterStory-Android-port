@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">MASL - An Unofficial After Story launcher</string>
+    <string name="attribution_default">Default Attribution</string>
 
     <string-array name="languages">
         <item>English</item>
@@ -18,19 +19,22 @@
     <string name="setup_step_1_desc">Download the official DDLC release for Windows.</string>
     <string name="setup_step_1_url">https://ddlc.moe/</string>
     <string name="setup_ddlc_sha256">SHA256: 2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e</string>
-    <string name="setup_step_2_title">Step 2: MASL</string>
-    <string name="setup_step_2_desc">Download the MAS 0.12.18 Dlx version.</string>
-    <string name="setup_step_2_url">https://github.com/Monika-After-Story/MonikaModDev/releases/tag/v0.12.18</string>
-    <string name="setup_mas_filename">Target: Monika_After_Story-0.12.18-Mod-Dlx.zip</string>
-    <string name="setup_mas_sha256">SHA256: 1575791c114dcd2ed6a8868fe0f99abfa140d5d95045802a8de231026772c960</string>
+    <string name="setup_step_2_title">Step 2: Monika After Story Mod</string>
+    <string name="setup_step_2_desc">Download the latest Monika After Story Mod version.</string>
+    <string name="setup_step_2_url">https://github.com/New-Traduction-Club/</string>
+    <string name="setup_mod_sha256">SHA256: %1$s</string>
     <string name="setup_btn_download">Download</string>
     <string name="setup_btn_download_manual">Download Manually</string>
-    <string name="setup_btn_download_auto">Download Automatically</string>
+    <string name="setup_btn_download_auto">Download from GitHub</string>
     <string name="setup_btn_select_file">Select File</string>
     <string name="setup_confirm_delete_zip_title">Delete ZIP?</string>
     <string name="setup_confirm_delete_zip_message">Do you want to delete the ZIP file after installation to save space?</string>
-    <string name="setup_downloading_mas">Downloading MAS...</string>
+    <string name="setup_downloading_mod">Downloading mod...</string>
     <string name="setup_download_error">Download error: %1$s</string>
+    <string name="setup_select_version_title">Select Version</string>
+    <string name="setup_error_incompatible_version">This version requires a newer app version (v%1$d). Please update the launcher.</string>
+    <string name="setup_fetching_packages">Fetching available versions...</string>
+    <string name="setup_error_fetching_packages">Could not fetch available versions.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="action_ok">Ok</string>
@@ -43,7 +47,7 @@
     <string name="setup_progress_verifying">Verifying files...</string>
     <string name="setup_progress_extracting_ddlc">Extracting DDLC...</string>
     <string name="setup_progress_extracting_rpa">Unpacking game assets (RPA)...</string>
-    <string name="setup_progress_extracting_mas">Installing Monika After Story...</string>
+    <string name="setup_progress_extracting_mas">Installing Monika After Story..</string>
     <string name="setup_progress_finalizing">Finalizing setup...</string>
     <string name="setup_complete">Setup completed!</string>
     <string name="setup_error">Error: %1$s</string>
@@ -151,6 +155,7 @@
 
     <!-- Launcher Strings -->
     <string name="launcher_start_game">Start game</string>
+    <string name="launcher_update_game">Update game</string>
     <string name="launcher_export_button">Export persistent</string>
     <string name="launcher_import_button">Import persistent</string>
     <string name="launcher_browse_internal">Browse internal files</string>
@@ -167,7 +172,6 @@
     <string name="launcher_internal_desc">Manage game files</string>
     <string name="launcher_external_desc">Access save files</string>
     <string name="launcher_settings_desc">Launcher config</string>
-    <string name="launcher_download_desc">Get updates</string>
     <string name="launcher_backups_desc">Manage data backups</string>
     <string name="discord_rpc_dialog_title">Discord RPC</string>
     <string name="discord_rpc_dialog_message">Sign in with Discord first, then enable Rich Presence for in-game activity.</string>
@@ -192,7 +196,7 @@
     <string name="discord_rpc_saved_disabled">Discord RPC disabled.</string>
     <string name="discord_rpc_presence_name">Monika After Story Launcher</string>
     <string name="discord_rpc_presence_state">In the spaceroom</string>
-    <string name="discord_rpc_presence_details">Unofficial Monika After Story Android port</string>
+    <string name="discord_rpc_presence_details">Unofficial Monika After Story</string>
     <string name="discord_rpc_button_play_store">Play Store</string>
     <string name="discord_rpc_button_github_repo">GitHub Repo</string>
 
@@ -248,19 +252,9 @@
     <string name="paste_error">Error pasting files</string>
 
     <string name="status_checking_network">Checking network...</string>
-    <string name="status_checking_updates">Checking for updates...</string>
     <string name="status_launching_game">Launching game...</string>
     <string name="status_export_ready">Export ready</string>
     <string name="status_import_completed">Import completed successfully</string>
-    <string name="error_check_updates">Failed to check updates</string>
-    <string name="error_update_failed">Update failed</string>
-    <string name="error_update_failed_launching_outdated">Update failed. Launching outdated version.</string>
-
-    <string name="dialog_update_available_title">Update Available</string>
-    <string name="dialog_update_available_wifi_message">An update is available. Download now?</string>
-    <string name="dialog_update_available_mobile_message">An update is available. You are on mobile data. Do you want to download it now?</string>
-    <string name="action_skip">Skip</string>
-    <string name="action_update">Update</string>
 
     <string name="settings_category_general">General</string>
     <string name="settings_category_appearance">Appearance</string>
@@ -273,12 +267,13 @@
     <!-- Notification Strings -->
     <string name="notification_channel_name">Downloads</string>
     <string name="notification_channel_description">Notifications for file downloads</string>
-    <string name="notification_download_title">Downloading MAS</string>
+    <string name="notification_download_title">Downloading mod</string>
     <string name="notification_download_complete">Download Complete</string>
     <string name="notification_download_failed">Download Failed</string>
     <string name="notification_download_progress">Speed: %1$s/s • ETA: %2$s</string>
     <string name="firebase_notification_default_title">New Update</string>
     <string name="firebase_notification_default_body">A new package is available for download.</string>
+
     <string name="setup_download_progress_full">%1$d%% • %2$s / %3$s • %4$s • ETA: %5$s</string>
     <string name="setup_download_progress_indeterminate">%1$s • %2$s</string>
     <string name="permission_notification_title">Enable Notifications?</string>
@@ -291,7 +286,6 @@
     <string name="extracting">Extracting…</string>
     <string name="extraction_completed">Extraction completed</string>
     <string name="extraction_error">Extraction error: %1$s</string>
-    <string name="launcher_download_center">Download Center</string>
     <string name="extra_content_title">Extra Content</string>
     <string name="extra_content_prompt">What would you like to install?</string>
     <string name="extra_content_option_install_sprites">Install Sprites</string>
@@ -326,26 +320,6 @@
     <string name="submod_install_success_toast">Submod installed successfully.</string>
     <string name="submod_unexpected_error">Installation failed: %1$s</string>
     
-    <!-- Download Center Strings -->
-    <string name="manifest_url">https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-updates/refs/heads/main/launcher_updates.json</string>
-    <string name="download_center_title">Download Center</string>
-    <string name="no_updates_found">No updates found or connection error</string>
-    <string name="download_in_progress">Another download is in progress</string>
-    <string name="update_installed">%1$s installed successfully</string>
-    <string name="installation_failed">Installation failed: %1$s</string>
-    <string name="update_current_version">Current: %1$s -> New: %2$s (%3$s)</string>
-    <string name="btn_update">Update</string>
-    <string name="btn_reinstall">Re-install</string>
-    <string name="status_downloading">Downloading...</string>
-    <string name="status_installing">Installing...</string>
-    <string name="download_failed_error">Download failed: %1$s</string>
-    <string name="wifi_only_label">Download only on Wi-Fi</string>
-    <string name="download_center_update_prompt_title">Updates available</string>
-    <string name="download_center_update_prompt_message_single">There is 1 package update available in Download Center.</string>
-    <string name="download_center_update_prompt_message_multiple">There are %1$d package updates available in Download Center.</string>
-    <string name="data_warning_title">Mobile Data Usage</string>
-    <string name="data_warning_message">You are using mobile data. This download (%1$s) may incur additional charges. Do you want to proceed?</string>
-    <string name="calculating_size">Calculating size...</string>
 
     <!-- Piano Strings -->
     <string name="piano_settings">Settings</string>
@@ -434,4 +408,57 @@
     <string name="window_mode_maximized_desc">Full-size window.</string>
     <string name="settings_window_mode_title">Window style</string>
     <string name="settings_window_mode_desc">Switch between windowed or maximized.</string>
+
+    <!-- Update Feature Strings -->
+    <string name="update_window_title">Game Update Manager</string>
+    <string name="update_status_initializing">Initializing Update...</string>
+    <string name="update_status_downloading">Downloading Update...</string>
+    <string name="update_status_verifying">Verifying Update...</string>
+    <string name="update_status_installing">Installing Update...</string>
+    <string name="update_status_complete">Update Complete!</string>
+    <string name="update_status_failed">Update Failed</string>
+    <string name="update_progress_percent">%1$d%%</string>
+    <string name="update_progress_error">Error</string>
+    <string name="update_desc_wait">Please do not close this window until the update is complete.</string>
+    <string name="update_desc_finished">The game has been updated. You can now close this window.</string>
+    <string name="update_error_no_package">Error: No package info provided</string>
+    <string name="update_error_checksum">Checksum verification failed. The download may be corrupted.</string>
+    <string name="update_error_file_not_found">Update file not found</string>
+    <string name="update_dialog_title">Update in Progress</string>
+    <string name="update_dialog_warning">The update is currently running. Closing this window now may corrupt your game files. Please wait until it finishes.</string>
+    <string name="update_select_version_title">Select Update Version</string>
+    <string name="update_error_fetch_failed">Could not fetch available updates.</string>
+    <string name="wifi_only_label">Download only with Wi-Fi</string>
+    <string name="update_current_version">Current: %1$s -> New: %2$s (%3$s)</string>
+    <string name="status_installing">Installing...</string>
+    <string name="status_downloading">Downloading...</string>
+    <string name="status_checking_updates">Searching updates...</string>
+    <string name="no_updates_found">No updates found</string>
+    <string name="launcher_download_center">Download Center</string>
+    <string name="installation_failed">Installation error: %1$s</string>
+
+    <!-- Toolbox -->
+    <string name="toolbox_title">Afterbox</string>
+    <string name="tool_virtual_keyboard">Virtual Keyboard</string>
+
+    <string name="btn_start">Start</string>
+    <string name="toolbox_swipe_tip">Tip: Swipe from the left edge to open the Afterbox</string>
+    <string name="tool_window_controller">Window Controller</string>
+    <string name="renpy_window_mode_title">Game Window Mode</string>
+    <string name="renpy_window_mode_windowed">Windowed</string>
+    <string name="renpy_window_mode_fullscreen">Fullscreen</string>
+    
+    <string name="notification_title_notifications">Notifications</string>
+    <string name="notification_clear_all">Clear all</string>
+    <string name="notification_no_new_notifications">No new notifications</string>
+    <string name="game_notification_channel_name">MAS Notifications</string>
+    <string name="game_notification_channel_desc">Notifications from Monika</string>
+    <string name="game_notification_default_title">Monika</string>
+    <string name="game_notification_default_message">Monika is waiting...</string>
+
+    <!-- Experiments Panel -->
+    <string name="title_experiments">Experiments</string>
+    <string name="experiments_description">Select and launch other Ren\'Py games found.</string>
+    <string name="experiments_no_games">No other Ren\'Py games detected. Place game folders under InternalFiles/&lt;folder&gt;/game/</string>
+    <string name="experiments_launch">Launch</string>
 </resources>

@@ -26,7 +26,6 @@ android {
         }
     }
 
-    dynamicFeatures = [":ff1"]
 
     signingConfigs {
         release {
@@ -70,6 +69,10 @@ android {
 
     androidResources {
         noCompress = [ 'ogv', 'avi', 'mpg', 'webm', 'mkv', 'mp4', 'mp3', 'mp2', 'ogg', 'opus', 'flac', 'rpyc', 'rpymc', 'rpyb', ]
+    }
+
+    aaptOptions {
+        ignoreAssetsPattern "!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~"
     }
 }
 

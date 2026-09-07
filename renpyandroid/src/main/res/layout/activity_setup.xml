@@ -183,49 +183,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/setup_step_2_desc"
                     android:textColor="#E0E0E0"
-                    android:layout_marginBottom="4dp"/>
-
-                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/setup_mas_filename"
-                    android:textStyle="italic"
-                    android:textColor="#BBBBBB"
                     android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/setup_mas_sha256"
-                    android:textSize="12sp"
-                    android:fontFamily="monospace"
-                    android:background="#2C2C2C"
-                    android:textColor="#A0A0A0"
-                    android:padding="4dp"
-                    android:layout_marginBottom="8dp"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <Button
-                        android:id="@+id/btnDownloadMAS"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/setup_btn_download_manual"
-                        android:layout_marginEnd="8dp"/>
-
-                    <Button
-                        android:id="@+id/btnSelectMAS"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/setup_btn_select_file"/>
-                </LinearLayout>
 
                 <Button
                     android:id="@+id/btnAutoDownloadMAS"

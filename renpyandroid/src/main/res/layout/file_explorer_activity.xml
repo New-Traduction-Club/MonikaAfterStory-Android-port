@@ -25,7 +25,7 @@
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_arrow_back"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="#B45D85"
+            app:tint="@color/colorPrimary"
             android:contentDescription="@string/file_nav_up"/>
 
         <HorizontalScrollView
@@ -50,7 +50,7 @@
             android:layout_marginEnd="8dp"
             android:src="@android:drawable/ic_input_add"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="#B45D85"
+            app:tint="@color/colorPrimary"
             android:contentDescription="@string/import_title"/>
 
         <ImageButton
@@ -60,7 +60,7 @@
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_search"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="#B45D85"
+            app:tint="@color/colorPrimary"
             android:contentDescription="@string/file_explorer_search"/>
 
         <ImageButton
@@ -70,7 +70,7 @@
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_folder"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="#B45D85"
+            app:tint="@color/colorPrimary"
             android:contentDescription="@string/documents_provider_open_action"
             android:visibility="gone" />
     </LinearLayout>
@@ -91,41 +91,37 @@
             android:layout_weight="1.5"
             android:layout_height="wrap_content"
             android:text="@string/file_col_name"
-            android:textColor="#B45D85"
-            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
             android:textSize="12sp"/>
 
-        <View android:layout_width="1dp" android:layout_height="12dp" android:background="#CC7295" android:layout_marginHorizontal="4dp"/>
+        <View android:layout_width="1dp" android:layout_height="12dp" android:background="@color/colorDivider" android:layout_marginHorizontal="4dp"/>
 
         <TextView
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="@string/file_col_date"
-            android:textColor="#B45D85"
-            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
             android:textSize="12sp"/>
 
-        <View android:layout_width="1dp" android:layout_height="12dp" android:background="#CC7295" android:layout_marginHorizontal="4dp"/>
+        <View android:layout_width="1dp" android:layout_height="12dp" android:background="@color/colorDivider" android:layout_marginHorizontal="4dp"/>
 
         <TextView
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="@string/file_col_type"
-            android:textColor="#B45D85"
-            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
             android:textSize="12sp"/>
 
-        <View android:layout_width="1dp" android:layout_height="12dp" android:background="#CC7295" android:layout_marginHorizontal="4dp"/>
+        <View android:layout_width="1dp" android:layout_height="12dp" android:background="@color/colorDivider" android:layout_marginHorizontal="4dp"/>
 
         <TextView
             android:layout_width="60dp"
             android:layout_height="wrap_content"
             android:text="@string/file_col_size"
             android:gravity="end"
-            android:textColor="#B45D85"
-            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
             android:textSize="12sp"/>
     </LinearLayout>
 
@@ -164,7 +160,7 @@
             android:contentDescription="@string/piano_close"/>
     </LinearLayout>
     
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CC7295" android:layout_marginBottom="4dp"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/colorDivider" android:layout_marginBottom="4dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
