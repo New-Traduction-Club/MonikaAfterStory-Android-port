@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="12dp"
+    android:paddingTop="12dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ImageView
+        android:id="@+id/imgNotifAvatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_notifications"
+        app:tint="@color/colorIconTint"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/txtNotifTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:text="Monika"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/imgNotifAvatar"
+        app:layout_constraintEnd_toStartOf="@id/txtNotifTime"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/txtNotifTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="12:00"
+        android:textColor="@color/colorTextSecondary"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toStartOf="@id/btnDismissNotif"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/txtNotifTitle"/>
+
+    <TextView
+        android:id="@+id/txtNotifMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Hello, player!"
+        android:textColor="@color/colorTextSecondary"
+        android:textSize="13sp"
+        app:layout_constraintStart_toStartOf="@id/txtNotifTitle"
+        app:layout_constraintEnd_toEndOf="@id/txtNotifTitle"
+        app:layout_constraintTop_toBottomOf="@id/txtNotifTitle"/>
+
+    <ImageButton
+        android:id="@+id/btnDismissNotif"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        app:tint="@color/colorTextSecondary"
+        android:scaleType="centerInside"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <View
+        android:id="@+id/dividerLine"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorDivider"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/txtNotifMessage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

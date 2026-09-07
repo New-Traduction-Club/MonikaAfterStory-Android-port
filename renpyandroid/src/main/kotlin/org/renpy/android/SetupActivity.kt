@@ -44,6 +44,7 @@ class SetupActivity : BaseActivity() {
 
     private var ddlcUri: Uri? = null
     private var masUri: Uri? = null
+    private var selectedPackage: PackageInfo? = null
     
     private var deleteDdlcAfterInstall = false
     private var deleteMasAfterInstall = false
@@ -73,8 +74,7 @@ class SetupActivity : BaseActivity() {
     private lateinit var tvCurrentLanguage: TextView
 
     private val CHECKSUM_DDLC = "2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e"
-    private val CHECKSUM_MAS = "1575791c114dcd2ed6a8868fe0f99abfa140d5d95045802a8de231026772c960"
-    private val MAS_DOWNLOAD_URL = "https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.18/Monika_After_Story-0.12.18-Mod-Dlx.zip"
+    private val PACKAGES_JSON_URL = "https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-port/refs/heads/main/.utilityfiles/packages_list.json"
 
     companion object {
         private const val TAG = "SetupActivity"
@@ -103,8 +103,6 @@ class SetupActivity : BaseActivity() {
         val btnSelectDDLC = findViewById<Button>(R.id.btnSelectDDLC)
         tvSelectedDDLC = findViewById(R.id.tvSelectedDDLC)
 
-        val btnDownloadMAS = findViewById<Button>(R.id.btnDownloadMAS)
-        val btnSelectMAS = findViewById<Button>(R.id.btnSelectMAS)
         val btnAutoDownloadMAS = findViewById<Button>(R.id.btnAutoDownloadMAS)
         tvSelectedMAS = findViewById(R.id.tvSelectedMAS)
 
@@ -137,14 +135,6 @@ class SetupActivity : BaseActivity() {
         }
 
         // MAS
-        btnDownloadMAS.setOnClickListener {
-            openUrl(getString(R.string.setup_step_2_url))
-        }
-
-        btnSelectMAS.setOnClickListener {
-            selectFile(REQUEST_CODE_MAS)
-        }
-        
         btnAutoDownloadMAS.setOnClickListener {
             checkAndStartDownload()
         }
@@ -408,15 +398,11 @@ class SetupActivity : BaseActivity() {
         
         findViewById<View>(R.id.btnDownloadDDLC).isEnabled = enabled
         findViewById<View>(R.id.btnSelectDDLC).isEnabled = enabled
-        findViewById<View>(R.id.btnDownloadMAS).isEnabled = enabled
-        findViewById<View>(R.id.btnSelectMAS).isEnabled = enabled
         findViewById<View>(R.id.btnAutoDownloadMAS).isEnabled = enabled
         findViewById<View>(R.id.btnLanguage).isEnabled = enabled
         
         findViewById<View>(R.id.btnDownloadDDLC).alpha = alpha
         findViewById<View>(R.id.btnSelectDDLC).alpha = alpha
-        findViewById<View>(R.id.btnDownloadMAS).alpha = alpha
-        findViewById<View>(R.id.btnSelectMAS).alpha = alpha
         findViewById<View>(R.id.btnAutoDownloadMAS).alpha = alpha
         findViewById<View>(R.id.btnLanguage).alpha = alpha
     }
@@ -533,7 +519,8 @@ class SetupActivity : BaseActivity() {
     }
 
     private suspend fun processInstallation() {
-        val gameDir = File(filesDir, "game")
+        val installDir = File(filesDir, "monikaafterstory-masl-edition")
+        val gameDir = File(installDir, "game")
         if (!gameDir.exists()) gameDir.mkdirs()
 
         // Verify and Extract DDLC
@@ -542,8 +529,12 @@ class SetupActivity : BaseActivity() {
         if (!verifyChecksum(ddlcUri!!, CHECKSUM_DDLC)) {
             throw Exception(getString(R.string.setup_error_checksum, "DDLC"))
         }
-        if (!verifyChecksum(masUri!!, CHECKSUM_MAS)) {
-            throw Exception(getString(R.string.setup_error_checksum, "MAS"))
+        
+        val modChecksum = selectedPackage?.sha256
+        if (modChecksum != null) {
+            if (!verifyChecksum(masUri!!, modChecksum)) {
+                throw Exception(getString(R.string.setup_error_checksum, "Mod"))
+            }
         }
 
         // Extract DDLC relevant files
@@ -559,13 +550,9 @@ class SetupActivity : BaseActivity() {
                 while (entries.hasMoreElements()) {
                     val entry = entries.nextElement()
                     val name = entry.name
-                    if (!entry.isDirectory && (
-                            name.endsWith("game/audio.rpa") ||
-                            name.endsWith("game/fonts.rpa") ||
-                            name.endsWith("game/images.rpa")
-                        )) {
+                    if (!entry.isDirectory && name.contains("game/") && name.endsWith(".rpa")) {
+                        val fileName = File(name).name
                         
-                        val fileName = File(name).name 
                         val targetFile = File(gameDir, fileName)
                         
                         zip.getInputStream(entry).use { input ->
@@ -580,53 +567,31 @@ class SetupActivity : BaseActivity() {
             ddlcTempFile?.delete()
         }
 
-        // Unrpa files
-        updateStatus(getString(R.string.setup_progress_extracting_rpa))
-        val rpaFiles = listOf("audio.rpa", "fonts.rpa", "images.rpa")
-        for (rpaName in rpaFiles) {
-            val rpaFile = File(gameDir, rpaName)
-            if (rpaFile.exists()) {
-                RpaUtils.extractGameAssets(rpaFile.absolutePath, gameDir) { file, current, total ->
-                }
-                rpaFile.delete()
-            }
-        }
-
         if (deleteDdlcAfterInstall && ddlcUri != null) {
             deleteFile(ddlcUri!!)
         }
 
-        // Extract MAS
+        // Extract Mod
         updateStatus(getString(R.string.setup_progress_extracting_mas))
         
-        var masTempFile: File? = null
+        var modTempFile: File? = null
         try {
             // Check if masUri is already a file we created (downloaded)
             if (masUri!!.scheme == "file") {
-                masTempFile = File(masUri!!.path!!)
+                modTempFile = File(masUri!!.path!!)
             } else {
-                masTempFile = File(cacheDir, "mas_temp_install.zip")
-                copyUriToFile(masUri!!, masTempFile)
+                modTempFile = File(cacheDir, "mod_temp_install.zip")
+                copyUriToFile(masUri!!, modTempFile)
             }
 
-            ZipFile(masTempFile).use { zip ->
+            ZipFile(modTempFile).use { zip ->
                 val entries = zip.entries()
                 while (entries.hasMoreElements()) {
                     val entry = entries.nextElement()
                     val name = entry.name
                     
-                    var relativePath: String? = null
-                    
-                    if (name.startsWith("game/")) {
-                        relativePath = name.substring("game/".length)
-                    } 
-                    else if (name.contains("/game/")) {
-                        val index = name.indexOf("/game/")
-                        relativePath = name.substring(index + "/game/".length)
-                    }
-                    
-                    if (!relativePath.isNullOrEmpty()) {
-                        val targetFile = File(gameDir, relativePath)
+                    if (name.startsWith("game/") || name.startsWith("characters/")) {
+                        val targetFile = File(installDir, name)
                         
                         if (entry.isDirectory) {
                             targetFile.mkdirs()
@@ -643,7 +608,7 @@ class SetupActivity : BaseActivity() {
             }
         } finally {
              if (masUri!!.scheme != "file") {
-                 masTempFile?.delete()
+                 modTempFile?.delete()
              }
         }
 
@@ -651,34 +616,8 @@ class SetupActivity : BaseActivity() {
             deleteFile(masUri!!)
         }
         
-        // Extract py_scripts_and_other_stuff.zip
+        // Finalizing
         updateStatus(getString(R.string.setup_progress_finalizing))
-        try {
-            val assetTemp = File(cacheDir, "py_scripts_temp.zip")
-            assets.open("py_scripts_and_other_stuff.zip").use { ais ->
-                FileOutputStream(assetTemp).use { fos -> ais.copyTo(fos) }
-            }
-            
-            ZipFile(assetTemp).use { zip ->
-                val entries = zip.entries()
-                while (entries.hasMoreElements()) {
-                    val entry = entries.nextElement()
-                    if (!entry.isDirectory) {
-                        val targetFile = File(gameDir, entry.name)
-                        targetFile.parentFile?.mkdirs()
-                        zip.getInputStream(entry).use { input ->
-                             FileOutputStream(targetFile).use { output ->
-                                 input.copyTo(output)
-                             }
-                        }
-                    }
-                }
-            }
-            assetTemp.delete()
-            
-        } catch (e: Exception) {
-            android.util.Log.w("Setup", "py_scripts zip missing or error: ${e.message}")
-        }
     }
 
     private fun confirmDeleteZip(requestCode: Int) {
@@ -710,20 +649,82 @@ class SetupActivity : BaseActivity() {
                         )
                     }
                     .setNegativeButton(getString(R.string.no)) { _, _ ->
-                        downloadMAS() // Proceed without notifications
+                        fetchAndSelectVersion() // Proceed without notifications
                     }
                     .show()
                 return
             }
         }
-        downloadMAS()
+        fetchAndSelectVersion()
+    }
+
+    private fun fetchAndSelectVersion() {
+        layoutProgress.visibility = View.VISIBLE
+        setUiEnabled(false)
+        tvProgress.text = getString(R.string.setup_fetching_packages)
+        progressBar.isIndeterminate = true
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val packages = withContext(Dispatchers.IO) {
+                PackageHelper.fetchPackages(PACKAGES_JSON_URL)
+            }
+
+            layoutProgress.visibility = View.GONE
+            setUiEnabled(true)
+
+            if (packages.isEmpty()) {
+                Toast.makeText(this@SetupActivity, getString(R.string.setup_error_fetching_packages), Toast.LENGTH_LONG).show()
+                return@launch
+            }
+
+            showVersionSelectionDialog(packages)
+        }
+    }
+
+    private fun showVersionSelectionDialog(packages: List<PackageInfo>) {
+        val versions = packages.map { it.version }.toTypedArray()
+        
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.setup_select_version_title))
+            .setItems(versions) { _, which ->
+                val selected = packages[which]
+                checkCompatibilityAndDownload(selected)
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun checkCompatibilityAndDownload(packageInfo: PackageInfo) {
+        val currentAppVersionCode = try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pInfo.longVersionCode.toInt()
+            } else {
+                @Suppress("DEPRECATION")
+                pInfo.versionCode
+            }
+        } catch (e: Exception) {
+            0
+        }
+
+        if (currentAppVersionCode < packageInfo.min_app_version) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.setup_error))
+                .setMessage(getString(R.string.setup_error_incompatible_version, packageInfo.min_app_version))
+                .setPositiveButton(getString(R.string.action_ok), null)
+                .show()
+            return
+        }
+
+        selectedPackage = packageInfo
+        downloadMod()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             REQUEST_PERMISSION_NOTIFICATIONS_DOWNLOAD -> {
-                downloadMAS()
+                fetchAndSelectVersion()
             }
             REQUEST_PERMISSION_NOTIFICATIONS_SETUP -> {
                 refreshNotificationPermissionUi()
@@ -759,7 +760,7 @@ class SetupActivity : BaseActivity() {
 
     private fun onDownloadComplete() {
         isMasDownloadInProgress = false
-        val destFile = File(filesDir, "mas_temp.zip")
+        val destFile = File(filesDir, "mod_temp.zip")
         masUri = Uri.fromFile(destFile)
         tvSelectedMAS.text = getString(R.string.setup_file_selected, destFile.name)
         tvSelectedMAS.visibility = View.VISIBLE
@@ -778,17 +779,18 @@ class SetupActivity : BaseActivity() {
         Toast.makeText(this, getString(R.string.setup_download_error, error ?: "Unknown"), Toast.LENGTH_LONG).show()
     }
 
-    private fun downloadMAS() {
+    private fun downloadMod() {
         if (isMasDownloadInProgress) return
+        val downloadUrl = selectedPackage?.download_url ?: return
         
         isMasDownloadInProgress = true
         layoutProgress.visibility = View.VISIBLE
         setUiEnabled(false)
-        tvProgress.text = getString(R.string.setup_downloading_mas)
+        tvProgress.text = getString(R.string.setup_downloading_mod)
         progressBar.progress = 0
         progressBar.isIndeterminate = true
         
-        val destFile = File(filesDir, "mas_temp.zip")
+        val destFile = File(filesDir, "mod_temp.zip")
         
         // Reset status
         val prefs = getSharedPreferences(DownloadService.PREFS_NAME, MODE_PRIVATE)
@@ -796,7 +798,7 @@ class SetupActivity : BaseActivity() {
         
         val intent = Intent(this, DownloadService::class.java).apply {
             action = DownloadService.ACTION_START_DOWNLOAD
-            putExtra(DownloadService.EXTRA_URL, MAS_DOWNLOAD_URL)
+            putExtra(DownloadService.EXTRA_URL, downloadUrl)
             putExtra(DownloadService.EXTRA_DEST_PATH, destFile.absolutePath)
         }
         

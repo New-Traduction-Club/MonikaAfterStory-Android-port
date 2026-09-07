@@ -46,6 +46,34 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/btnWindowMinimize"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="6dp"
+                    android:text="—"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/bg_close_button" />
+
+                <TextView
+                    android:id="@+id/btnWindowMaximize"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="6dp"
+                    android:text="▢"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/bg_close_button" />
+
                 <!-- Close button with pink square frame -->
                 <TextView
                     android:id="@+id/btnWindowClose"
@@ -62,6 +90,7 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/windowHeaderDivider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/colorDivider" /> <!-- very light pink separator -->

@@ -31,4 +31,7 @@
     <color name="colorTextPrimary">#2C1C24</color>
     <color name="colorTextSecondary">#888888</color>
     <color name="colorIconTint">#D25C7E</color>
+
+    <color name="colorSelectionFill">#33E94D87</color>
+    <color name="colorSelectionStroke">#80E94D87</color>
 </resources>

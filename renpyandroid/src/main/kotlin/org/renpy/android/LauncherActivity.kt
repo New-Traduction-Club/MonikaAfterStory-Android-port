@@ -12,6 +12,8 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.widget.TextView
+import android.widget.LinearLayout
 import android.os.StatFs
 import android.os.SystemClock
 import android.text.format.Formatter
@@ -40,11 +42,27 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.lifecycle.lifecycleScope
 import android.app.ActivityManager
+import android.animation.ValueAnimator
+import android.widget.ImageView
+import android.widget.ImageButton
+import android.widget.FrameLayout
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import android.annotation.SuppressLint
+import android.view.animation.LinearInterpolator
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.Shader
+import android.graphics.drawable.BitmapDrawable
 
 
+import android.graphics.RectF
+import android.view.MotionEvent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -54,7 +72,6 @@ class LauncherActivity : BaseActivity() {
 
     companion object {
         private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
-        private const val STATE_DOWNLOAD_CENTER_CHECK_COMPLETED = "state_download_center_check_completed"
         private const val REQUEST_CODE_EXPORT_SAVES = 2001
         private const val REQUEST_CODE_IMPORT_SAVES = 2002
         private const val MAX_EXPANDED_ITEMS_PER_COLUMN = 6
@@ -95,7 +112,6 @@ class LauncherActivity : BaseActivity() {
     private var currentLanguage: String = ""
     private var isUiInitialized = false
     private var bootSequenceCompleted = false
-    private var downloadCenterCheckCompleted = false
     
     private var progressDialog: AlertDialog? = null
     private var progressIndicator: android.widget.ProgressBar? = null
@@ -103,6 +119,214 @@ class LauncherActivity : BaseActivity() {
     
     private var pendingExportUri: Uri? = null
     private var wallpaperRotationJob: Job? = null
+
+    private var selectionStartX = 0f
+    private var selectionStartY = 0f
+
+    private val runningApps = mutableMapOf<String, RunningAppInfo>()
+    private var lastFocusedAppId: String? = null
+    private var renpyMonitorJob: kotlinx.coroutines.Job? = null
+
+    data class RunningAppInfo(
+        val id: String,
+        val name: String,
+        var state: String
+    )
+
+    private var notificationAdapter: NotificationAdapter? = null
+
+    private val desktopNotificationReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "org.renpy.android.ACTION_NEW_DESKTOP_NOTIFICATION") {
+                val title = intent.getStringExtra("title") ?: "Monika"
+                val message = intent.getStringExtra("message") ?: ""
+                val imagePath = intent.getStringExtra("image_path")
+
+                val notification = NotificationHistoryManager.addNotification(context, title, message, imagePath)
+
+                updateNotificationBadge()
+                notificationAdapter?.updateItems(NotificationHistoryManager.getNotifications(context))
+
+                showNotificationToast(title, message, imagePath)
+            }
+        }
+    }
+
+    private val windowStateReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: android.content.Intent) {
+            if (intent.action == DesktopWindowManager.ACTION_WINDOW_STATE_CHANGED) {
+                val id = intent.getStringExtra(DesktopWindowManager.EXTRA_ACTIVITY_ID) ?: return
+                val name = intent.getStringExtra(DesktopWindowManager.EXTRA_ACTIVITY_NAME) ?: "App"
+                val state = intent.getStringExtra(DesktopWindowManager.EXTRA_STATE) ?: return
+
+                if (state == "DESTROYED") {
+                    runningApps.remove(id)
+                    if (lastFocusedAppId == id) {
+                        lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
+                    }
+                } else {
+                    runningApps[id] = RunningAppInfo(id, name, state)
+                    if (state == "RUNNING") {
+                        lastFocusedAppId = id
+                    } else if (lastFocusedAppId == id) {
+                        lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
+                    }
+                    if (id.startsWith("org.renpy.android.PythonSDLActivity")) {
+                        startRenpyProcessMonitoring(id)
+                    }
+                }
+                updateTaskbarApps()
+            }
+        }
+    }
+
+    private val renpyMonitorJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+
+    private fun startRenpyProcessMonitoring(activityId: String) {
+        if (renpyMonitorJobs[activityId]?.isActive == true) return
+        val suffix = when (activityId) {
+            "org.renpy.android.PythonSDLActivity" -> "renpy"
+            "org.renpy.android.PythonSDLActivity2" -> "renpy2"
+            "org.renpy.android.PythonSDLActivity3" -> "renpy3"
+            else -> "renpy"
+        }
+        val renpyProcessName = "$packageName:$suffix"
+        renpyMonitorJobs[activityId] = lifecycleScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(1000)
+                if (!isProcessRunning(renpyProcessName)) {
+                    if (runningApps.containsKey(activityId)) {
+                        runningApps.remove(activityId)
+                        if (lastFocusedAppId == activityId) {
+                            lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
+                        }
+                        updateTaskbarApps()
+                    }
+                    break
+                }
+            }
+        }
+    }
+
+    private fun isProcessRunning(processName: String): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager ?: return false
+        val runningProcesses = manager.runningAppProcesses ?: return false
+        for (processInfo in runningProcesses) {
+            if (processInfo.processName == processName) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun bringRunningActivitiesToFront() {
+        val processesToCheck = listOf(
+            "org.renpy.android.PythonSDLActivity" to "renpy",
+            "org.renpy.android.PythonSDLActivity2" to "renpy2",
+            "org.renpy.android.PythonSDLActivity3" to "renpy3"
+        )
+        var anyRemoved = false
+        for ((actId, suffix) in processesToCheck) {
+            val processName = "$packageName:$suffix"
+            if (runningApps.containsKey(actId) && !isProcessRunning(processName)) {
+                runningApps.remove(actId)
+                if (lastFocusedAppId == actId) {
+                    lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
+                }
+                anyRemoved = true
+            }
+        }
+        if (anyRemoved) {
+            updateTaskbarApps()
+        }
+
+        val runningIds = runningApps.values
+            .filter { it.state == "RUNNING" }
+            .map { it.id }
+
+        if (runningIds.isEmpty()) return
+
+        for (id in runningIds) {
+            if (id != lastFocusedAppId) {
+                if (id.startsWith("org.renpy.android.PythonSDLActivity") || ActiveActivityRegistry.activeActivities.contains(id)) {
+                    bringToFront(id)
+                }
+            }
+        }
+
+        lastFocusedAppId?.let { id ->
+            if (runningIds.contains(id)) {
+                if (id.startsWith("org.renpy.android.PythonSDLActivity") || ActiveActivityRegistry.activeActivities.contains(id)) {
+                    bringToFront(id)
+                }
+            }
+        }
+    }
+
+    private fun bringToFront(id: String) {
+        try {
+            val activityClass = Class.forName(id)
+            val intent = Intent(this, activityClass).apply {
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("LauncherActivity", "Failed to bring app to front: $id", e)
+        }
+    }
+
+    private fun launchActivityWindow(intent: Intent, classId: String) {
+        returnFromWindow = true
+        lastFocusedAppId = classId
+        bringRunningActivitiesToFront()
+        startActivity(intent)
+    }
+
+    private fun updateTaskbarApps() {
+        binding.runningAppsContainer.removeAllViews()
+        val density = resources.displayMetrics.density
+        val paddingHorizontal = (12 * density).toInt()
+        val paddingVertical = (4 * density).toInt()
+
+        for (app in runningApps.values) {
+            val appButton = TextView(this).apply {
+                text = app.name
+                textSize = 12f
+                gravity = android.view.Gravity.CENTER
+                setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
+                
+                if (app.state == "MINIMIZED") {
+                    setTextColor(androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorTaskbarTint))
+                    setBackgroundResource(R.drawable.bg_taskbar)
+                    alpha = 0.5f
+                } else {
+                    setTextColor(Color.WHITE)
+                    setBackgroundResource(R.drawable.bg_taskbar_button_press)
+                    alpha = 1.0f
+                }
+
+                setOnClickListener {
+                    SoundEffects.playClick(this@LauncherActivity)
+                    if (app.state == "MINIMIZED") {
+                        lastFocusedAppId = app.id
+                        DesktopWindowManager.sendCommand(this@LauncherActivity, app.id, "RESTORE")
+                    } else {
+                        DesktopWindowManager.sendCommand(this@LauncherActivity, app.id, "MINIMIZE")
+                    }
+                }
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                    marginStart = (4 * density).toInt()
+                    marginEnd = (4 * density).toInt()
+                }
+                layoutParams = params
+            }
+            binding.runningAppsContainer.addView(appButton)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,15 +344,12 @@ class LauncherActivity : BaseActivity() {
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
         currentLanguage = prefs.getString("language", "English") ?: "English"
         bootSequenceCompleted = savedInstanceState?.getBoolean(STATE_BOOT_SEQUENCE_COMPLETED, false) ?: false
-        downloadCenterCheckCompleted = savedInstanceState?.getBoolean(STATE_DOWNLOAD_CENTER_CHECK_COMPLETED, false) ?: false
 
         val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
         val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
         
         if (isFirstLaunch && !setupConfirmed) {
             showLanguageSelectionDialog()
-        } else {
-            checkAndInstallLanguageScripts()
         }
 
         createLanguageFile(currentLanguage)
@@ -138,6 +359,24 @@ class LauncherActivity : BaseActivity() {
         setupEdgeToEdgeInsets()
         isUiInitialized = true
 
+        (applicationContext as android.app.Application).registerActivityLifecycleCallbacks(
+            object : android.app.Application.ActivityLifecycleCallbacks {
+                override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: Bundle?) {}
+                override fun onActivityStarted(activity: android.app.Activity) {}
+                override fun onActivityResumed(activity: android.app.Activity) {
+                    ActiveActivityRegistry.currentActivity = activity
+                }
+                override fun onActivityPaused(activity: android.app.Activity) {
+                    if (ActiveActivityRegistry.currentActivity === activity) {
+                        ActiveActivityRegistry.currentActivity = null
+                    }
+                }
+                override fun onActivityStopped(activity: android.app.Activity) {}
+                override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: Bundle) {}
+                override fun onActivityDestroyed(activity: android.app.Activity) {}
+            }
+        )
+
         SoundEffects.initialize(this)
         
         setupObservers()
@@ -145,13 +384,101 @@ class LauncherActivity : BaseActivity() {
         initializeDesktopGrid()
         startSystemClockWorker()
         setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
+        setupDesktopSelection()
+        
+        startBootCrtAnimations()
         
         createNotificationChannel()
+
+        // Register window state broadcast receiver
+        val filter = android.content.IntentFilter(DesktopWindowManager.ACTION_WINDOW_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(windowStateReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(windowStateReceiver, filter)
+        }
+
+        val notifFilter = android.content.IntentFilter("org.renpy.android.ACTION_NEW_DESKTOP_NOTIFICATION")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(desktopNotificationReceiver, notifFilter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(desktopNotificationReceiver, notifFilter)
+        }
+
+        val rvLayoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.rvNotifications.layoutManager = rvLayoutManager
+        notificationAdapter = NotificationAdapter(emptyList()) { item ->
+            NotificationHistoryManager.deleteNotification(this, item.id)
+            notificationAdapter?.updateItems(NotificationHistoryManager.getNotifications(this))
+            updateNotificationBadge()
+        }
+        binding.rvNotifications.adapter = notificationAdapter
+
+        binding.btnClearAllNotifications.setOnClickListener {
+            SoundEffects.playClick(this)
+            NotificationHistoryManager.clearAll(this)
+            notificationAdapter?.updateItems(emptyList())
+            updateNotificationBadge()
+        }
+
+        binding.btnNotificationCenter.setOnClickListener {
+            SoundEffects.playClick(this)
+            toggleNotificationCenter()
+        }
+
+        updateNotificationBadge()
+
+        binding.btnStartMenu.setOnClickListener {
+            SoundEffects.playClick(this)
+            isStartMenuExpanded = false
+            hideExpandedMenuAnimated()
+            if (binding.startMenuPanel.visibility == View.VISIBLE) {
+                binding.startMenuPanel.animate()
+                    .translationY(binding.startMenuPanel.height.toFloat())
+                    .setDuration(220)
+                    .withEndAction { binding.startMenuPanel.visibility = View.GONE }
+                    .start()
+            } else {
+                showStartMenuAnimated()
+            }
+        }
 
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         
         handleShortcutIntent(intent)
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupDesktopSelection() {
+        binding.root.setOnTouchListener { _, event ->
+            if (!bootSequenceCompleted) return@setOnTouchListener false
+
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    selectionStartX = event.x
+                    selectionStartY = event.y
+                    binding.desktopSelectionView.updateSelection(null)
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val rect = RectF(
+                        Math.min(selectionStartX, event.x),
+                        Math.min(selectionStartY, event.y),
+                        Math.max(selectionStartX, event.x),
+                        Math.max(selectionStartY, event.y)
+                    )
+                    binding.desktopSelectionView.updateSelection(rect)
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    binding.desktopSelectionView.updateSelection(null)
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -214,6 +541,7 @@ class LauncherActivity : BaseActivity() {
         super.onNewIntent(intent)
         handleShortcutIntent(intent)
     }
+
     
     private var returnFromWindow = false
 
@@ -242,6 +570,11 @@ class LauncherActivity : BaseActivity() {
                 ensureStartMenuVisible()
             }
         }
+
+        lifecycleScope.launch {
+            delay(150)
+            bringRunningActivitiesToFront()
+        }
     }
 
     override fun onPause() {
@@ -253,13 +586,22 @@ class LauncherActivity : BaseActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBoolean(STATE_BOOT_SEQUENCE_COMPLETED, bootSequenceCompleted)
-        outState.putBoolean(STATE_DOWNLOAD_CENTER_CHECK_COMPLETED, downloadCenterCheckCompleted)
         super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
         if (isUiInitialized) {
             WallpaperManager.clearVideoWallpaper(binding.root)
+        }
+        try {
+            unregisterReceiver(windowStateReceiver)
+        } catch (e: Exception) {
+            // Ignore if not registered
+        }
+        try {
+            unregisterReceiver(desktopNotificationReceiver)
+        } catch (e: Exception) {
+            // Ignore if not registered
         }
         super.onDestroy()
     }
@@ -322,12 +664,14 @@ class LauncherActivity : BaseActivity() {
     private fun getExpandedItems(): List<DesktopShortcut> {
         return listOf(
             DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
-            DesktopShortcut(R.string.launcher_download_center, R.drawable.ic_launcher_download, "download_center"),
-            DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
-            DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
+            DesktopShortcut(R.string.launcher_update_game, R.drawable.ic_launcher_export, "update_game"),
+            // TODO: maybe edit this to support JY submods
+            // DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
+            // DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
             DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
-            DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info")
+            DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
+            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments")
         )
     }
 
@@ -376,7 +720,6 @@ class LauncherActivity : BaseActivity() {
             startBootSequence()
         } else {
             ensureStartMenuVisible()
-            checkDownloadCenterUpdatesAfterBootIfNeeded()
         }
     }
 
@@ -443,7 +786,7 @@ class LauncherActivity : BaseActivity() {
                 delay(hexLineIntervalMs)
             }
 
-            appendBootText("\nTraduction Club BIOS v0.2\n")
+            appendBootText("\nTraduction Club BIOS v0.3\n")
             appendBootText("Kernel: $kernelVersion\n")
             appendBootText("Board: $manufacturer $model\n")
             appendBootText("OS: Android $androidVersion\n")
@@ -478,7 +821,6 @@ class LauncherActivity : BaseActivity() {
                     lifecycleScope.launch {
                         delay(1000)
                         showStartMenuAnimated()
-                        checkDownloadCenterUpdatesAfterBootIfNeeded()
                     }
                 }
                 .start()
@@ -507,68 +849,6 @@ class LauncherActivity : BaseActivity() {
     private fun resolveInternalStorageStats(): Pair<Long, Long> {
         val statFs = StatFs(filesDir.absolutePath)
         return statFs.totalBytes to statFs.availableBytes
-    }
-
-    private fun checkDownloadCenterUpdatesAfterBootIfNeeded() {
-        if (downloadCenterCheckCompleted || !isUiInitialized) return
-        downloadCenterCheckCompleted = true
-
-        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
-        val wifiOnly = prefs.getBoolean("wifi_only", false)
-        if (!isNetworkConnected()) return
-        if (wifiOnly && !isConnectedToWifi()) return
-
-        lifecycleScope.launch {
-            val updateManager = UpdateManager(this@LauncherActivity)
-            val updates = updateManager.fetchUpdates(getString(R.string.manifest_url))
-            val availableCount = updates.count { updateManager.isUpdateAvailable(it) }
-            if (availableCount > 0 && !isFinishing && !isDestroyed) {
-                showDownloadCenterUpdatePrompt(availableCount)
-            }
-        }
-    }
-
-    private fun showDownloadCenterUpdatePrompt(availableCount: Int) {
-        val message = if (availableCount == 1) {
-            getString(R.string.download_center_update_prompt_message_single)
-        } else {
-            getString(R.string.download_center_update_prompt_message_multiple, availableCount)
-        }
-
-        GameDialogBuilder(this)
-            .setTitle(getString(R.string.download_center_update_prompt_title))
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.launcher_download_center)) { _, _ ->
-                returnFromWindow = true
-                startActivity(Intent(this, DownloadCenterActivity::class.java))
-            }
-            .setNegativeButton(getString(R.string.import_conflict_ignore), null)
-            .show()
-    }
-
-    @Suppress("DEPRECATION")
-    private fun isNetworkConnected(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val network = connectivityManager.activeNetwork ?: return false
-            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-        } else {
-            connectivityManager.activeNetworkInfo?.isConnected == true
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun isConnectedToWifi(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val network = connectivityManager.activeNetwork ?: return false
-            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-        } else {
-            val activeNetwork = connectivityManager.activeNetworkInfo
-            activeNetwork?.isConnected == true && activeNetwork.type == ConnectivityManager.TYPE_WIFI
-        }
     }
 
     private fun setBootConsoleText(text: String) {
@@ -682,8 +962,10 @@ class LauncherActivity : BaseActivity() {
             showDiscordRpcWarningDialog(prefs)
             return
         }
-        returnFromWindow = true
-        startActivity(Intent(this, DiscordRpcActivity::class.java))
+        val intent = Intent(this, DiscordRpcActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        }
+        launchActivityWindow(intent, DiscordRpcActivity::class.java.name)
     }
 
     private fun showDiscordRpcWarningDialog(prefs: SharedPreferences) {
@@ -702,6 +984,117 @@ class LauncherActivity : BaseActivity() {
             .show()
     }
 
+    private fun handleUpdateGame() {
+        lifecycleScope.launch {
+            val packages = withContext(Dispatchers.IO) {
+                GameUpdateManager.fetchPackages()
+            }
+
+            if (packages.isEmpty()) {
+                InAppNotifier.show(this@LauncherActivity, getString(R.string.update_error_fetch_failed))
+                return@launch
+            }
+
+            val versions = packages.map { it.version }.toTypedArray()
+            GameDialogBuilder(this@LauncherActivity)
+                .setTitle(getString(R.string.update_select_version_title))
+                .setItems(versions) { _, which ->
+                    val selected = packages[which]
+                    val intent = Intent(this@LauncherActivity, UpdateWindowActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        putExtra("package_info", selected)
+                    }
+                    launchActivityWindow(intent, UpdateWindowActivity::class.java.name)
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+        }
+    }
+
+    private fun checkLanguageAndStartGame() {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val language = prefs.getString("language", "English") ?: "English"
+        val skipWarning = prefs.getBoolean("skip_language_warning", false)
+
+        if (language == "English" || skipWarning) {
+            viewModel.handlePlayClick()
+            return
+        }
+
+        val titleText = when (language) {
+            "Español" -> "Aviso de idioma"
+            "Português" -> "Aviso de idioma"
+            else -> "Language Warning"
+        }
+        
+        val messageText = when (language) {
+            "Español" -> "Aviso: El soporte para español en MAS se limita a lo básico, si encuentras contenido en inglés, favor de no reportarlo. Usar la versión de MASL de la Play Store si tu prioridad es la traducción y no el uso de Ren'Py 6.99 de esta edición de MASL.\n\nPodrás cambiar el idioma dentro del juego en el apartado de Ajustes."
+            "Português" -> "Aviso: O MASL 6.99 não possui suporte nativo para português na sua versão do MAS. Por favor, considere mudar para o MASL da Play Store ou instalar a tradução em português do MAS Brasil usando a função Experimentos."
+            else -> ""
+        }
+        
+        val checkBoxText = when (language) {
+            "Español" -> "No volver a mostrar"
+            "Português" -> "Não mostrar novamente"
+            else -> "Don't show again"
+        }
+        
+        val okButtonText = when (language) {
+            "Español" -> "Vale"
+            "Português" -> "Entendido"
+            else -> "OK"
+        }
+
+        val scrollContainer = android.widget.ScrollView(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        val textView = TextView(this).apply {
+            text = messageText
+            setTextColor(androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorTextPrimary))
+            textSize = 14f
+        }
+        container.addView(textView)
+
+        val spacer = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(12)
+            )
+        }
+        container.addView(spacer)
+
+        val checkBox = android.widget.CheckBox(this).apply {
+            text = checkBoxText
+            setTextColor(androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorTextPrimary))
+            textSize = 14f
+            val tintColor = androidx.core.content.ContextCompat.getColor(this@LauncherActivity, R.color.colorPrimary)
+            androidx.core.widget.CompoundButtonCompat.setButtonTintList(this, android.content.res.ColorStateList.valueOf(tintColor))
+        }
+        container.addView(checkBox)
+
+        scrollContainer.addView(container)
+
+        GameDialogBuilder(this)
+            .setTitle(titleText)
+            .setView(scrollContainer)
+            .setPositiveButton(okButtonText) { _, _ ->
+                if (checkBox.isChecked) {
+                    prefs.edit().putBoolean("skip_language_warning", true).apply()
+                }
+                viewModel.handlePlayClick()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
     private fun handleShortcutExecution(shortcut: DesktopShortcut) {
         if (shortcut.actionId == "toggle_expand") {
             isStartMenuExpanded = !isStartMenuExpanded
@@ -715,21 +1108,10 @@ class LauncherActivity : BaseActivity() {
         
         when (shortcut.actionId) {
             "start_game" -> {
-                showProgressDialog(getString(R.string.installing_language_data, currentLanguage))
-                Thread {
-                    try {
-                        installLogic(currentLanguage)
-                        runOnUiThread {
-                            dismissProgressDialog()
-                            viewModel.handlePlayClick()
-                        }
-                    } catch (e: Exception) {
-                        runOnUiThread {
-                            dismissProgressDialog()
-                            InAppNotifier.show(this@LauncherActivity, getString(R.string.install_error, e.message), true)
-                        }
-                    }
-                }.start()
+                checkLanguageAndStartGame()
+            }
+            "update_game" -> {
+                handleUpdateGame()
             }
             "import" -> {
                 GameDialogBuilder(this)
@@ -761,48 +1143,98 @@ class LauncherActivity : BaseActivity() {
                     .show()
             }
             "internal_files" -> {
-                returnFromWindow = true
-                val intent = Intent(this, FileExplorerActivity::class.java)
-                intent.putExtra("startPath", filesDir.absolutePath)
-                startActivity(intent)
+                val intent = Intent(this, FileExplorerActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra("startPath", filesDir.absolutePath)
+                }
+                launchActivityWindow(intent, FileExplorerActivity::class.java.name)
             }
             "settings" -> {
-                returnFromWindow = true
-                startActivity(Intent(this, SettingsActivity::class.java))
-            }
-            "download_center" -> {
-                returnFromWindow = true
-                startActivity(Intent(this, DownloadCenterActivity::class.java))
+                val intent = Intent(this, SettingsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, SettingsActivity::class.java.name)
             }
             "extra_content" -> {
-                returnFromWindow = true
-                startActivity(Intent(this, ExtraContentActivity::class.java))
+                val intent = Intent(this, ExtraContentActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, ExtraContentActivity::class.java.name)
             }
             "discord_rpc" -> {
                 openDiscordRpcWindow()
             }
             "backups" -> {
-                returnFromWindow = true
-                startActivity(Intent(this, BackupsActivity::class.java))
+                val intent = Intent(this, BackupsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, BackupsActivity::class.java.name)
             }
             "wallpapers" -> {
-                returnFromWindow = true
-                startActivity(Intent(this, WallpapersActivity::class.java))
+                val intent = Intent(this, WallpapersActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, WallpapersActivity::class.java.name)
             }
             "external_files" -> {
-                returnFromWindow = true
                 val externalPath = getExternalFilesDir(null)?.absolutePath
                 if (externalPath != null) {
-                    val intent = Intent(this, FileExplorerActivity::class.java)
-                    intent.putExtra("startPath", externalPath)
-                    startActivity(intent)
+                    val intent = Intent(this, FileExplorerActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        putExtra("startPath", externalPath)
+                    }
+                    launchActivityWindow(intent, FileExplorerActivity::class.java.name)
                 }
             }
             "app_info" -> {
-                returnFromWindow = true
-                startActivity(Intent(this, AppInfoActivity::class.java))
+                val intent = Intent(this, AppInfoActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, AppInfoActivity::class.java.name)
+            }
+            "experiments" -> {
+                val intent = Intent(this, ExperimentsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, ExperimentsActivity::class.java.name)
             }
         }
+    }
+
+    private fun startBootCrtAnimations() {
+        val scanlineBitmap = Bitmap.createBitmap(1, 2, Bitmap.Config.ARGB_8888)
+        scanlineBitmap.setPixel(0, 0, Color.TRANSPARENT)
+        scanlineBitmap.setPixel(0, 1, Color.argb(45, 0, 0, 0))
+        
+        val scanlineDrawable = BitmapDrawable(resources, scanlineBitmap)
+        scanlineDrawable.tileModeY = Shader.TileMode.REPEAT
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            binding.crtOverlay.foreground = scanlineDrawable
+        } else {}
+
+        val rollingLine = binding.bootRollingLine
+        rollingLine.post {
+            val parentHeight = binding.bootScreenLayout.height.toFloat()
+            val lineAnimator = ValueAnimator.ofFloat(-200f, parentHeight + 200f)
+            lineAnimator.duration = 4000
+            lineAnimator.repeatCount = ValueAnimator.INFINITE
+            lineAnimator.interpolator = LinearInterpolator()
+            lineAnimator.addUpdateListener { animator ->
+                rollingLine.translationY = animator.animatedValue as Float
+            }
+            lineAnimator.start()
+        }
+
+        val overlay = binding.crtOverlay
+        val flickerAnimator = ValueAnimator.ofFloat(0.6f, 0.8f)
+        flickerAnimator.duration = 60
+        flickerAnimator.repeatCount = ValueAnimator.INFINITE
+        flickerAnimator.repeatMode = ValueAnimator.REVERSE
+        flickerAnimator.addUpdateListener { animator ->
+            overlay.alpha = animator.animatedValue as Float
+        }
+        flickerAnimator.start()
     }
 
     private fun startSystemClockWorker() {
@@ -845,24 +1277,6 @@ class LauncherActivity : BaseActivity() {
                 is LauncherViewModel.LaunchState.Idle -> {
                     dismissProgressDialog()
                 }
-                is LauncherViewModel.LaunchState.CheckingNetwork -> {
-                    showProgressDialog(getString(R.string.translation_checking))
-                }
-                is LauncherViewModel.LaunchState.CheckingUpdates -> {
-                    updateProgressText(getString(R.string.translation_checking))
-                }
-                is LauncherViewModel.LaunchState.UpdateAvailable -> {
-                    dismissProgressDialog()
-                    showUpdateConfirmationDialog(state.isMobileData)
-                }
-                is LauncherViewModel.LaunchState.Downloading -> {
-                    if (progressDialog == null || !progressDialog!!.isShowing) {
-                        showProgressDialog(getString(R.string.translation_updating))
-                    }
-                    progressIndicator?.isIndeterminate = false
-                    progressIndicator?.progress = state.progress
-                    updateProgressText("${getString(R.string.translation_updating)} ${state.progress}%")
-                }
                 is LauncherViewModel.LaunchState.LaunchGame -> {
                     dismissProgressDialog()
                     viewModel.consumeLaunchState()
@@ -900,55 +1314,11 @@ class LauncherActivity : BaseActivity() {
         }
     }
     
-    private fun showProgressDialog(message: String) {
-        if (progressDialog?.isShowing == true) {
-            updateProgressText(message)
-            return
-        }
-        
-        val builder = GameDialogBuilder(this)
-        val view = LayoutInflater.from(this).inflate(R.layout.dialog_progress, null) // Assuming we create this layout
-        progressIndicator = view.findViewById(R.id.progressBar)
-        progressText = view.findViewById(R.id.progressText)
-        progressText?.text = message
-        progressIndicator?.isIndeterminate = true
-        
-        builder.setView(view)
-        builder.setCancelable(false)
-        progressDialog = builder.create()
-        progressDialog?.show()
-    }
-    
-    private fun updateProgressText(message: String) {
-        progressText?.text = message
-    }
-    
     private fun dismissProgressDialog() {
         progressDialog?.dismiss()
         progressDialog = null
         progressIndicator = null
         progressText = null
-    }
-
-    private fun showUpdateConfirmationDialog(isMobile: Boolean) {
-        val title = getString(R.string.dialog_update_available_title)
-        val msg = if (isMobile) {
-            getString(R.string.dialog_update_available_mobile_message)
-        } else {
-            getString(R.string.dialog_update_available_wifi_message)
-        }
-        
-        GameDialogBuilder(this)
-            .setTitle(title)
-            .setMessage(msg)
-            .setPositiveButton(getString(R.string.action_update)) { _, _ ->
-                viewModel.confirmUpdate(useMobileData = true)
-            }
-            .setNegativeButton(getString(R.string.action_skip)) { _, _ ->
-                viewModel.skipUpdate()
-            }
-            .setCancelable(false)
-            .show()
     }
 
     private fun showLanguageSelectionDialog() {
@@ -1000,77 +1370,8 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun checkAndInstallLanguageScripts() {
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val selectedLang = prefs.getString("language", "English") ?: "English"
-        val installedLang = prefs.getString("installed_language", null)
-        val gameDir = File(filesDir, "game")
-
-        if (selectedLang != installedLang || !gameDir.exists()) {
-            showProgressDialog(getString(R.string.installing_language_data, selectedLang))
-            
-            Thread {
-                try {
-                    installLogic(selectedLang)
-                    
-                    prefs.edit().putString("installed_language", selectedLang).apply()
-                    
-                    runOnUiThread {
-                        dismissProgressDialog()
-                        createLanguageFile(selectedLang)
-                    }
-                } catch (e: Exception) {
-                    runOnUiThread {
-                        dismissProgressDialog()
-                        InAppNotifier.show(this, getString(R.string.install_error, e.message), true)
-                    }
-                }
-            }.start()
-        }
-    }
-
-    private fun installLogic(language: String) {
-        val zipName = when(language) {
-            "Español" -> "es.zip"
-            "Português" -> "pt.zip"
-            else -> "en.zip"
-        }
-        val gameDir = File(filesDir, "game")
-        
-        if (gameDir.exists()) {
-            gameDir.listFiles()?.forEach { 
-                if (it.extension == "rpyc") it.delete() 
-            }
-        } else {
-            gameDir.mkdirs()
-        }
-
-        val updateFile = File(filesDir, "LauncherUpdates/$zipName")
-        val inputStream = if (updateFile.exists()) {
-            FileInputStream(updateFile)
-        } else {
-            assets.open(zipName)
-        }
-
-        inputStream.use { stream ->
-            ZipInputStream(stream).use { zip ->
-                var entry = zip.nextEntry
-                while (entry != null) {
-                    val file = File(gameDir, entry.name)
-                    if (entry.isDirectory) {
-                        file.mkdirs()
-                    } else {
-                        file.parentFile?.mkdirs()
-                        FileOutputStream(file).use { out -> zip.copyTo(out) }
-                    }
-                    entry = zip.nextEntry
-                }
-            }
-        }
-    }
-
     private fun removeUtf8CodingDeclarationsInPythonPackages() {
-        val pythonPackagesDir = File(filesDir, "game/python-packages")
+        val pythonPackagesDir = File(filesDir, "monikaafterstory-masl-edition/game/python-packages")
         if (!pythonPackagesDir.isDirectory) return
 
         pythonPackagesDir.walkTopDown()
@@ -1114,8 +1415,9 @@ class LauncherActivity : BaseActivity() {
         Thread {
             var sanitizeError: IOException? = null
             try {
-                ensureAndroidMasbaseBootstrapScript()
+                // ensureAndroidMasbaseBootstrapScript()
                 removeUtf8CodingDeclarationsInPythonPackages()
+                ensureCaCertBundle()
             } catch (e: IOException) {
                 sanitizeError = e
             }
@@ -1124,19 +1426,39 @@ class LauncherActivity : BaseActivity() {
                 sanitizeError?.let { error ->
                     InAppNotifier.show(this@LauncherActivity, getString(R.string.install_error, error.message), true)
                 }
-                startActivity(Intent(this@LauncherActivity, PythonSDLActivity::class.java))
+                val intent = Intent(this@LauncherActivity, PythonSDLActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra("base_dir", "monikaafterstory-masl-edition")
+                }
+                launchActivityWindow(intent, PythonSDLActivity::class.java.name)
             }
         }.start()
     }
 
+    private fun ensureCaCertBundle() {
+        try {
+            val certFile = File(filesDir, "monikaafterstory-masl-edition/game/python-packages/certifi/cacert.pem")
+            certFile.parentFile?.mkdirs()
+            
+            assets.open("cacert.pem").use { input ->
+                FileOutputStream(certFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("LauncherActivity", "Failed to copy cacert.pem: ${e.message}")
+        }
+    }
+
     @Throws(IOException::class)
     private fun ensureAndroidMasbaseBootstrapScript() {
-        val gameDir = File(filesDir, "game")
+        val installDir = File(filesDir, "monikaafterstory-masl-edition")
+        val gameDir = File(installDir, "game")
         if (!gameDir.exists() && !gameDir.mkdirs()) {
             throw IOException("Unable to create game directory")
         }
 
-        val escapedBasePath = filesDir.absolutePath
+        val escapedBasePath = installDir.absolutePath
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
         val bootstrapScript = """
@@ -1153,7 +1475,7 @@ class LauncherActivity : BaseActivity() {
 
     private fun createLanguageFile(language: String) {
         try {
-            val gameDir = File(filesDir, "game")
+            val gameDir = File(filesDir, "monikaafterstory-masl-edition/game")
             if (!gameDir.exists()) {
                 gameDir.mkdirs()
             }
@@ -1170,6 +1492,123 @@ class LauncherActivity : BaseActivity() {
             langFile.createNewFile()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun updateNotificationBadge() {
+        val unreadCount = NotificationHistoryManager.getUnreadCount(this)
+        if (unreadCount > 0) {
+            binding.txtNotificationBadge.text = unreadCount.toString()
+            binding.txtNotificationBadge.visibility = View.VISIBLE
+        } else {
+            binding.txtNotificationBadge.visibility = View.GONE
+        }
+
+        // Also update the empty state text inside the panel
+        val notifications = NotificationHistoryManager.getNotifications(this)
+        if (notifications.isEmpty()) {
+            binding.txtNoNotifications.visibility = View.VISIBLE
+            binding.rvNotifications.visibility = View.GONE
+        } else {
+            binding.txtNoNotifications.visibility = View.GONE
+            binding.rvNotifications.visibility = View.VISIBLE
+        }
+    }
+
+    private fun toggleNotificationCenter() {
+        val adapter = notificationAdapter ?: return
+        if (binding.notificationCenterPanel.visibility == View.VISIBLE) {
+            binding.notificationCenterPanel.animate()
+                .translationY(binding.notificationCenterPanel.height.toFloat())
+                .alpha(0f)
+                .setDuration(200)
+                .withEndAction { binding.notificationCenterPanel.visibility = View.GONE }
+                .start()
+        } else {
+            NotificationHistoryManager.markAllAsRead(this)
+            updateNotificationBadge()
+            adapter.updateItems(NotificationHistoryManager.getNotifications(this))
+
+            binding.notificationCenterPanel.visibility = View.VISIBLE
+            binding.notificationCenterPanel.alpha = 0f
+            binding.notificationCenterPanel.post {
+                binding.notificationCenterPanel.translationY = binding.notificationCenterPanel.height.toFloat()
+                binding.notificationCenterPanel.animate()
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(220)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+        }
+    }
+
+    private fun showNotificationToast(title: String, message: String, imagePath: String?) {
+        val activeActivity = ActiveActivityRegistry.currentActivity
+        val targetActivity: android.app.Activity = if (activeActivity != null && !activeActivity.isFinishing && 
+            (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !activeActivity.isDestroyed)) {
+            activeActivity
+        } else {
+            this
+        }
+        DesktopNotificationUI.showNotificationToast(targetActivity, title, message, imagePath)
+    }
+
+    private inner class NotificationAdapter(
+        private var items: List<DesktopNotification>,
+        private val onDismiss: (DesktopNotification) -> Unit
+    ) : RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
+
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val imgAvatar: ImageView = view.findViewById(R.id.imgNotifAvatar)
+            val txtTitle: TextView = view.findViewById(R.id.txtNotifTitle)
+            val txtMessage: TextView = view.findViewById(R.id.txtNotifMessage)
+            val txtTime: TextView = view.findViewById(R.id.txtNotifTime)
+            val btnDismiss: ImageButton = view.findViewById(R.id.btnDismissNotif)
+            val divider: View = view.findViewById(R.id.dividerLine)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = layoutInflater.inflate(R.layout.item_desktop_notification, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val item = items[position]
+            holder.txtTitle.text = item.title
+            holder.txtMessage.text = item.message
+            
+            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+            holder.txtTime.text = sdf.format(Date(item.timestamp))
+
+            if (!item.imagePath.isNullOrEmpty()) {
+                val file = File(item.imagePath)
+                if (file.exists()) {
+                    val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
+                    if (bitmap != null) {
+                        holder.imgAvatar.setImageBitmap(bitmap)
+                    } else {
+                        holder.imgAvatar.setImageResource(R.drawable.ic_notifications)
+                    }
+                } else {
+                    holder.imgAvatar.setImageResource(R.drawable.ic_notifications)
+                }
+            } else {
+                holder.imgAvatar.setImageResource(R.drawable.ic_notifications)
+            }
+
+            holder.btnDismiss.setOnClickListener {
+                onDismiss(item)
+            }
+
+            holder.divider.visibility = if (position == itemCount - 1) View.GONE else View.VISIBLE
+        }
+
+        override fun getItemCount(): Int = items.size
+
+        fun updateItems(newItems: List<DesktopNotification>) {
+            items = newItems
+            notifyDataSetChanged()
         }
     }
 

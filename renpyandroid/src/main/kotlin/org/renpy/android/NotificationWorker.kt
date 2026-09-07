@@ -35,7 +35,7 @@ import kotlin.math.max
  *     context,
  *     "Monika",
  *     "Yahallo!",
- *     "/storage/emulated/0/Android/data/our.package.name/files/game/images/monika_icon.png" // or relative path to internal files
+ *     "/storage/emulated/0/Android/data/our.package.name/files/game/images/yuri_icon.png" // or relative path to internal files
  * )
  *
  * # Schedule Notification (e.g., in 5 hours)
@@ -117,16 +117,93 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
             triggerNotification(context, title, message, imagePath)
         }
 
+        /**
+         * Exposes a method to post internal virtual desktop notifications.
+         * Callable from JNIUS.
+         */
+        @JvmStatic
+        fun showDesktopNotification(
+            context: Context,
+            title: String,
+            message: String,
+            imagePath: String?
+        ) {
+            val sdlActivity = PythonSDLActivity.mActivity
+            val isPipActive = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && sdlActivity != null) {
+                sdlActivity.isInPictureInPictureMode
+            } else {
+                false
+            }
+
+            if (isPipActive) {
+                NotificationHistoryManager.addNotification(context, title, message, imagePath)
+
+                triggerNotification(context, title, message, imagePath)
+                return
+            }
+
+            val intent = Intent("org.renpy.android.ACTION_NEW_DESKTOP_NOTIFICATION").apply {
+                setPackage(context.packageName)
+                putExtra("title", title)
+                putExtra("message", message)
+                putExtra("image_path", imagePath)
+            }
+            context.sendBroadcast(intent)
+        }
+
+        /**
+         * Convenient overload for showDesktopNotification (nullable image path omitted).
+         */
+        @JvmStatic
+        fun showDesktopNotification(
+            context: Context,
+            title: String,
+            message: String
+        ) {
+            showDesktopNotification(context, title, message, null)
+        }
+
+        /**
+         * Static helper that automatically retrieves the current PythonSDLActivity instance.
+         */
+        @JvmStatic
+        fun showDesktopNotification(
+            title: String,
+            message: String
+        ) {
+            val activity = PythonSDLActivity.mActivity
+            if (activity != null) {
+                showDesktopNotification(activity, title, message, null)
+            }
+        }
+
+        /**
+         * Static helper that automatically retrieves the current PythonSDLActivity instance.
+         */
+        @JvmStatic
+        fun showDesktopNotification(
+            title: String,
+            message: String,
+            imagePath: String?
+        ) {
+            val activity = PythonSDLActivity.mActivity
+            if (activity != null) {
+                showDesktopNotification(activity, title, message, imagePath)
+            }
+        }
+
         private fun triggerNotification(context: Context, title: String, message: String, imagePath: String?) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channelName = context.getString(R.string.game_notification_channel_name)
+                val channelDesc = context.getString(R.string.game_notification_channel_desc)
                 val channel = NotificationChannel(
                     CHANNEL_ID,
-                    CHANNEL_NAME,
+                    channelName,
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = CHANNEL_DESC
+                    description = channelDesc
                     enableVibration(true)
                 }
                 manager.createNotificationChannel(channel)
@@ -197,8 +274,10 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
     }
 
     override fun doWork(): Result {
-        val title = inputData.getString(KEY_TITLE) ?: "Monika After Story"
-        val message = inputData.getString(KEY_MESSAGE) ?: "Monika is waiting..."
+        val defaultTitle = applicationContext.getString(R.string.game_notification_default_title)
+        val defaultMessage = applicationContext.getString(R.string.game_notification_default_message)
+        val title = inputData.getString(KEY_TITLE) ?: defaultTitle
+        val message = inputData.getString(KEY_MESSAGE) ?: defaultMessage
         val imagePath = inputData.getString(KEY_IMAGE_PATH)
 
         triggerNotification(applicationContext, title, message, imagePath)

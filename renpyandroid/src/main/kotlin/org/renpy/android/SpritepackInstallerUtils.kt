@@ -90,7 +90,7 @@ object SpritepackInstallerUtils {
                     "Unrecognized Spritepack structure. Please verify that the file is compatible with MAS."
                 )
 
-            val destinationDir = File(context.filesDir, "game/mod_assets/monika")
+            val destinationDir = File(context.filesDir, "monikaafterstory-masl-edition/game/mod_assets/monika")
             if (!destinationDir.exists() && !destinationDir.mkdirs()) {
                 throw IOException("Cannot create destination directory: ${destinationDir.absolutePath}")
             }
@@ -161,7 +161,7 @@ object SpritepackInstallerUtils {
     ): Int {
         val displayName = fileNameHint ?: resolveDisplayName(context, archiveUri)
         val archiveFormat = detectArchiveFormat(context, archiveUri, displayName)
-        val destinationDir = File(context.filesDir, "characters")
+        val destinationDir = File(context.filesDir, "monikaafterstory-masl-edition/characters")
         if (destinationDir.exists() && !destinationDir.isDirectory) {
             throw IOException("characters path is not a directory")
         }

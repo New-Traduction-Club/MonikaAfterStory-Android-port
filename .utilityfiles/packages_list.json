@@ -1,0 +1,16 @@
+{
+  "packages": [
+    {
+      "version": "v0.12.18-r1",
+      "download_url": "https://github.com/New-Traduction-Club/MonikaModDev-Unofficial-Android/releases/download/v0.12.18-r1/mas-0.12.18-android-unofficial-r1.zip",
+      "sha256": "1752c018acb50a2501c7e759c0c2464c7d0e3b8a0cbbd30ff08ef2404a7c2dbc",
+      "min_app_version": 1
+    },
+    {
+      "version": "Skip installation - No recommended",
+      "download_url": "https://files.traduction-club.live/dummy.zip",
+      "sha256": "cbb11873cc3b865902e5eaf07272191307f43bf4d34012b72bb5c38019f6cf98",
+      "min_app_version": 1
+    }
+  ]
+}

@@ -239,6 +239,14 @@ class GameDialogBuilder(private val context: Context) {
                 textView.setTextColor(ContextCompat.getColor(context, R.color.colorTextPrimary))
                 textView.textSize = 14f
                 view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorWindowContentBackground))
+
+                if (view is android.widget.CheckedTextView) {
+                    val tintColor = ContextCompat.getColor(context, R.color.colorPrimary)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        view.checkMarkTintList = android.content.res.ColorStateList.valueOf(tintColor)
+                    }
+                }
+
                 return view
             }
         }

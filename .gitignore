@@ -42,3 +42,4 @@ __pycache__/
 *$py.class
 
 app/src/main/assets/
+app/release/

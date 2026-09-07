@@ -26,9 +26,10 @@ public class ResourceManager {
     }
 
     public String getString(String name) {
-
+        int id = getIdentifier(name, "string");
+        if (id == 0) return null;
         try {
-            return res.getString(getIdentifier(name, "string"));
+            return res.getString(id);
         } catch (Exception e) {
             return null;
         }

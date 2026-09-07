@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Action Buttons (Bottom Left) -->
+    <LinearLayout
+        android:id="@+id/tetris_action_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="24dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_tetris_hard_drop"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#B3808080"
+            android:text="HD"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_tetris_hold"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#B3808080"
+            android:text="HOLD"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_tetris_swap"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:backgroundTint="#B3808080"
+            android:text="SWAP"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- D-Pad (Bottom Right) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/tetris_dpad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp">
+
+        <ImageButton
+            android:id="@+id/btn_tetris_rotate"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:backgroundTint="#B3808080"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:tint="#FFFFFF"
+            android:scaleType="centerInside"
+            app:layout_constraintEnd_toEndOf="@id/btn_tetris_down"
+            app:layout_constraintStart_toStartOf="@id/btn_tetris_down"
+            app:layout_constraintBottom_toTopOf="@id/btn_tetris_down" />
+
+        <ImageButton
+            android:id="@+id/btn_tetris_left"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:backgroundTint="#B3808080"
+            android:src="@drawable/ic_left_arrow"
+            android:tint="#FFFFFF"
+            android:scaleType="centerInside"
+            app:layout_constraintBottom_toBottomOf="@id/btn_tetris_down"
+            app:layout_constraintEnd_toStartOf="@id/btn_tetris_down"
+            app:layout_constraintTop_toTopOf="@id/btn_tetris_down" />
+
+        <ImageButton
+            android:id="@+id/btn_tetris_down"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:backgroundTint="#B3808080"
+            android:src="@drawable/ic_down_arrow"
+            android:tint="#FFFFFF"
+            android:scaleType="centerInside"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageButton
+            android:id="@+id/btn_tetris_right"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:backgroundTint="#B3808080"
+            android:src="@drawable/ic_right_arrow"
+            android:tint="#FFFFFF"
+            android:scaleType="centerInside"
+            app:layout_constraintBottom_toBottomOf="@id/btn_tetris_down"
+            app:layout_constraintStart_toEndOf="@id/btn_tetris_down"
+            app:layout_constraintTop_toTopOf="@id/btn_tetris_down" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

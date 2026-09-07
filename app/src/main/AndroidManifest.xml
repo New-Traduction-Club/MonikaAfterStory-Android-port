@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto">
 
+    <attribution
+        android:tag="default"
+        android:label="@string/attribution_default" />
+
   <application
       android:allowBackup="true"
       android:fullBackupContent="@xml/backup"
@@ -32,22 +36,43 @@
     <activity
         android:name="org.renpy.android.DiscordRpcActivity"
         android:exported="false"
-        android:theme="@style/Theme.Material3.Light.Dialog" />
+        android:theme="@style/Theme.DesktopActivityWindow" />
     
     <activity
       android:name="org.renpy.android.FileExplorerActivity"
       android:exported="false"
-      android:theme="@style/Theme.Material3.Light.Dialog"/>
+      android:theme="@style/Theme.DesktopActivityWindow"/>
 
     <activity
       android:name="org.renpy.android.FileViewerActivity"
       android:exported="false"
-      android:theme="@style/Theme.Material3.Light.Dialog"/>
+      android:theme="@style/Theme.DesktopActivityWindow"/>
 
     <activity
       android:name="org.renpy.android.PythonSDLActivity"
       android:exported="true"
       android:process=":renpy"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity2"
+      android:exported="false"
+      android:process=":renpy2"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity3"
+      android:exported="false"
+      android:process=":renpy3"
+      android:theme="@style/Theme.GameWindow"
       android:alwaysRetainTaskState="true"
       android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
       android:launchMode="singleTop"
@@ -55,19 +80,20 @@
 
 
 
-    <activity android:name="org.renpy.android.SettingsActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.DownloadCenterActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.ExtraContentActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.SpritepackInstallerActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.SubmodInstallerActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
-    <activity android:name="org.renpy.android.WallpapersActivity" android:exported="false" android:theme="@style/Theme.Material3.Light.Dialog"/>
+    <activity android:name="org.renpy.android.UpdateWindowActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.SettingsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.ExtraContentActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.SpritepackInstallerActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.SubmodInstallerActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.ExperimentsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.WallpapersActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity
         android:name="org.renpy.android.WallpaperCropActivity"
         android:exported="false"
         android:screenOrientation="landscape"
-        android:theme="@style/Theme.Material3.Light.Dialog" />
+        android:theme="@style/Theme.DesktopActivityWindow" />
     <activity
         android:name="org.renpy.android.FullscreenCropImageActivity"
         android:exported="false"

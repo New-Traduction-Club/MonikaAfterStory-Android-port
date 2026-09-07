@@ -88,7 +88,7 @@ object SubmodInstallerUtils {
             val installFlow = resolveInstallFlow(effectiveSourceRoot)
 
             onPhaseChanged?.invoke(InstallPhase.MERGING_FILES)
-            val destinationRoot = context.filesDir
+            val destinationRoot = File(context.filesDir, "monikaafterstory-masl-edition")
             val mergeStats = when (installFlow) {
                 InstallFlow.CORE_PATCH -> mergeDirectoryContents(
                     sourceRoot = effectiveSourceRoot,

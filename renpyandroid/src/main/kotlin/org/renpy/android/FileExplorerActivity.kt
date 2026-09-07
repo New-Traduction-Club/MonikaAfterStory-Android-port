@@ -31,7 +31,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-class FileExplorerActivity : GameWindowActivity() {
+open class FileExplorerActivity : GameWindowActivity() {
 
     companion object {
         private const val STATE_CURRENT_DIR_PATH = "state_current_dir_path"
@@ -194,6 +194,18 @@ class FileExplorerActivity : GameWindowActivity() {
                 }
             }
             popup.show()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.hasExtra("startPath")) {
+            val startPath = intent.getStringExtra("startPath") ?: filesDir.absolutePath
+            rootDir = File(startPath)
+            isInternalRoot = isInternalRootPath(rootDir)
+            binding.btnSystemFiles.visibility = if (isInternalRoot) View.VISIBLE else View.GONE
+            viewModel.loadDirectory(rootDir.absolutePath)
         }
     }
     
@@ -875,7 +887,11 @@ class FileExplorerActivity : GameWindowActivity() {
                     file.name.lowercase()
                 }
                 textSize = 14f
-                setTextColor(if (isLast) 0xFFB45D85.toInt() else 0xCC7295B4.toInt())
+                setTextColor(if (isLast) {
+                    ContextCompat.getColor(this@FileExplorerActivity, R.color.colorPrimary)
+                } else {
+                    ContextCompat.getColor(this@FileExplorerActivity, R.color.colorTextSecondary)
+                })
                 setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
                 if (!isLast) {
                     setOnClickListener {
@@ -890,7 +906,7 @@ class FileExplorerActivity : GameWindowActivity() {
                 val separator = TextView(this).apply {
                     text = ">"
                     textSize = 12f
-                    setTextColor(0x88B45D85.toInt())
+                    setTextColor(ContextCompat.getColor(this@FileExplorerActivity, R.color.colorDivider))
                 }
                 container.addView(separator)
             }
