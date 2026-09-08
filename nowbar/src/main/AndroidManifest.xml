@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <uses-feature
+        android:name="com.samsung.feature.nowbar"
+        android:required="false" />
+
+    <application>
+        <meta-data
+            android:name="com.samsung.android.support.ongoing_activity"
+            android:value="true" />
+        <meta-data
+            android:name="com.samsung.android.nowbar.enabled"
+            android:value="true" />
+    </application>
+
+</manifest>
