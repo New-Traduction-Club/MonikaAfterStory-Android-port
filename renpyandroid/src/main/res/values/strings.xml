@@ -461,4 +461,32 @@
     <string name="experiments_description">Select and launch other Ren\'Py games found.</string>
     <string name="experiments_no_games">No other Ren\'Py games detected. Place game folders under InternalFiles/&lt;folder&gt;/game/</string>
     <string name="experiments_launch">Launch</string>
+
+    <!-- Migration Feature Strings -->
+    <string name="migration_window_title">Engine &amp; Data Migration</string>
+    <string name="migration_intro_title">Game Migration Required</string>
+    <string name="migration_intro_desc">MASL has updated to Ren\'Py 6.99 engine. To continue playing, please provide your DDLC files so we can updated the engine and migrate your submods, assets, and saves.</string>
+    <string name="migration_step_ddlc_title">Step 1: Doki Doki Literature Club</string>
+    <string name="migration_step_ddlc_desc">Select your official DDLC Windows release zip file (ddlc-win.zip).</string>
+    <string name="migration_status_idle">Ready to start migration.</string>
+    <string name="migration_status_fetching">Checking available packages...</string>
+    <string name="migration_status_downloading">Downloading base game update (v0.12.18-r1)...</string>
+    <string name="migration_status_verifying_download">Verifying downloaded package...</string>
+    <string name="migration_status_extracting_base">Installing...</string>
+    <string name="migration_status_transferring_assets">Copying submods and other assets...</string>
+    <string name="migration_status_updating_saves">Migrating persistent save files...</string>
+    <string name="migration_status_complete">Migration Completed Successfully!</string>
+    <string name="migration_desc_wait">Please keep this window open while the migration is in progress.</string>
+    <string name="migration_desc_finished">Your game data has been migrated to the new engine structure.</string>
+    <string name="migration_error_offline">An active internet connection is required to download the engine update. Please connect and try again.</string>
+    <string name="migration_error_package_not_found">Error: Package v0.12.18-r1 was not found in packages list.</string>
+    <string name="migration_error_missing_persistent_699">Migration aborted: \"persistent_699\" was not found in your saves folder. Your files were not modified.</string>
+    <string name="migration_error_generic">Migration failed: %1$s</string>
+    <string name="migration_cleanup_title">Clean Up Files?</string>
+    <string name="migration_cleanup_message">Migration finished! Do you want to delete old game files to free up storage space?</string>
+    <string name="migration_cleanup_btn_delete">Delete</string>
+    <string name="migration_cleanup_btn_keep">Keep</string>
+    <string name="migration_btn_start">Start Migration</string>
+    <string name="migration_btn_okay">Okay</string>
+    <string name="migration_dialog_warning">The migration is currently running. Closing this window now may corrupt your game files. Please wait until it finishes.</string>
 </resources>

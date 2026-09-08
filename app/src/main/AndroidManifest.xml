@@ -81,6 +81,7 @@
 
 
     <activity android:name="org.renpy.android.UpdateWindowActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.MigrationActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.SettingsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.ExtraContentActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.SpritepackInstallerActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>

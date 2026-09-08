@@ -477,4 +477,32 @@
     <string name="experiments_description">Selecione e inicie outros jogos do Ren\'Py.</string>
     <string name="experiments_no_games">Nenhum outro jogo detectado. Coloque as pastas do jogo em files/&lt;pasta&gt;/game/</string>
     <string name="experiments_launch">Iniciar</string>
+
+    <!-- Migration Feature Strings -->
+    <string name="migration_window_title">Migração do Motor e Dados</string>
+    <string name="migration_intro_title">Migração do Jogo Necessária</string>
+    <string name="migration_intro_desc">O MASL foi atualizado para um motor otimizado Ren\'Py 6.99. Para continuar jogando, forneça os arquivos do DDLC para que possamos instalar o motor atualizado e migrar seus submods, recursos e dados salvos.</string>
+    <string name="migration_step_ddlc_title">Passo 1: Doki Doki Literature Club</string>
+    <string name="migration_step_ddlc_desc">Selecione o arquivo zip oficial do DDLC para Windows (ddlc-win.zip).</string>
+    <string name="migration_status_idle">Pronto para iniciar a migração.</string>
+    <string name="migration_status_fetching">Verificando pacotes disponíveis...</string>
+    <string name="migration_status_downloading">Baixando atualização base (v0.12.18-r1)...</string>
+    <string name="migration_status_verifying_download">Verificando pacote baixado...</string>
+    <string name="migration_status_extracting_base">Instalando motor e arquivos do DDLC...</string>
+    <string name="migration_status_transferring_assets">Migrando submods e recursos personalizados...</string>
+    <string name="migration_status_updating_saves">Migrando arquivos de save persistentes...</string>
+    <string name="migration_status_complete">Migração concluída com sucesso!</string>
+    <string name="migration_desc_wait">Por favor, mantenha esta janela aberta enquanto a migração estiver em andamento.</string>
+    <string name="migration_desc_finished">Os dados do seu jogo foram migrados para a nova estrutura do motor.</string>
+    <string name="migration_error_offline">É necessária uma conexão ativa com a internet para baixar a atualização do motor. Conecte-se e tente novamente.</string>
+    <string name="migration_error_package_not_found">Erro: Pacote base v0.12.18-r1 não encontrado na lista de pacotes.</string>
+    <string name="migration_error_missing_persistent_699">Migração abortada: \"persistent_699\" não foi encontrado na sua pasta de saves. Seus arquivos não foram modificados.</string>
+    <string name="migration_error_generic">Erro na migração: %1$s</string>
+    <string name="migration_cleanup_title">Limpar arquivos antigos?</string>
+    <string name="migration_cleanup_message">Migração concluída! Deseja excluir os dados antigos do jogo para liberar espaço de armazenamento?</string>
+    <string name="migration_cleanup_btn_delete">Excluir</string>
+    <string name="migration_cleanup_btn_keep">Manter</string>
+    <string name="migration_btn_start">Iniciar Migração</string>
+    <string name="migration_btn_okay">Ok</string>
+    <string name="migration_dialog_warning">A migração está em andamento. Fechar esta janela agora pode corromper os arquivos do jogo. Por favor, aguarde até o término.</string>
 </resources>

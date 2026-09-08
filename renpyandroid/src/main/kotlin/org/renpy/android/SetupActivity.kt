@@ -373,7 +373,10 @@ class SetupActivity : BaseActivity() {
                 progressBar.isIndeterminate = false
                 
                 val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-                prefs.edit().putBoolean("is_setup_completed", true).apply()
+                prefs.edit()
+                    .putBoolean("is_setup_completed", true)
+                    .putBoolean("user_migrated_masl", true)
+                    .apply()
 
                 Toast.makeText(this@SetupActivity, getString(R.string.setup_complete), Toast.LENGTH_SHORT).show()
                 

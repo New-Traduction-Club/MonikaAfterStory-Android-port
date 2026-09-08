@@ -748,6 +748,10 @@ class LauncherActivity : BaseActivity() {
             startBootSequence()
         } else {
             ensureStartMenuVisible()
+            lifecycleScope.launch {
+                delay(300)
+                checkAndPromptMigration()
+            }
         }
     }
 
@@ -849,9 +853,22 @@ class LauncherActivity : BaseActivity() {
                     lifecycleScope.launch {
                         delay(1000)
                         showStartMenuAnimated()
+                        delay(600)
+                        checkAndPromptMigration()
                     }
                 }
                 .start()
+        }
+    }
+
+    private fun checkAndPromptMigration() {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val isMigrated = prefs.getBoolean("user_migrated_masl", false)
+        if (!isMigrated) {
+            if (!ActiveActivityRegistry.activeActivities.contains(MigrationActivity::class.java.name)) {
+                val intent = Intent(this, MigrationActivity::class.java)
+                launchActivityWindow(intent, MigrationActivity::class.java.name)
+            }
         }
     }
 
@@ -1041,6 +1058,13 @@ class LauncherActivity : BaseActivity() {
 
     private fun checkLanguageAndStartGame() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val isMigrated = prefs.getBoolean("user_migrated_masl", false)
+        if (!isMigrated) {
+            val intent = Intent(this, MigrationActivity::class.java)
+            launchActivityWindow(intent, MigrationActivity::class.java.name)
+            return
+        }
+
         val language = prefs.getString("language", "English") ?: "English"
         val skipWarning = prefs.getBoolean("skip_language_warning", false)
 
@@ -1469,6 +1493,12 @@ class LauncherActivity : BaseActivity() {
             }
 
             runOnUiThread {
+                val isMigrated = getSharedPreferences("app_prefs", MODE_PRIVATE).getBoolean("user_migrated_masl", false)
+                if (!isMigrated) {
+                    launchActivityWindow(Intent(this@LauncherActivity, MigrationActivity::class.java), MigrationActivity::class.java.name)
+                    return@runOnUiThread
+                }
+
                 sanitizeError?.let { error ->
                     InAppNotifier.show(this@LauncherActivity, getString(R.string.install_error, error.message), true)
                 }
