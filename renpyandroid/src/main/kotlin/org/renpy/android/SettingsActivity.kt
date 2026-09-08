@@ -15,34 +15,34 @@ class SettingsActivity : GameWindowActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-         binding = SettingsActivityBinding.inflate(layoutInflater)
-         setContentView(binding.root)
-         
-         val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
-         currentLanguage = prefs.getString("language", "English") ?: "English"
-         currentSoundEffect = prefs.getString("sound_effect", "default") ?: "default"
-         
-         setTitle(R.string.settings_title)
-         setupLanguageUI()
-         setupSoundUI(prefs)
-         setupThemeUI(prefs)
+
+        binding = SettingsActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
+        currentLanguage = prefs.getString("language", "English") ?: "English"
+        currentSoundEffect = prefs.getString("sound_effect", "default") ?: "default"
+
+        setTitle(R.string.settings_title)
+        setupLanguageUI()
+        setupSoundUI(prefs)
+        setupThemeUI(prefs)
         setupWindowModeUI()
-         setupNetworkUI(prefs)
-     }
-    
+        setupNetworkUI(prefs)
+    }
+
     private fun setupLanguageUI() {
         binding.txtCurrentLanguage.text = currentLanguage
-        
+
         binding.cardLanguage.setOnClickListener {
             showLanguageDialog()
         }
     }
-    
+
     private fun setupNetworkUI(prefs: android.content.SharedPreferences) {
         val wifiOnly = prefs.getBoolean("wifi_only", false)
         binding.switchWifiOnly.isChecked = wifiOnly
-        
+
         binding.switchWifiOnly.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("wifi_only", isChecked).apply()
         }
@@ -61,13 +61,13 @@ class SettingsActivity : GameWindowActivity() {
         }
     }
 
-     private fun setupSoundUI(prefs: android.content.SharedPreferences) {
-         binding.txtCurrentSoundEffect.text = soundLabelFor(currentSoundEffect)
- 
-         binding.cardSoundEffect.setOnClickListener {
-             showSoundEffectDialog(prefs)
-         }
-     }
+    private fun setupSoundUI(prefs: android.content.SharedPreferences) {
+        binding.txtCurrentSoundEffect.text = soundLabelFor(currentSoundEffect)
+
+        binding.cardSoundEffect.setOnClickListener {
+            showSoundEffectDialog(prefs)
+        }
+    }
 
     private fun setupWindowModeUI() {
         binding.txtCurrentWindowMode.text = windowModeLabel()
@@ -107,12 +107,12 @@ class SettingsActivity : GameWindowActivity() {
             else -> getString(R.string.settings_sound_effect_default)
         }
     }
-    
-     private fun showLanguageDialog() {
-         val languages = resources.getStringArray(R.array.languages)
-         // Find current index
-         var checkedItem = languages.indexOf(currentLanguage)
-         if (checkedItem < 0) checkedItem = 0
+
+    private fun showLanguageDialog() {
+        val languages = resources.getStringArray(R.array.languages)
+        // Find current index
+        var checkedItem = languages.indexOf(currentLanguage)
+        if (checkedItem < 0) checkedItem = 0
 
         GameDialogBuilder(this)
             .setTitle(getString(R.string.select_language_title))
@@ -123,19 +123,19 @@ class SettingsActivity : GameWindowActivity() {
                     prefs.edit()
                         .putString("language", selectedLang)
                         .apply()
-                    
+
                     BaseActivity.clearCache()
                     createLanguageFile(selectedLang)
                     currentLanguage = selectedLang
                     binding.txtCurrentLanguage.text = currentLanguage
-                    
+
                     recreate()
                 }
                 dialog.dismiss()
             }
-             .setNegativeButton(getString(R.string.cancel), null)
-             .show()
-     }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
 
     private fun windowModeLabel(): String {
         return when (getWindowMode()) {
@@ -151,17 +151,21 @@ class SettingsActivity : GameWindowActivity() {
         }
     }
 
-     private fun createLanguageFile(language: String) {
-         try {
-             val gameDir = File(filesDir, "game")
-             if (!gameDir.exists()) {
-                 gameDir.mkdirs()
+    private fun createLanguageFile(language: String) {
+        try {
+            val gameDir = File(filesDir, "monikaafterstory-masl-edition/game")
+            if (!gameDir.exists()) {
+                gameDir.mkdirs()
             }
 
             gameDir.listFiles { file -> file.name.startsWith("language_") && file.name.endsWith(".txt") }
                 ?.forEach { it.delete() }
 
-            val langParam = if (language == "Español") "spanish" else "english"
+            val langParam = when (language) {
+                "Español" -> "spanish"
+                "Português" -> "portuguese"
+                else -> "english"
+            }
             val langFile = File(gameDir, "language_$langParam.txt")
             langFile.createNewFile()
         } catch (e: Exception) {
