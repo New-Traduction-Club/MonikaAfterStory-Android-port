@@ -1066,7 +1066,7 @@ class LauncherActivity : BaseActivity() {
         }
 
         val language = prefs.getString("language", "English") ?: "English"
-        val skipWarning = prefs.getBoolean("skip_language_warning", false)
+        val skipWarning = prefs.getBoolean("skip_language_warning", true)
 
         if (language == "English" || skipWarning) {
             viewModel.handlePlayClick()
@@ -1495,7 +1495,10 @@ class LauncherActivity : BaseActivity() {
             runOnUiThread {
                 val isMigrated = getSharedPreferences("app_prefs", MODE_PRIVATE).getBoolean("user_migrated_masl", false)
                 if (!isMigrated) {
-                    launchActivityWindow(Intent(this@LauncherActivity, MigrationActivity::class.java), MigrationActivity::class.java.name)
+                    launchActivityWindow(
+                        Intent(this@LauncherActivity, MigrationActivity::class.java),
+                        MigrationActivity::class.java.name
+                    )
                     return@runOnUiThread
                 }
 
