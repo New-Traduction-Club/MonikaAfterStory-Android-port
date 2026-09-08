@@ -14,6 +14,6 @@ dependencyResolutionManagement {
 }
 
 
-include ':renpyandroid', ':app', ':kizzy'
+include ':renpyandroid', ':app', ':kizzy', ':nowbar'
 
 rootProject.name="app"

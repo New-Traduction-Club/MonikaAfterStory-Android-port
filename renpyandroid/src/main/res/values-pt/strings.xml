@@ -505,4 +505,10 @@
     <string name="migration_btn_start">Iniciar Migração</string>
     <string name="migration_btn_okay">Ok</string>
     <string name="migration_dialog_warning">A migração está em andamento. Fechar esta janela agora pode corromper os arquivos do jogo. Por favor, aguarde até o término.</string>
+
+    <!-- Now Bar Strings -->
+    <string name="launcher_nowbar_demo">Test da Now Bar</string>
+    <string name="nowbar_demo_started">Test iniciado!</string>
+    <string name="nowbar_demo_stopped">Test interrompido.</string>
+    <string name="nowbar_action_stop">Parar</string>
 </resources>

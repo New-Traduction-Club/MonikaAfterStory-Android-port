@@ -23,7 +23,7 @@ internal object StatusChipAdapter {
             builder
                 .setWhen(whenTime)
                 .setShowWhen(true)
-                .setUsesChronometer(card.isChipChronometerCountDown())
+                .setUsesChronometer(true)
                 .setChronometerCountDown(card.isChipChronometerCountDown())
             return
         }
@@ -47,7 +47,7 @@ internal object StatusChipAdapter {
             builder
                 .setWhen(whenTime)
                 .setShowWhen(true)
-                .setUsesChronometer(card.isChipChronometerCountDown())
+                .setUsesChronometer(true)
                 .setChronometerCountDown(card.isChipChronometerCountDown())
             return
         }

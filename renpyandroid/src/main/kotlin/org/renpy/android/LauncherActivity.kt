@@ -26,6 +26,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.nowbar.api.NowBarConfig
+import com.nowbar.api.NowBarManager
+import com.nowbar.api.cards.CustomCard
+import com.nowbar.api.notification.ActionConfig
+import com.nowbar.api.util.AppIconHelper
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
@@ -699,7 +704,8 @@ class LauncherActivity : BaseActivity() {
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
             DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
             DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
-            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments")
+            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments"),
+            DesktopShortcut(R.string.launcher_nowbar_demo, android.R.drawable.ic_menu_compass, "nowbar_demo")
         )
     }
 
@@ -1265,6 +1271,41 @@ class LauncherActivity : BaseActivity() {
                 }
                 launchActivityWindow(intent, ExperimentsActivity::class.java.name)
             }
+
+            "nowbar_demo" -> {
+                handleNowBarDemo()
+            }
+        }
+    }
+
+    private fun handleNowBarDemo() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    androidx.core.app.ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                        1001
+                    )
+                }
+            }
+
+            val posted = NowBarBridge.startTest(this)
+            if (posted) {
+                InAppNotifier.show(this, getString(R.string.nowbar_demo_started))
+            } else {
+                InAppNotifier.show(
+                    this,
+                    "Could not post notification. Please check app notification permissions.",
+                    true
+                )
+            }
+        } else {
+            InAppNotifier.show(this, "Now Bar requires Android 16.0+")
         }
     }
 

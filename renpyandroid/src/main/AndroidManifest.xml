@@ -1,4 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-sdk tools:overrideLibrary="com.nowbar.api" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -10,6 +13,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application>
+        <receiver
+            android:name=".NowBarStopReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.renpy.android.ACTION_STOP_NOWBAR" />
+            </intent-filter>
+        </receiver>
+
         <receiver
             android:name=".NotificationSchedulerReceiver"
             android:exported="false" />

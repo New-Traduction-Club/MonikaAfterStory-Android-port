@@ -489,4 +489,10 @@
     <string name="migration_btn_start">Start Migration</string>
     <string name="migration_btn_okay">Okay</string>
     <string name="migration_dialog_warning">The migration is currently running. Closing this window now may corrupt your game files. Please wait until it finishes.</string>
+
+    <!-- Now Bar Strings -->
+    <string name="launcher_nowbar_demo">Now Bar Test</string>
+    <string name="nowbar_demo_started">Test started!</string>
+    <string name="nowbar_demo_stopped">Test stopped.</string>
+    <string name="nowbar_action_stop">Stop</string>
 </resources>
