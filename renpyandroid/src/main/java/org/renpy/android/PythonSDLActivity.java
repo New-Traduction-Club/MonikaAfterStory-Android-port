@@ -182,6 +182,11 @@ public class PythonSDLActivity extends SDLActivity {
                 "837renpython",
             };
         }
+        if (isRenpy7411Engine) {
+            return new String[] {
+                "7411renpython",
+            };
+        }
         if (isRenpy7Engine) {
             return new String[] {
                 "rencompat",
@@ -326,14 +331,17 @@ public class PythonSDLActivity extends SDLActivity {
             Log.v("python", "Extracting " + resource + " assets.");
 
             /**
-             * Delete main.pyo unconditionally. This fixes a problem where we have
-             * a main.py newer than main.pyo, but start.c won't run it.
+             * Delete main.pyo, main.pyc, main.py unconditionally. This fixes a problem where we have
+             * an old main script from another runtime or start.c won't run it.
              */
             new File(target, "main.pyo").delete();
+            new File(target, "main.pyc").delete();
+            new File(target, "main.py").delete();
 
             // Delete old libraries & renpy files.
             recursiveDelete(new File(target, "lib"));
             recursiveDelete(new File(target, "renpy"));
+            recursiveDelete(new File(target, "include"));
 
             target.mkdirs();
 
@@ -433,6 +441,9 @@ public class PythonSDLActivity extends SDLActivity {
         nativeSetEnv("ANDROID_ARGUMENT", path.getAbsolutePath());
         nativeSetEnv("ANDROID_PRIVATE", path.getAbsolutePath());
         nativeSetEnv("ANDROID_MASBASE", path.getAbsolutePath());
+        if (isRenpy7411Engine) {
+            nativeSetEnv("ANDROID_PACK_FF1", path.getAbsolutePath());
+        }
         if (!isRenpy7OrLater()) {
             nativeSetEnv("REQUESTS_CA_BUNDLE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
             nativeSetEnv("SSL_CERT_FILE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
@@ -521,8 +532,9 @@ public class PythonSDLActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity837)) {
+        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity837)) {
             isRenpy7Engine = false;
+            isRenpy7411Engine = false;
             isRenpy8Engine = false;
         }
         mActivity = this;

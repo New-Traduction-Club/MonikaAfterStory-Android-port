@@ -4,16 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorSurface"
+    android:background="@android:color/transparent"
     android:padding="16dp">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/descriptionCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="8dp"
+        app:cardCornerRadius="4dp"
         app:cardElevation="2dp"
-        app:strokeWidth="0dp"
+        app:strokeColor="@color/colorDivider"
+        app:strokeWidth="1dp"
         app:cardBackgroundColor="@color/colorCardBackground"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -26,12 +27,20 @@
             android:gravity="center_vertical"
             android:padding="16dp">
 
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_launcher_internal"
+                app:tint="@color/colorIconTint"
+                android:layout_marginEnd="12dp" />
+
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="@string/experiments_description"
                 android:textColor="@color/colorTextSecondary"
-                android:textSize="14sp" />
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -41,7 +50,7 @@
         android:layout_height="wrap_content"
         android:text="@string/experiments_no_games"
         android:textColor="@color/colorTextSecondary"
-        android:textSize="14sp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
         android:gravity="center"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/descriptionCard"
@@ -60,6 +69,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:clipToPadding="false"
         android:scrollbars="vertical" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

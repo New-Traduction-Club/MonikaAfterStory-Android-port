@@ -41,10 +41,11 @@ public class SDLActivity extends Activity {
     public static boolean mIsPaused, mIsSurfaceReady, mHasFocus;
     public static boolean mExitCalledFromJava;
     public static boolean isRenpy7Engine = false;
+    public static boolean isRenpy7411Engine = false;
     public static boolean isRenpy8Engine = false;
 
     public static boolean isRenpy7OrLater() {
-        return isRenpy7Engine || isRenpy8Engine;
+        return isRenpy7Engine || isRenpy7411Engine || isRenpy8Engine;
     }
 
     /** If shared libraries (e.g. SDL or the native application) could not be loaded. */
@@ -404,6 +405,7 @@ public class SDLActivity extends Activity {
     static final int COMMAND_CHANGE_TITLE = 1;
     static final int COMMAND_UNUSED = 2;
     static final int COMMAND_TEXTEDIT_HIDE = 3;
+    static final int COMMAND_CHANGE_SURFACEVIEW_FORMAT = 4;
     static final int COMMAND_SET_KEEP_SCREEN_ON = 5;
 
     protected static final int COMMAND_USER = 0x8000;
@@ -456,6 +458,32 @@ public class SDLActivity extends Activity {
                     mSurface.requestFocus();
                 }
                 break;
+            case COMMAND_CHANGE_SURFACEVIEW_FORMAT:
+            {
+                int format = (Integer) msg.obj;
+                int pf;
+
+                if (SDLActivity.mSurface == null) {
+                    return;
+                }
+
+                SurfaceHolder holder = SDLActivity.mSurface.getHolder();
+                if (holder == null) {
+                    return;
+                }
+
+                if (format == 1) {
+                    pf = PixelFormat.RGBA_8888;
+                } else if (format == 2) {
+                    pf = PixelFormat.RGBX_8888;
+                } else {
+                    pf = PixelFormat.RGB_565;
+                }
+
+                holder.setFormat(pf);
+
+                break;
+            }
             case COMMAND_SET_KEEP_SCREEN_ON:
             {
                 Window window = ((Activity) context).getWindow();
@@ -494,6 +522,7 @@ public class SDLActivity extends Activity {
     public static native int nativeRunMain(String library, String function, Object arguments);
     public static native void onNativeDropFile(String filename);
     public static native void nativeSetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, float rate);
+    public static native void nativeSetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, int format, float rate);
     public static native void onNativeResize();
     public static native void onNativeSurfaceCreated();
     public static native void onNativeSurfaceChanged();
@@ -940,6 +969,15 @@ public class SDLActivity extends Activity {
         return SDLActivity.mSurface.getNativeSurface();
     }
 
+    /**
+     * This method is called by SDL using JNI (7.4.11).
+     */
+    public static void setSurfaceViewFormat(int format) {
+        if (mSingleton != null) {
+            mSingleton.sendCommand(COMMAND_CHANGE_SURFACEVIEW_FORMAT, format);
+        }
+    }
+
     // Audio
 
     /**
@@ -1336,7 +1374,14 @@ class SDLMain implements Runnable {
     public void run() {
         // Runs SDL_main()
         if (SDLActivity.isRenpy7OrLater()) {
-            String library = SDLActivity.isRenpy8Engine ? "lib837renpython.so" : "librenpython.so";
+            String library;
+            if (SDLActivity.isRenpy8Engine) {
+                library = "lib837renpython.so";
+            } else if (SDLActivity.isRenpy7411Engine) {
+                library = "lib7411renpython.so";
+            } else {
+                library = "librenpython.so";
+            }
             String function = "SDL_main";
             SDLActivity.nativeRunMain(library, function, SDLActivity.mSingleton.getArguments());
             if (SDLActivity.mSingleton != null) {
@@ -1483,7 +1528,10 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
         mWidth = width;
         mHeight = height;
-        if (SDLActivity.isRenpy7OrLater()) {
+        if (SDLActivity.isRenpy7411Engine) {
+            SDLActivity.nativeSetScreenResolution(width, height, width, height, sdlFormat, mDisplay.getRefreshRate());
+            SDLActivity.onNativeResize();
+        } else if (SDLActivity.isRenpy7OrLater()) {
             SDLActivity.nativeSetScreenResolution(width, height, width, height, mDisplay.getRefreshRate());
             SDLActivity.onNativeResize();
         } else {

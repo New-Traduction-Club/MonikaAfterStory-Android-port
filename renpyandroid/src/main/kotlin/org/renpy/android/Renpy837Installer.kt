@@ -69,8 +69,12 @@ object Renpy837Installer {
         File(gameDir, "main.py").delete()
         File(gameDir, "renpy").deleteRecursively()
         File(gameDir, "lib").deleteRecursively()
+        File(gameDir, "include").deleteRecursively()
+        File(gameDir, ".runtime_699.version").delete()
+        File(gameDir, ".runtime_7411.version").delete()
         File(gameDir, ".runtime_784.version").delete()
         File(gameDir, ".runtime_837.version").delete()
+        File(gameDir, "private.version").delete()
         File(gameDir, ".private.version").delete()
     }
 

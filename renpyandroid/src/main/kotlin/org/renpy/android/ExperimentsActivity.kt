@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,9 +24,10 @@ class ExperimentsActivity : GameWindowActivity() {
 
     companion object {
         const val RUNTIME_699 = "6.99"
+        const val RUNTIME_7411 = "7.4.11"
         const val RUNTIME_784 = "7.8.4"
         const val RUNTIME_837 = "8.3.7"
-        private val RUNTIME_OPTIONS = arrayOf("Renpy 6.99", "Renpy 7.8.4", "Renpy 8.3.7")
+        private val RUNTIME_OPTIONS = arrayOf("Ren'Py 6.99", "Ren'Py 7.4.11", "Ren'Py 7.8.4", "Ren'Py 8.3.7")
         const val EXCLUDED_MAS_DIR = "monikaafterstory-masl-edition"
         const val DEANDROID_RPY_CONTENT = "init -999 python:\n    renpy.android = False\n"
 
@@ -115,7 +115,7 @@ class ExperimentsActivity : GameWindowActivity() {
         if (!file.exists()) return null
         return try {
             val content = file.readText().trim()
-            if (content == RUNTIME_699 || content == RUNTIME_784 || content == RUNTIME_837) content else null
+            if (content == RUNTIME_699 || content == RUNTIME_7411 || content == RUNTIME_784 || content == RUNTIME_837) content else null
         } catch (e: Exception) {
             null
         }
@@ -124,17 +124,12 @@ class ExperimentsActivity : GameWindowActivity() {
     private fun setGameEngine(gameFolder: File, engine: String) {
         try {
             File(gameFolder, "engine.txt").writeText(engine)
-            if (engine == RUNTIME_699) {
-                File(gameFolder, ".runtime_784.version").delete()
-                File(gameFolder, ".runtime_837.version").delete()
-                File(gameFolder, ".private.version").delete()
-            } else if (engine == RUNTIME_784) {
-                File(gameFolder, ".runtime_837.version").delete()
-                File(gameFolder, ".private.version").delete()
-            } else if (engine == RUNTIME_837) {
-                File(gameFolder, ".runtime_784.version").delete()
-                File(gameFolder, ".private.version").delete()
-            }
+            File(gameFolder, ".runtime_699.version").delete()
+            File(gameFolder, ".runtime_7411.version").delete()
+            File(gameFolder, ".runtime_784.version").delete()
+            File(gameFolder, ".runtime_837.version").delete()
+            File(gameFolder, "private.version").delete()
+            File(gameFolder, ".private.version").delete()
         } catch (e: Exception) {
             // ignore write errors
         }
@@ -143,27 +138,32 @@ class ExperimentsActivity : GameWindowActivity() {
     private fun showRuntimeSelectorDialog(gameFolder: File, onSelected: ((String) -> Unit)? = null) {
         val currentEngine = getGameEngine(gameFolder)
         var selectedIndex = when (currentEngine) {
-            RUNTIME_837 -> 2
-            RUNTIME_784 -> 1
+            RUNTIME_837 -> 3
+            RUNTIME_784 -> 2
+            RUNTIME_7411 -> 1
             else -> 0
         }
 
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Select Runtime")
+        GameDialogBuilder(this)
+            .setTitle(getString(R.string.experiments_select_runtime))
             .setSingleChoiceItems(RUNTIME_OPTIONS, selectedIndex) { _, which ->
                 selectedIndex = which
             }
-            .setPositiveButton("Select") { _, _ ->
+            .setPositiveButton(getString(R.string.experiments_select)) { dialog, _ ->
                 val chosenEngine = when (selectedIndex) {
-                    2 -> RUNTIME_837
-                    1 -> RUNTIME_784
+                    3 -> RUNTIME_837
+                    2 -> RUNTIME_784
+                    1 -> RUNTIME_7411
                     else -> RUNTIME_699
                 }
                 setGameEngine(gameFolder, chosenEngine)
                 rvExperiments.adapter?.notifyDataSetChanged()
                 onSelected?.invoke(chosenEngine)
+                dialog.dismiss()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
             .show()
     }
 
@@ -171,67 +171,34 @@ class ExperimentsActivity : GameWindowActivity() {
         SoundEffects.playClick(this@ExperimentsActivity)
         ensureDeandroidPatch(gameFolder)
 
-        if (engine == RUNTIME_837) {
-            lifecycleScope.launch {
-                val progressDialog = MaterialAlertDialogBuilder(this@ExperimentsActivity)
-                    .setMessage("Preparing Ren'Py 8.3.7 runtime...")
-                    .setCancelable(false)
-                    .create()
-                progressDialog.show()
-
-                val ok = withContext(Dispatchers.IO) {
-                    Renpy837Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
-                }
-                progressDialog.dismiss()
-
-                if (ok) {
-                    val intent = Intent(this@ExperimentsActivity, PythonSDLActivity837::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                        putExtra("base_dir", gameFolder.name)
-                    }
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(
-                        this@ExperimentsActivity,
-                        "Failed to prepare Renpy 8.3.7 runtime",
-                        Toast.LENGTH_SHORT
-                    ).show()
+        lifecycleScope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                when (engine) {
+                    RUNTIME_837 -> Renpy837Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_7411 -> Renpy7411Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_784 -> Renpy784Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    else -> Renpy699Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
                 }
             }
-        } else if (engine == RUNTIME_784) {
-            lifecycleScope.launch {
-                val progressDialog = MaterialAlertDialogBuilder(this@ExperimentsActivity)
-                    .setMessage("Preparing Ren'Py 7.8.4 runtime...")
-                    .setCancelable(false)
-                    .create()
-                progressDialog.show()
 
-                val ok = withContext(Dispatchers.IO) {
-                    Renpy784Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+            if (ok) {
+                val targetIntent = when (engine) {
+                    RUNTIME_837 -> Intent(this@ExperimentsActivity, PythonSDLActivity837::class.java)
+                    RUNTIME_7411 -> Intent(this@ExperimentsActivity, PythonSDLActivity7411::class.java)
+                    RUNTIME_784 -> Intent(this@ExperimentsActivity, PythonSDLActivity784::class.java)
+                    else -> Intent(this@ExperimentsActivity, getFreeActivityClass())
+                }.apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra("base_dir", gameFolder.name)
                 }
-                progressDialog.dismiss()
-
-                if (ok) {
-                    val intent = Intent(this@ExperimentsActivity, PythonSDLActivity784::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                        putExtra("base_dir", gameFolder.name)
-                    }
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(
-                        this@ExperimentsActivity,
-                        "Failed to prepare Renpy 7.8.4 runtime",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                startActivity(targetIntent)
+            } else {
+                Toast.makeText(
+                    this@ExperimentsActivity,
+                    getString(R.string.experiments_failed_prepare_runtime, engine),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        } else {
-            val targetClass = getFreeActivityClass()
-            val intent = Intent(this@ExperimentsActivity, targetClass).apply {
-                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                putExtra("base_dir", gameFolder.name)
-            }
-            startActivity(intent)
         }
     }
 
@@ -309,15 +276,20 @@ class ExperimentsActivity : GameWindowActivity() {
             holder.tvGameTitle.text = displayName
             holder.tvGamePath.text = "filesDir/${file.name}/"
 
+            val context = holder.itemView.context
             val engine = getEngine(file)
             if (engine != null) {
-                holder.tvRuntimeBadge.text = "Runtime: Renpy $engine"
+                holder.tvRuntimeBadge.text = context.getString(R.string.experiments_runtime_badge, engine)
             } else {
-                holder.tvRuntimeBadge.text = "Runtime: Not selected"
+                holder.tvRuntimeBadge.text = context.getString(R.string.experiments_runtime_not_selected)
             }
 
             holder.tvRuntimeBadge.setOnClickListener {
                 onChangeRuntimeClick(file)
+            }
+
+            holder.itemView.setOnClickListener {
+                onLaunchClick(file)
             }
 
             holder.itemView.setOnLongClickListener {

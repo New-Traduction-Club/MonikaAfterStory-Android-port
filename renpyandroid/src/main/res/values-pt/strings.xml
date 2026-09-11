@@ -477,6 +477,11 @@
     <string name="experiments_description">Selecione e inicie outros jogos do Ren\'Py.</string>
     <string name="experiments_no_games">Nenhum outro jogo detectado. Coloque as pastas do jogo em files/&lt;pasta&gt;/game/</string>
     <string name="experiments_launch">Iniciar</string>
+    <string name="experiments_select_runtime">Selecionar versão do Ren\'Py</string>
+    <string name="experiments_runtime_badge">Motor: Ren\'Py %1$s</string>
+    <string name="experiments_runtime_not_selected">Motor: Não selecionado</string>
+    <string name="experiments_failed_prepare_runtime">Falha ao preparar o motor Ren\'Py %1$s</string>
+    <string name="experiments_select">Selecionar</string>
 
     <!-- Migration Feature Strings -->
     <string name="migration_window_title">Migração do Motor e Dados</string>

@@ -61,34 +61,46 @@ class Renpy837InstallerTest {
         val gameDir = tempFolder.newFolder("game_to_clean")
         val renpyDir = File(gameDir, "renpy").apply { mkdirs() }
         val libDir = File(gameDir, "lib").apply { mkdirs() }
+        val includeDir = File(gameDir, "include").apply { mkdirs() }
         val mainPyo = File(gameDir, "main.pyo").apply { writeText("dummy") }
         val mainPyc = File(gameDir, "main.pyc").apply { writeText("dummy") }
         val mainPy = File(gameDir, "main.py").apply { writeText("dummy") }
+        val runtime699 = File(gameDir, ".runtime_699.version").apply { writeText("6.99") }
+        val runtime7411 = File(gameDir, ".runtime_7411.version").apply { writeText("7.4.11") }
         val runtime784 = File(gameDir, ".runtime_784.version").apply { writeText("7.8.4") }
         val runtime837 = File(gameDir, ".runtime_837.version").apply { writeText("8.3.7") }
-        val privateVer = File(gameDir, ".private.version").apply { writeText("6.99") }
+        val privateVer = File(gameDir, "private.version").apply { writeText("6.99") }
+        val dotPrivateVer = File(gameDir, ".private.version").apply { writeText("6.99") }
         File(renpyDir, "__init__.py").writeText("# old renpy")
         File(libDir, "test.so").writeText("so")
 
         assertTrue(renpyDir.exists())
         assertTrue(libDir.exists())
+        assertTrue(includeDir.exists())
         assertTrue(mainPyo.exists())
         assertTrue(mainPyc.exists())
         assertTrue(mainPy.exists())
+        assertTrue(runtime699.exists())
+        assertTrue(runtime7411.exists())
         assertTrue(runtime784.exists())
         assertTrue(runtime837.exists())
         assertTrue(privateVer.exists())
+        assertTrue(dotPrivateVer.exists())
 
         Renpy837Installer.cleanOldEngineFiles(gameDir)
 
         assertFalse(renpyDir.exists())
         assertFalse(libDir.exists())
+        assertFalse(includeDir.exists())
         assertFalse(mainPyo.exists())
         assertFalse(mainPyc.exists())
         assertFalse(mainPy.exists())
+        assertFalse(runtime699.exists())
+        assertFalse(runtime7411.exists())
         assertFalse(runtime784.exists())
         assertFalse(runtime837.exists())
         assertFalse(privateVer.exists())
+        assertFalse(dotPrivateVer.exists())
     }
 
     @Test

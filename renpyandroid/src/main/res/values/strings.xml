@@ -461,6 +461,11 @@
     <string name="experiments_description">Select and launch other Ren\'Py games found.</string>
     <string name="experiments_no_games">No other Ren\'Py games detected. Place game folders under InternalFiles/&lt;folder&gt;/game/</string>
     <string name="experiments_launch">Launch</string>
+    <string name="experiments_select_runtime">Select Runtime</string>
+    <string name="experiments_runtime_badge">Runtime: Ren\'Py %1$s</string>
+    <string name="experiments_runtime_not_selected">Runtime: Not selected</string>
+    <string name="experiments_failed_prepare_runtime">Failed to prepare Ren\'Py %1$s</string>
+    <string name="experiments_select">Select</string>
 
     <!-- Migration Feature Strings -->
     <string name="migration_window_title">Engine &amp; Data Migration</string>

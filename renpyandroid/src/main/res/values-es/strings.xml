@@ -476,6 +476,11 @@
     <string name="experiments_description">Ejecuta otros juegos de Ren\'Py.</string>
     <string name="experiments_no_games">No se detectaron otros juegos. Coloca las carpetas del juego en ArchivosInternos/&lt;carpeta&gt;/game/</string>
     <string name="experiments_launch">Ejecutar</string>
+    <string name="experiments_select_runtime">Seleccionar versión de Ren\'Py</string>
+    <string name="experiments_runtime_badge">Motor: Ren\'Py %1$s</string>
+    <string name="experiments_runtime_not_selected">Motor: No seleccionado</string>
+    <string name="experiments_failed_prepare_runtime">Error al preparar Ren\'Py %1$s</string>
+    <string name="experiments_select">Seleccionar</string>
 
     <!-- Migration Feature Strings -->
     <string name="migration_window_title">Actualización del motor</string>
