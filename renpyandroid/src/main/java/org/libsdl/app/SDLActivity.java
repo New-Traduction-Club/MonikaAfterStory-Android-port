@@ -28,6 +28,8 @@ import android.graphics.drawable.Drawable;
 import android.media.*;
 import android.hardware.*;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
+import android.util.DisplayMetrics;
 
 /**
     SDL Activity
@@ -38,6 +40,12 @@ public class SDLActivity extends Activity {
     // Keep track of the paused state
     public static boolean mIsPaused, mIsSurfaceReady, mHasFocus;
     public static boolean mExitCalledFromJava;
+    public static boolean isRenpy7Engine = false;
+    public static boolean isRenpy8Engine = false;
+
+    public static boolean isRenpy7OrLater() {
+        return isRenpy7Engine || isRenpy8Engine;
+    }
 
     /** If shared libraries (e.g. SDL or the native application) could not be loaded. */
     public static boolean mBrokenLibraries;
@@ -85,6 +93,10 @@ public class SDLActivity extends Activity {
        for (String lib : getLibraries()) {
           System.loadLibrary(lib);
        }
+       if (isRenpy7OrLater()) {
+           SDL.setContext(this);
+           SDL.setupJNI();
+       }
     }
 
     /**
@@ -122,7 +134,12 @@ public class SDLActivity extends Activity {
         Log.v(TAG, "onCreate(): " + mSingleton);
         super.onCreate(savedInstanceState);
 
-        SDLActivity.initialize();
+        if (isRenpy7OrLater()) {
+            SDL.initialize();
+            SDL.setContext(this);
+        } else {
+            SDLActivity.initialize();
+        }
         // So we can call stuff from static callbacks
         mSingleton = this;
 
@@ -165,11 +182,20 @@ public class SDLActivity extends Activity {
         // Set up the surface
         mSurface = new SDLSurface(getApplication());
 
-        if(Build.VERSION.SDK_INT >= 12) {
-            mJoystickHandler = new SDLJoystickHandler_API12();
-        }
-        else {
-            mJoystickHandler = new SDLJoystickHandler();
+        if (isRenpy7OrLater()) {
+            if (Build.VERSION.SDK_INT >= 19) {
+                mJoystickHandler = new SDLJoystickHandler_API19();
+            } else if (Build.VERSION.SDK_INT >= 16) {
+                mJoystickHandler = new SDLJoystickHandler_API16();
+            } else {
+                mJoystickHandler = new SDLJoystickHandler();
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= 12) {
+                mJoystickHandler = new SDLJoystickHandler_699();
+            } else {
+                mJoystickHandler = new SDLJoystickHandler();
+            }
         }
 
         mLayout = new AbsoluteLayout(this);
@@ -187,6 +213,10 @@ public class SDLActivity extends Activity {
                 SDLActivity.onNativeDropFile(filename);
             }
         }
+    }
+
+    public static View getContentView() {
+        return mLayout;
     }
 
     // Events
@@ -258,7 +288,19 @@ public class SDLActivity extends Activity {
         if (!mSkipNativeQuit) {
              // Send a quit message to the application
              SDLActivity.mExitCalledFromJava = true;
-             SDLActivity.nativeQuit();
+             if (isRenpy7OrLater()) {
+                 try {
+                     SDLActivity.nativeSendQuit();
+                 } catch (Throwable t) {
+                     Log.w(TAG, "nativeSendQuit failed in onDestroy: " + t);
+                 }
+             } else {
+                 try {
+                     SDLActivity.nativeQuit();
+                 } catch (Throwable t) {
+                     Log.w(TAG, "nativeQuit failed in onDestroy: " + t);
+                 }
+             }
          } else {
              Log.v(TAG, "Skipping nativeQuit()");
              mSkipNativeQuit = false;
@@ -276,9 +318,26 @@ public class SDLActivity extends Activity {
             //Log.v(TAG, "Finished waiting for SDL thread");
         }
 
+        if (isRenpy7OrLater()) {
+            try {
+                SDLActivity.nativeQuit();
+            } catch (Throwable t) {
+                Log.w(TAG, "nativeQuit cleanup failed in onDestroy: " + t);
+            }
+        }
+
         super.onDestroy();
         // Reset everything in case the user re opens the app
         SDLActivity.initialize();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (isRenpy7OrLater()) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED;
+            nativePermissionResult(requestCode, granted);
+        }
     }
 
     @Override
@@ -429,12 +488,56 @@ public class SDLActivity extends Activity {
     }
 
     // C functions we call
-    public static native int nativeInit(Object arguments);
+
+    // 7.8.4 - librenpython.so
+    public static native int nativeSetupJNI();
+    public static native int nativeRunMain(String library, String function, Object arguments);
+    public static native void onNativeDropFile(String filename);
+    public static native void nativeSetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, float rate);
+    public static native void onNativeResize();
+    public static native void onNativeSurfaceCreated();
+    public static native void onNativeSurfaceChanged();
+    public static native void onNativeSurfaceDestroyed();
+    public static native void onNativeKeyDown(int keycode);
+    public static native void onNativeKeyUp(int keycode);
+    public static native boolean onNativeSoftReturnKey();
+    public static native void onNativeKeyboardFocusLost();
+    public static native void onNativeTouch(int touchDevId, int pointerFingerId, int action, float x, float y, float p);
+    public static native void onNativeMouse(int button, int action, float x, float y, boolean relative);
+    public static native void onNativeAccel(float x, float y, float z);
+    public static native void onNativeClipboardChanged();
     public static native void nativeLowMemory();
+    public static native void onNativeLocaleChanged();
+    public static native void nativeSendQuit();
     public static native void nativeQuit();
     public static native void nativePause();
     public static native void nativeResume();
-    public static native void onNativeDropFile(String filename);
+    public static native void nativeFocusChanged(boolean hasFocus);
+    public static native String nativeGetHint(String name);
+    public static native boolean nativeGetHintBoolean(String name, boolean default_value);
+    public static native void nativeSetenv(String name, String value);
+    public static native void onNativeOrientationChanged(int orientation);
+    public static native void nativeAddTouch(int touchId, String name);
+    public static native void nativePermissionResult(int requestCode, boolean result);
+
+    public static void requestAppQuit() {
+        if (isRenpy7OrLater()) {
+            try {
+                nativeSendQuit();
+            } catch (Throwable t) {
+                Log.w(TAG, "nativeSendQuit failed: " + t);
+            }
+        } else {
+            try {
+                nativeQuit();
+            } catch (Throwable t) {
+                Log.w(TAG, "nativeQuit failed: " + t);
+            }
+        }
+    }
+
+    // 6.99
+    public static native int nativeInit(Object arguments);
     public static native void onNativeResize(int x, int y, int format, float rate);
     public static native int onNativePadDown(int device_id, int keycode);
     public static native int onNativePadUp(int device_id, int keycode);
@@ -442,22 +545,268 @@ public class SDLActivity extends Activity {
                                           float value);
     public static native void onNativeHat(int device_id, int hat_id,
                                           int x, int y);
-    public static native void onNativeKeyDown(int keycode);
-    public static native void onNativeKeyUp(int keycode);
-    public static native void onNativeKeyboardFocusLost();
     public static native void onNativeMouse(int button, int action, float x, float y);
-    public static native void onNativeTouch(int touchDevId, int pointerFingerId,
-                                            int action, float x,
-                                            float y, float p);
-    public static native void onNativeAccel(float x, float y, float z);
-    public static native void onNativeSurfaceChanged();
-    public static native void onNativeSurfaceDestroyed();
     public static native void nativeFlipBuffers();
     public static native int nativeAddJoystick(int device_id, String name,
                                                int is_accelerometer, int nbuttons,
                                                int naxes, int nhats, int nballs);
     public static native int nativeRemoveJoystick(int device_id);
-    public static native String nativeGetHint(String name);
+
+    public static void sendNativeMouse(int button, int action, float x, float y, boolean relative) {
+        if (isRenpy7OrLater()) {
+            try {
+                SDLActivity.onNativeMouse(button, action, x, y, relative);
+            } catch (Throwable t) {
+                Log.w(TAG, "onNativeMouse(5-arg) error: " + t);
+            }
+        } else {
+            try {
+                SDLActivity.onNativeMouse(button, action, x, y);
+            } catch (Throwable t) {
+                Log.w(TAG, "onNativeMouse(4-arg) error: " + t);
+            }
+        }
+    }
+
+    public static int sendNativePadDown(int device_id, int keycode) {
+        if (isRenpy7OrLater()) {
+            try {
+                return SDLControllerManager.onNativePadDown(device_id, keycode);
+            } catch (Throwable t) {
+                Log.w(TAG, "SDLControllerManager.onNativePadDown error: " + t);
+                return -1;
+            }
+        } else {
+            try {
+                return SDLActivity.onNativePadDown(device_id, keycode);
+            } catch (Throwable t) {
+                Log.w(TAG, "SDLActivity.onNativePadDown error: " + t);
+                return -1;
+            }
+        }
+    }
+
+    public static int sendNativePadUp(int device_id, int keycode) {
+        if (isRenpy7OrLater()) {
+            try {
+                return SDLControllerManager.onNativePadUp(device_id, keycode);
+            } catch (Throwable t) {
+                Log.w(TAG, "SDLControllerManager.onNativePadUp error: " + t);
+                return -1;
+            }
+        } else {
+            try {
+                return SDLActivity.onNativePadUp(device_id, keycode);
+            } catch (Throwable t) {
+                Log.w(TAG, "SDLActivity.onNativePadUp error: " + t);
+                return -1;
+            }
+        }
+    }
+
+    public static boolean clipboardHasText() {
+        Context context = getContext();
+        if (context == null) return false;
+        ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm == null) return false;
+        return cm.hasPrimaryClip();
+    }
+
+    public static String clipboardGetText() {
+        Context context = getContext();
+        if (context == null) return "";
+        ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm == null || !cm.hasPrimaryClip()) return "";
+        ClipData clip = cm.getPrimaryClip();
+        if (clip != null && clip.getItemCount() > 0) {
+            ClipData.Item item = clip.getItemAt(0);
+            if (item != null) {
+                CharSequence text = item.getText();
+                return text != null ? text.toString() : "";
+            }
+        }
+        return "";
+    }
+
+    public static void clipboardSetText(String string) {
+        Context context = getContext();
+        if (context == null) return;
+        ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm == null) return;
+        ClipData clip = ClipData.newPlainText("text", string);
+        cm.setPrimaryClip(clip);
+    }
+
+    public static int createCustomCursor(int[] colors, int width, int height, int hotSpotX, int hotSpotY) {
+        return 0;
+    }
+
+    public static void destroyCustomCursor(int cursorID) {
+    }
+
+    public static boolean setCustomCursor(int cursorID) {
+        return false;
+    }
+
+    public static boolean setSystemCursor(int cursorID) {
+        return false;
+    }
+
+    public static DisplayMetrics getDisplayDPI() {
+        Context context = getContext();
+        if (context != null) {
+            return context.getResources().getDisplayMetrics();
+        }
+        return new DisplayMetrics();
+    }
+
+    public static boolean getManifestEnvironmentVariables() {
+        try {
+            Context context = getContext();
+            if (context == null) {
+                return false;
+            }
+            android.content.pm.ApplicationInfo applicationInfo = context.getPackageManager()
+                    .getApplicationInfo(context.getPackageName(), android.content.pm.PackageManager.GET_META_DATA);
+            Bundle bundle = applicationInfo.metaData;
+            if (bundle == null) {
+                return false;
+            }
+            String prefix = "SDL_ENV.";
+            final int trimLength = prefix.length();
+            for (String key : bundle.keySet()) {
+                if (key.startsWith(prefix)) {
+                    String name = key.substring(trimLength);
+                    String value = String.valueOf(bundle.get(key));
+                    nativeSetenv(name, value);
+                }
+            }
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public static void initTouch() {
+        int[] ids = InputDevice.getDeviceIds();
+        for (int id : ids) {
+            InputDevice device = InputDevice.getDevice(id);
+            if (device != null && ((device.getSources() & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN || device.isVirtual())) {
+                int touchDevId = device.getId();
+                if (touchDevId < 0) {
+                    touchDevId -= 1;
+                }
+                nativeAddTouch(touchDevId, device.getName());
+            }
+        }
+    }
+
+    public static boolean isAndroidTV() {
+        Context context = getContext();
+        if (context == null) return false;
+        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+        if (uiModeManager != null && uiModeManager.getCurrentModeType() == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isChromebook() {
+        Context context = getContext();
+        if (context == null) return false;
+        return context.getPackageManager().hasSystemFeature("org.chromium.arc.device_management");
+    }
+
+    public static boolean isDeXMode() {
+        return false;
+    }
+
+    public static boolean isScreenKeyboardShown() {
+        return false;
+    }
+
+    public static boolean isTablet() {
+        return false;
+    }
+
+    public static void manualBackButton() {
+        if (mSingleton != null) {
+            mSingleton.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mSingleton != null && !mSingleton.isFinishing()) {
+                        mSingleton.onBackPressed();
+                    }
+                }
+            });
+        }
+    }
+
+    public static void minimizeWindow() {
+        if (mSingleton != null) {
+            mSingleton.moveTaskToBack(true);
+        }
+    }
+
+    public static int openURL(String url) {
+        try {
+            if (mSingleton == null) return -1;
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mSingleton.startActivity(i);
+            return 0;
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
+    public static void requestPermission(String permission, int requestCode) {
+        if (Build.VERSION.SDK_INT >= 23 && mSingleton != null) {
+            if (mSingleton.checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                mSingleton.requestPermissions(new String[]{permission}, requestCode);
+            } else {
+                nativePermissionResult(requestCode, true);
+            }
+        } else {
+            nativePermissionResult(requestCode, true);
+        }
+    }
+
+    public static int showToast(final String message, final int duration, final int gravity, final int xOffset, final int yOffset) {
+        if (mSingleton == null) return -1;
+        mSingleton.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mSingleton != null) {
+                    android.widget.Toast toast = android.widget.Toast.makeText(mSingleton, message, duration);
+                    if (gravity >= 0) {
+                        toast.setGravity(gravity, xOffset, yOffset);
+                    }
+                    toast.show();
+                }
+            }
+        });
+        return 0;
+    }
+
+    public static void setOrientation(int w, int h, boolean resizable, String hint) {
+    }
+
+    public static boolean setRelativeMouseEnabled(boolean enabled) {
+        return false;
+    }
+
+    public static void setWindowStyle(boolean fullscreen) {
+    }
+
+    public static boolean shouldMinimizeOnFocusLoss() {
+        return false;
+    }
+
+    public static boolean supportsRelativeMouse() {
+        return false;
+    }
 
     /**
      * This method is called by SDL using JNI.
@@ -703,7 +1052,12 @@ public class SDLActivity extends Activity {
 
     // Joystick glue code, just a series of stubs that redirect to the SDLJoystickHandler instance
     public static boolean handleJoystickMotionEvent(MotionEvent event) {
-        return mJoystickHandler.handleMotionEvent(event);
+        if (isRenpy7OrLater()) {
+            return SDLControllerManager.handleJoystickMotionEvent(event);
+        } else if (mJoystickHandler != null) {
+            return mJoystickHandler.handleMotionEvent(event);
+        }
+        return false;
     }
 
     /**
@@ -711,7 +1065,11 @@ public class SDLActivity extends Activity {
      */
     public static void pollInputDevices() {
         if (SDLActivity.mSDLThread != null) {
-            mJoystickHandler.pollInputDevices();
+            if (isRenpy7OrLater()) {
+                SDLControllerManager.pollInputDevices();
+            } else if (mJoystickHandler != null) {
+                mJoystickHandler.pollInputDevices();
+            }
         }
     }
 
@@ -977,7 +1335,16 @@ class SDLMain implements Runnable {
     @Override
     public void run() {
         // Runs SDL_main()
-        SDLActivity.nativeInit(SDLActivity.mSingleton.getArguments());
+        if (SDLActivity.isRenpy7OrLater()) {
+            String library = SDLActivity.isRenpy8Engine ? "lib837renpython.so" : "librenpython.so";
+            String function = "SDL_main";
+            SDLActivity.nativeRunMain(library, function, SDLActivity.mSingleton.getArguments());
+            if (SDLActivity.mSingleton != null) {
+                SDLActivity.mSingleton.finish();
+            }
+        } else {
+            SDLActivity.nativeInit(SDLActivity.mSingleton.getArguments());
+        }
 
         //Log.v("SDL", "SDL thread terminated");
     }
@@ -1046,6 +1413,9 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         org.renpy.android.PythonSDLActivity.logLifecycle("SDLActivity.surfaceCreated()");
         Log.v("SDL", "surfaceCreated()");
         holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+        if (SDLActivity.isRenpy7OrLater()) {
+            SDLActivity.onNativeSurfaceCreated();
+        }
     }
 
     // Called when we lose the surface
@@ -1113,7 +1483,12 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
         mWidth = width;
         mHeight = height;
-        SDLActivity.onNativeResize(width, height, sdlFormat, mDisplay.getRefreshRate());
+        if (SDLActivity.isRenpy7OrLater()) {
+            SDLActivity.nativeSetScreenResolution(width, height, width, height, mDisplay.getRefreshRate());
+            SDLActivity.onNativeResize();
+        } else {
+            SDLActivity.onNativeResize(width, height, sdlFormat, mDisplay.getRefreshRate());
+        }
         Log.v("SDL", "Window size: " + width + "x" + height);
 
 
@@ -1216,11 +1591,11 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         if ( (event.getSource() & InputDevice.SOURCE_GAMEPAD) != 0 ||
                    (event.getSource() & InputDevice.SOURCE_DPAD) != 0 ) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                if (SDLActivity.onNativePadDown(event.getDeviceId(), keyCode) == 0) {
+                if (SDLActivity.sendNativePadDown(event.getDeviceId(), keyCode) == 0) {
                     return true;
                 }
             } else if (event.getAction() == KeyEvent.ACTION_UP) {
-                if (SDLActivity.onNativePadUp(event.getDeviceId(), keyCode) == 0) {
+                if (SDLActivity.sendNativePadUp(event.getDeviceId(), keyCode) == 0) {
                     return true;
                 }
             }
@@ -1270,7 +1645,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                     mouseButton = 1;    // oh well.
                 }
             }
-            SDLActivity.onNativeMouse(mouseButton, action, event.getX(0), event.getY(0));
+            SDLActivity.sendNativeMouse(mouseButton, action, event.getX(0), event.getY(0), false);
         } else {
             switch(action) {
                 case MotionEvent.ACTION_MOVE:
@@ -1499,6 +1874,8 @@ class SDLInputConnection extends BaseInputConnection {
 
     public native void nativeCommitText(String text, int newCursorPosition);
 
+    public native void nativeGenerateScancodeForUnichar(char c);
+
     public native void nativeSetComposingText(String text, int newCursorPosition);
 
     @Override
@@ -1514,27 +1891,8 @@ class SDLInputConnection extends BaseInputConnection {
     }
 }
 
-/* A null joystick handler for API level < 12 devices (the accelerometer is handled separately) */
-class SDLJoystickHandler {
-
-    /**
-     * Handles given MotionEvent.
-     * @param event the event to be handled.
-     * @return if given event was processed.
-     */
-    public boolean handleMotionEvent(MotionEvent event) {
-        return false;
-    }
-
-    /**
-     * Handles adding and removing of input devices.
-     */
-    public void pollInputDevices() {
-    }
-}
-
-/* Actual joystick functionality available for API >= 12 devices */
-class SDLJoystickHandler_API12 extends SDLJoystickHandler {
+/* Renpy 6.99 joystick handler calling 6.99 libSDL2 JNI methods */
+class SDLJoystickHandler_699 extends SDLJoystickHandler {
 
     static class SDLJoystick {
         public int device_id;
@@ -1551,31 +1909,22 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
 
     private ArrayList<SDLJoystick> mJoysticks;
 
-    public SDLJoystickHandler_API12() {
-
+    public SDLJoystickHandler_699() {
         mJoysticks = new ArrayList<SDLJoystick>();
     }
 
     @Override
     public void pollInputDevices() {
         int[] deviceIds = InputDevice.getDeviceIds();
-        // It helps processing the device ids in reverse order
-        // For example, in the case of the XBox 360 wireless dongle,
-        // so the first controller seen by SDL matches what the receiver
-        // considers to be the first controller
-
-        for(int i=deviceIds.length-1; i>-1; i--) {
+        for (int i = deviceIds.length - 1; i > -1; i--) {
             SDLJoystick joystick = getJoystick(deviceIds[i]);
             if (joystick == null) {
-                joystick = new SDLJoystick();
                 InputDevice joystickDevice = InputDevice.getDevice(deviceIds[i]);
+                if (joystickDevice == null) continue;
 
-                if (
-                      (joystickDevice.getSources() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0
-                   ||
-                      (joystickDevice.getSources() & InputDevice.SOURCE_CLASS_BUTTON) != 0
-                  )
-                {
+                if ((joystickDevice.getSources() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0
+                   || (joystickDevice.getSources() & InputDevice.SOURCE_CLASS_BUTTON) != 0) {
+                    joystick = new SDLJoystick();
                     joystick.device_id = deviceIds[i];
                     joystick.name = joystickDevice.getName();
                     joystick.axes = new ArrayList<InputDevice.MotionRange>();
@@ -1583,31 +1932,34 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
 
                     List<InputDevice.MotionRange> ranges = joystickDevice.getMotionRanges();
                     Collections.sort(ranges, new RangeComparator());
-                    for (InputDevice.MotionRange range : ranges ) {
-                        if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0 ) {
+                    for (InputDevice.MotionRange range : ranges) {
+                        if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
                             if (range.getAxis() == MotionEvent.AXIS_HAT_X ||
                                 range.getAxis() == MotionEvent.AXIS_HAT_Y) {
                                 joystick.hats.add(range);
-                            }
-                            else {
+                            } else {
                                 joystick.axes.add(range);
                             }
                         }
                     }
 
                     mJoysticks.add(joystick);
-                    SDLActivity.nativeAddJoystick(joystick.device_id, joystick.name, 0, -1,
-                                                  joystick.axes.size(), joystick.hats.size()/2, 0);
+                    try {
+                        SDLActivity.nativeAddJoystick(joystick.device_id, joystick.name, 0, -1,
+                                                      joystick.axes.size(), joystick.hats.size() / 2, 0);
+                    } catch (Throwable t) {
+                        Log.w("SDL", "SDLActivity.nativeAddJoystick failed: " + t);
+                    }
                 }
             }
         }
 
         /* Check removed devices */
         ArrayList<Integer> removedDevices = new ArrayList<Integer>();
-        for(int i=0; i < mJoysticks.size(); i++) {
+        for (int i = 0; i < mJoysticks.size(); i++) {
             int device_id = mJoysticks.get(i).device_id;
             int j;
-            for (j=0; j < deviceIds.length; j++) {
+            for (j = 0; j < deviceIds.length; j++) {
                 if (device_id == deviceIds[j]) break;
             }
             if (j == deviceIds.length) {
@@ -1615,10 +1967,14 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
             }
         }
 
-        for(int i=0; i < removedDevices.size(); i++) {
+        for (int i = 0; i < removedDevices.size(); i++) {
             int device_id = removedDevices.get(i).intValue();
-            SDLActivity.nativeRemoveJoystick(device_id);
-            for (int j=0; j < mJoysticks.size(); j++) {
+            try {
+                SDLActivity.nativeRemoveJoystick(device_id);
+            } catch (Throwable t) {
+                Log.w("SDL", "SDLActivity.nativeRemoveJoystick failed: " + t);
+            }
+            for (int j = 0; j < mJoysticks.size(); j++) {
                 if (mJoysticks.get(j).device_id == device_id) {
                     mJoysticks.remove(j);
                     break;
@@ -1628,7 +1984,7 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
     }
 
     protected SDLJoystick getJoystick(int device_id) {
-        for(int i=0; i < mJoysticks.size(); i++) {
+        for (int i = 0; i < mJoysticks.size(); i++) {
             if (mJoysticks.get(i).device_id == device_id) {
                 return mJoysticks.get(i);
             }
@@ -1638,23 +1994,31 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
 
     @Override
     public boolean handleMotionEvent(MotionEvent event) {
-        if ( (event.getSource() & InputDevice.SOURCE_JOYSTICK) != 0) {
+        if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) != 0) {
             int actionPointerIndex = event.getActionIndex();
             int action = event.getActionMasked();
-            switch(action) {
+            switch (action) {
                 case MotionEvent.ACTION_MOVE:
                     SDLJoystick joystick = getJoystick(event.getDeviceId());
-                    if ( joystick != null ) {
+                    if (joystick != null) {
                         for (int i = 0; i < joystick.axes.size(); i++) {
                             InputDevice.MotionRange range = joystick.axes.get(i);
                             /* Normalize the value to -1...1 */
-                            float value = ( event.getAxisValue( range.getAxis(), actionPointerIndex) - range.getMin() ) / range.getRange() * 2.0f - 1.0f;
-                            SDLActivity.onNativeJoy(joystick.device_id, i, value );
+                            float value = (event.getAxisValue(range.getAxis(), actionPointerIndex) - range.getMin()) / range.getRange() * 2.0f - 1.0f;
+                            try {
+                                SDLActivity.onNativeJoy(joystick.device_id, i, value);
+                            } catch (Throwable t) {
+                                Log.w("SDL", "SDLActivity.onNativeJoy failed: " + t);
+                            }
                         }
-                        for (int i = 0; i < joystick.hats.size(); i+=2) {
-                            int hatX = Math.round(event.getAxisValue( joystick.hats.get(i).getAxis(), actionPointerIndex ) );
-                            int hatY = Math.round(event.getAxisValue( joystick.hats.get(i+1).getAxis(), actionPointerIndex ) );
-                            SDLActivity.onNativeHat(joystick.device_id, i/2, hatX, hatY );
+                        for (int i = 0; i < joystick.hats.size(); i += 2) {
+                            int hatX = Math.round(event.getAxisValue(joystick.hats.get(i).getAxis(), actionPointerIndex));
+                            int hatY = Math.round(event.getAxisValue(joystick.hats.get(i + 1).getAxis(), actionPointerIndex));
+                            try {
+                                SDLActivity.onNativeHat(joystick.device_id, i / 2, hatX, hatY);
+                            } catch (Throwable t) {
+                                Log.w("SDL", "SDLActivity.onNativeHat failed: " + t);
+                            }
                         }
                     }
                     break;
@@ -1666,46 +2030,3 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
     }
 }
 
-class SDLGenericMotionListener_API12 implements View.OnGenericMotionListener {
-    // Generic Motion (mouse hover, joystick...) events go here
-    @Override
-    public boolean onGenericMotion(View v, MotionEvent event) {
-        float x, y;
-        int mouseButton;
-        int action;
-
-        switch ( event.getSource() ) {
-            case InputDevice.SOURCE_JOYSTICK:
-            case InputDevice.SOURCE_GAMEPAD:
-            case InputDevice.SOURCE_DPAD:
-                SDLActivity.handleJoystickMotionEvent(event);
-                return true;
-
-            case InputDevice.SOURCE_MOUSE:
-                action = event.getActionMasked();
-                switch (action) {
-                    case MotionEvent.ACTION_SCROLL:
-                        x = event.getAxisValue(MotionEvent.AXIS_HSCROLL, 0);
-                        y = event.getAxisValue(MotionEvent.AXIS_VSCROLL, 0);
-                        SDLActivity.onNativeMouse(0, action, x, y);
-                        return true;
-
-                    case MotionEvent.ACTION_HOVER_MOVE:
-                        x = event.getX(0);
-                        y = event.getY(0);
-
-                        SDLActivity.onNativeMouse(0, action, x, y);
-                        return true;
-
-                    default:
-                        break;
-                }
-
-            default:
-                break;
-        }
-
-        // Event was not managed
-        return false;
-    }
-}

@@ -188,6 +188,8 @@ class LauncherActivity : BaseActivity() {
             "org.renpy.android.PythonSDLActivity" -> "renpy"
             "org.renpy.android.PythonSDLActivity2" -> "renpy2"
             "org.renpy.android.PythonSDLActivity3" -> "renpy3"
+            "org.renpy.android.PythonSDLActivity784" -> "renpy784"
+            "org.renpy.android.PythonSDLActivity837" -> "renpy837"
             else -> "renpy"
         }
         val renpyProcessName = "$packageName:$suffix"
@@ -223,7 +225,9 @@ class LauncherActivity : BaseActivity() {
         val processesToCheck = listOf(
             "org.renpy.android.PythonSDLActivity" to "renpy",
             "org.renpy.android.PythonSDLActivity2" to "renpy2",
-            "org.renpy.android.PythonSDLActivity3" to "renpy3"
+            "org.renpy.android.PythonSDLActivity3" to "renpy3",
+            "org.renpy.android.PythonSDLActivity784" to "renpy784",
+            "org.renpy.android.PythonSDLActivity837" to "renpy837"
         )
         var anyRemoved = false
         for ((actId, suffix) in processesToCheck) {

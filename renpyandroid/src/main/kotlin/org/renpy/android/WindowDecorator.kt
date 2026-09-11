@@ -58,7 +58,7 @@ class WindowDecorator(private val activity: Activity) {
 
         btnWindowClose.setOnClickListener {
             if (activity is org.libsdl.app.SDLActivity) {
-                org.libsdl.app.SDLActivity.nativeQuit()
+                org.libsdl.app.SDLActivity.requestAppQuit()
             } else {
                 activity.onBackPressed()
             }

@@ -78,6 +78,27 @@
       android:launchMode="singleTop"
       android:supportsPictureInPicture="true" />
 
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity784"
+      android:exported="false"
+      android:process=":renpy784"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity837"
+      android:exported="false"
+      android:process=":renpy837"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+
 
 
     <activity android:name="org.renpy.android.UpdateWindowActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>

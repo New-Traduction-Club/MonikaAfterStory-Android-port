@@ -97,7 +97,7 @@ public class PythonSDLActivity extends SDLActivity {
             if (DesktopWindowManager.ACTION_WINDOW_COMMAND.equals(intent.getAction())) {
                 String targetId = intent.getStringExtra(DesktopWindowManager.EXTRA_ACTIVITY_ID);
                 String command = intent.getStringExtra(DesktopWindowManager.EXTRA_COMMAND);
-                if (targetId != null && targetId.equals(PythonSDLActivity.class.getName())) {
+                if (targetId != null && targetId.equals(PythonSDLActivity.this.getClass().getName())) {
                     if (mWindowDecorator != null) {
                         if ("MINIMIZE".equals(command)) {
                             mWindowDecorator.minimizeWindow();
@@ -177,6 +177,17 @@ public class PythonSDLActivity extends SDLActivity {
     ResourceManager resourceManager;
 
     protected String[] getLibraries() {
+        if (isRenpy8Engine) {
+            return new String[] {
+                "837renpython",
+            };
+        }
+        if (isRenpy7Engine) {
+            return new String[] {
+                "rencompat",
+                "renpython",
+            };
+        }
         return new String[] {
                 "png16",
                 "SDL2",
@@ -187,6 +198,7 @@ public class PythonSDLActivity extends SDLActivity {
                 "python2.7",
                 "pymodules",
                 "main",
+                "rencompat",
         };
     }
 
@@ -406,23 +418,28 @@ public class PythonSDLActivity extends SDLActivity {
         }
 
         long unpackStart = System.currentTimeMillis();
-        String privateVersion = resourceManager.getString("private_version");
-        if (privateVersion != null) {
-            unpackData("private", path, privateVersion);
-        }
-        String publicVersion = resourceManager.getString("public_version");
-        if (publicVersion != null) {
-            unpackData("public", externalStorage, publicVersion);
+        if (!isRenpy7OrLater()) {
+            String privateVersion = resourceManager.getString("private_version");
+            if (privateVersion != null) {
+                unpackData("private", path, privateVersion);
+            }
+            String publicVersion = resourceManager.getString("public_version");
+            if (publicVersion != null) {
+                unpackData("public", externalStorage, publicVersion);
+            }
         }
         Log.v("python", "unpackData finished. Duration: " + (System.currentTimeMillis() - unpackStart) + "ms");
 
         nativeSetEnv("ANDROID_ARGUMENT", path.getAbsolutePath());
         nativeSetEnv("ANDROID_PRIVATE", path.getAbsolutePath());
         nativeSetEnv("ANDROID_MASBASE", path.getAbsolutePath());
-        nativeSetEnv("REQUESTS_CA_BUNDLE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
-        nativeSetEnv("SSL_CERT_FILE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
+        if (!isRenpy7OrLater()) {
+            nativeSetEnv("REQUESTS_CA_BUNDLE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
+            nativeSetEnv("SSL_CERT_FILE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
+        }
         if (customBaseDir != null && !customBaseDir.isEmpty()
                 && !customBaseDir.equals("monikaafterstory-masl-edition")) {
+            ExperimentsActivity.ensureDeandroidPatch(path);
             nativeSetEnv("ANDROID_PUBLIC", path.getAbsolutePath());
             nativeSetEnv("ANDROID_OLD_PUBLIC", path.getAbsolutePath());
         } else {
@@ -504,6 +521,10 @@ public class PythonSDLActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity837)) {
+            isRenpy7Engine = false;
+            isRenpy8Engine = false;
+        }
         mActivity = this;
         logLifecycle("onCreate()");
         Log.v("python", "onCreate() started");
