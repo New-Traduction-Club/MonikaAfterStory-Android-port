@@ -69,6 +69,7 @@ class Renpy7411InstallerTest {
         val runtime7411 = File(gameDir, ".runtime_7411.version").apply { writeText("7.4.11") }
         val runtime784 = File(gameDir, ".runtime_784.version").apply { writeText("7.8.4") }
         val runtime837 = File(gameDir, ".runtime_837.version").apply { writeText("8.3.7") }
+        val runtime841 = File(gameDir, ".runtime_841.version").apply { writeText("8.4.1") }
         val privateVer = File(gameDir, "private.version").apply { writeText("6.99") }
         val dotPrivateVer = File(gameDir, ".private.version").apply { writeText("6.99") }
         File(renpyDir, "__init__.py").writeText("# old renpy")
@@ -84,6 +85,7 @@ class Renpy7411InstallerTest {
         assertTrue(runtime7411.exists())
         assertTrue(runtime784.exists())
         assertTrue(runtime837.exists())
+        assertTrue(runtime841.exists())
         assertTrue(privateVer.exists())
         assertTrue(dotPrivateVer.exists())
 
@@ -99,6 +101,7 @@ class Renpy7411InstallerTest {
         assertFalse(runtime7411.exists())
         assertFalse(runtime784.exists())
         assertFalse(runtime837.exists())
+        assertFalse(runtime841.exists())
         assertFalse(privateVer.exists())
         assertFalse(dotPrivateVer.exists())
     }
@@ -109,6 +112,7 @@ class Renpy7411InstallerTest {
         assertEquals("7.4.11", ExperimentsActivity.RUNTIME_7411)
         assertEquals("7.8.4", ExperimentsActivity.RUNTIME_784)
         assertEquals("8.3.7", ExperimentsActivity.RUNTIME_837)
+        assertEquals("8.4.1", ExperimentsActivity.RUNTIME_841)
     }
 
     @Test

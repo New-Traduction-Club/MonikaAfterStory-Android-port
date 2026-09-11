@@ -74,6 +74,7 @@ object Renpy784Installer {
         File(gameDir, ".runtime_7411.version").delete()
         File(gameDir, ".runtime_784.version").delete()
         File(gameDir, ".runtime_837.version").delete()
+        File(gameDir, ".runtime_841.version").delete()
         File(gameDir, "private.version").delete()
         File(gameDir, ".private.version").delete()
     }

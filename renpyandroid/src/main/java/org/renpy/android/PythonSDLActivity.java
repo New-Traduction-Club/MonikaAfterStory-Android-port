@@ -177,6 +177,11 @@ public class PythonSDLActivity extends SDLActivity {
     ResourceManager resourceManager;
 
     protected String[] getLibraries() {
+        if (isRenpy841Engine) {
+            return new String[] {
+                "841renpython",
+            };
+        }
         if (isRenpy8Engine) {
             return new String[] {
                 "837renpython",
@@ -532,10 +537,11 @@ public class PythonSDLActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity837)) {
+        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity837) && !(this instanceof PythonSDLActivity841)) {
             isRenpy7Engine = false;
             isRenpy7411Engine = false;
             isRenpy8Engine = false;
+            isRenpy841Engine = false;
         }
         mActivity = this;
         logLifecycle("onCreate()");
@@ -756,6 +762,20 @@ public class PythonSDLActivity extends SDLActivity {
             startActivity(i);
         } catch (Exception e) {
             Log.e("python", "Failed to open URL: " + url, e);
+        }
+    }
+
+    public void openEditor(String file) {
+        try {
+            File f = new File(file);
+            Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                this, getPackageName() + ".fileprovider", f);
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setDataAndType(uri, "text/plain");
+            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+        } catch (Exception e) {
+            Log.e("python", "Failed to open editor for: " + file, e);
         }
     }
 
