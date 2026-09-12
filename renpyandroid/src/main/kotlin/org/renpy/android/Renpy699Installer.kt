@@ -79,6 +79,7 @@ object Renpy699Installer {
         File(gameDir, ".runtime_699.version").delete()
         File(gameDir, ".runtime_7411.version").delete()
         File(gameDir, ".runtime_784.version").delete()
+        File(gameDir, ".runtime_803.version").delete()
         File(gameDir, ".runtime_837.version").delete()
         File(gameDir, ".runtime_841.version").delete()
         File(gameDir, "private.version").delete()

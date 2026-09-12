@@ -187,6 +187,11 @@ public class PythonSDLActivity extends SDLActivity {
                 "837renpython",
             };
         }
+        if (isRenpy803Engine) {
+            return new String[] {
+                "803renpython",
+            };
+        }
         if (isRenpy7411Engine) {
             return new String[] {
                 "7411renpython",
@@ -446,7 +451,7 @@ public class PythonSDLActivity extends SDLActivity {
         nativeSetEnv("ANDROID_ARGUMENT", path.getAbsolutePath());
         nativeSetEnv("ANDROID_PRIVATE", path.getAbsolutePath());
         nativeSetEnv("ANDROID_MASBASE", path.getAbsolutePath());
-        if (isRenpy7411Engine) {
+        if (isRenpy7411Engine || isRenpy803Engine) {
             nativeSetEnv("ANDROID_PACK_FF1", path.getAbsolutePath());
         }
         if (!isRenpy7OrLater()) {
@@ -537,9 +542,10 @@ public class PythonSDLActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity837) && !(this instanceof PythonSDLActivity841)) {
+        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity803) && !(this instanceof PythonSDLActivity837) && !(this instanceof PythonSDLActivity841)) {
             isRenpy7Engine = false;
             isRenpy7411Engine = false;
+            isRenpy803Engine = false;
             isRenpy8Engine = false;
             isRenpy841Engine = false;
         }
@@ -605,32 +611,34 @@ public class PythonSDLActivity extends SDLActivity {
     /**
      * Called by Ren'Py to hide the presplash after start.
      */
-    public void hidePresplash() {
+    public static void hidePresplash() {
         Log.v("python", "hidePresplash() called");
-        final PythonSDLActivity activity = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (activity.mPresplash != null) {
-                    ViewGroup parent = (ViewGroup) activity.mPresplash.getParent();
-                    if (parent != null) {
-                        parent.removeView(activity.mPresplash);
+        final PythonSDLActivity activity = mActivity;
+        if (activity != null) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity.mPresplash != null) {
+                        ViewGroup parent = (ViewGroup) activity.mPresplash.getParent();
+                        if (parent != null) {
+                            parent.removeView(activity.mPresplash);
+                        }
+                        activity.mPresplash = null;
                     }
-                    activity.mPresplash = null;
-                }
 
-                if (activity.mProgressBar != null) {
-                    ViewGroup parent = (ViewGroup) activity.mProgressBar.getParent();
-                    if (parent != null) {
-                        parent.removeView(activity.mProgressBar);
+                    if (activity.mProgressBar != null) {
+                        ViewGroup parent = (ViewGroup) activity.mProgressBar.getParent();
+                        if (parent != null) {
+                            parent.removeView(activity.mProgressBar);
+                        }
+                        activity.mProgressBar = null;
                     }
-                    activity.mProgressBar = null;
-                }
 
-                activity.applyImmersiveFullscreen();
-                ToolboxManager.initialize(activity);
-            }
-        });
+                    activity.applyImmersiveFullscreen();
+                    ToolboxManager.initialize(activity);
+                }
+            });
+        }
     }
 
     @Override

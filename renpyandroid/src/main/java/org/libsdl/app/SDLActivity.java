@@ -42,11 +42,12 @@ public class SDLActivity extends Activity {
     public static boolean mExitCalledFromJava;
     public static boolean isRenpy7Engine = false;
     public static boolean isRenpy7411Engine = false;
+    public static boolean isRenpy803Engine = false;
     public static boolean isRenpy8Engine = false;
     public static boolean isRenpy841Engine = false;
 
     public static boolean isRenpy7OrLater() {
-        return isRenpy7Engine || isRenpy7411Engine || isRenpy8Engine || isRenpy841Engine;
+        return isRenpy7Engine || isRenpy7411Engine || isRenpy803Engine || isRenpy8Engine || isRenpy841Engine;
     }
 
     /** If shared libraries (e.g. SDL or the native application) could not be loaded. */
@@ -1380,6 +1381,8 @@ class SDLMain implements Runnable {
                 library = "lib841renpython.so";
             } else if (SDLActivity.isRenpy8Engine) {
                 library = "lib837renpython.so";
+            } else if (SDLActivity.isRenpy803Engine) {
+                library = "lib803renpython.so";
             } else if (SDLActivity.isRenpy7411Engine) {
                 library = "lib7411renpython.so";
             } else {
