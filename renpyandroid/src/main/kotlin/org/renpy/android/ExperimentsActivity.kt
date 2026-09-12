@@ -68,7 +68,13 @@ class ExperimentsActivity : GameWindowActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_experiments)
 
-        setTitle(R.string.title_experiments)
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val activeProfile = prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
+        if (activeProfile == ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER) {
+            setTitle(R.string.title_mine)
+        } else {
+            setTitle(R.string.title_experiments)
+        }
 
         rvExperiments = findViewById(R.id.rvExperiments)
         tvEmptyState = findViewById(R.id.tvEmptyState)

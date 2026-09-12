@@ -495,10 +495,11 @@
     <string name="migration_btn_okay">Okay</string>
     <string name="migration_dialog_warning">The migration is currently running. Closing this window now may corrupt your game files. Please wait until it finishes.</string>
 
+    <string name="title_mine" translatable="false">MINE</string>
     <!-- User Selection Strings -->
     <string name="user_selection_title_mas">MAS</string>
     <string name="user_selection_desc_mas">Recommended for MAS users.</string>
-    <string name="user_selection_title_renpy">Ren\'Py Launcher</string>
+    <string name="user_selection_title_renpy">MINE</string>
     <string name="user_selection_desc_renpy">The full experience to play Ren\'Py games.</string>
     <string name="user_selection_btn_login">Log in</string>
     <string name="user_selection_footer">Traduction Club\'s virtual desktop</string>

@@ -90,4 +90,66 @@ class ProfileNavigationTest {
         assertEquals("EN", ProfileNavigationHelper.getLanguageShortCode("Unknown"))
         assertEquals("EN", ProfileNavigationHelper.getLanguageShortCode(""))
     }
+
+    @Test
+    fun testMasProfileStartMenuItems() {
+        val pinned = ProfileNavigationHelper.getPinnedItems(ProfileNavigationHelper.PROFILE_MAS)
+        val expanded = ProfileNavigationHelper.getExpandedItems(ProfileNavigationHelper.PROFILE_MAS)
+
+        assertEquals(6, pinned.size)
+        assertEquals(
+            listOf("start_game", "internal_files", "import", "export", "settings", "toggle_expand"),
+            pinned.map { it.actionId }
+        )
+
+        assertEquals(9, expanded.size)
+        assertEquals(
+            listOf("external_files", "update_game", "extra_content", "discord_rpc", "backups", "wallpapers", "app_info", "experiments", "switch_user"),
+            expanded.map { it.actionId }
+        )
+        assertEquals(R.string.title_experiments, expanded[7].titleResId)
+    }
+
+    @Test
+    fun testRenpyProfileStartMenuItems() {
+        val pinned = ProfileNavigationHelper.getPinnedItems(ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
+        val expanded = ProfileNavigationHelper.getExpandedItems(ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
+
+        assertEquals(6, pinned.size)
+        assertEquals(
+            listOf("experiments", "internal_files", "external_files", "wallpapers", "settings", "toggle_expand"),
+            pinned.map { it.actionId }
+        )
+        assertEquals(R.string.title_mine, pinned[0].titleResId)
+
+        assertEquals(2, expanded.size)
+        assertEquals(
+            listOf("app_info", "switch_user"),
+            expanded.map { it.actionId }
+        )
+    }
+
+    @Test
+    fun testRenpyProfileExcludesMasItems() {
+        val pinned = ProfileNavigationHelper.getPinnedItems(ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
+        val expanded = ProfileNavigationHelper.getExpandedItems(ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
+        val allRenpyActions = (pinned + expanded).map { it.actionId }.toSet()
+
+        val excludedItems = listOf(
+            "start_game",
+            "import",
+            "export",
+            "update_game",
+            "extra_content",
+            "discord_rpc",
+            "backups"
+        )
+
+        for (excluded in excludedItems) {
+            assertFalse(
+                "Action $excluded should not be present in Ren'Py profile start menu",
+                allRenpyActions.contains(excluded)
+            )
+        }
+    }
 }

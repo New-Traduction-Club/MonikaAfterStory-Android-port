@@ -568,6 +568,8 @@ class LauncherActivity : BaseActivity() {
             intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
             val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
             prefs.edit().putString("active_user_profile", profile).apply()
+            updateStartMenuAdapter()
+            setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         }
         if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
             intent.removeExtra(EXTRA_FROM_LOGIN)
@@ -603,6 +605,8 @@ class LauncherActivity : BaseActivity() {
         intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
             intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
             prefs.edit().putString("active_user_profile", profile).apply()
+            updateStartMenuAdapter()
+            setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         }
 
         if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
@@ -680,7 +684,8 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun setupDynamicShortcuts(isSetupCompleted: Boolean) {
-        if (!isSetupCompleted) {
+        val activeProfile = getActiveProfile()
+        if (!isSetupCompleted || activeProfile != ProfileNavigationHelper.PROFILE_MAS) {
             ShortcutManagerCompat.removeAllDynamicShortcuts(this)
             return
         }
@@ -713,29 +718,18 @@ class LauncherActivity : BaseActivity() {
 
     private var isStartMenuExpanded = false
 
+    private fun getActiveProfile(): String {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        return prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
+            ?: ProfileNavigationHelper.PROFILE_MAS
+    }
+
     private fun getPinnedItems(): List<DesktopShortcut> {
-        return listOf(
-            DesktopShortcut(R.string.launcher_start_game, android.R.drawable.ic_media_play, "start_game"),
-            DesktopShortcut(R.string.label_internal_files, R.drawable.ic_launcher_internal, "internal_files"),
-            DesktopShortcut(R.string.launcher_import_button, R.drawable.ic_launcher_import, "import"),
-            DesktopShortcut(R.string.launcher_export_button, R.drawable.ic_launcher_export, "export"),
-            DesktopShortcut(R.string.launcher_settings, R.drawable.ic_launcher_settings, "settings"),
-            DesktopShortcut(R.string.launcher_all_programs, android.R.drawable.ic_menu_sort_by_size, "toggle_expand")
-        )
+        return ProfileNavigationHelper.getPinnedItems(getActiveProfile())
     }
 
     private fun getExpandedItems(): List<DesktopShortcut> {
-        return listOf(
-            DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
-            DesktopShortcut(R.string.launcher_update_game, R.drawable.ic_launcher_export, "update_game"),
-            DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
-            DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
-            DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
-            DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
-            DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
-            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments"),
-            DesktopShortcut(R.string.launcher_log_off, android.R.drawable.ic_lock_power_off, "switch_user")
-        )
+        return ProfileNavigationHelper.getExpandedItems(getActiveProfile())
     }
 
     private fun updateStartMenuAdapter() {
