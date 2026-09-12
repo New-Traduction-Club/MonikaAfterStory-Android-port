@@ -128,6 +128,16 @@
       android:launchMode="singleTop"
       android:supportsPictureInPicture="true" />
 
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity853"
+      android:exported="false"
+      android:process=":renpy853"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
 
 
 

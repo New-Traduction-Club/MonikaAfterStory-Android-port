@@ -29,7 +29,8 @@ class ExperimentsActivity : GameWindowActivity() {
         const val RUNTIME_803 = "8.0.3"
         const val RUNTIME_837 = "8.3.7"
         const val RUNTIME_841 = "8.4.1"
-        private val RUNTIME_OPTIONS = arrayOf("Ren'Py 6.99", "Ren'Py 7.4.11", "Ren'Py 7.8.4", "Ren'Py 8.0.3", "Ren'Py 8.3.7", "Ren'Py 8.4.1")
+        const val RUNTIME_853 = "8.5.3"
+        private val RUNTIME_OPTIONS = arrayOf("Ren'Py 6.99", "Ren'Py 7.4.11", "Ren'Py 7.8.4", "Ren'Py 8.0.3", "Ren'Py 8.3.7", "Ren'Py 8.4.1", "Ren'Py 8.5.3")
         const val EXCLUDED_MAS_DIR = "monikaafterstory-masl-edition"
         const val DEANDROID_RPY_CONTENT = "init -999 python:\n    renpy.android = False\n"
 
@@ -117,7 +118,7 @@ class ExperimentsActivity : GameWindowActivity() {
         if (!file.exists()) return null
         return try {
             val content = file.readText().trim()
-            if (content == RUNTIME_699 || content == RUNTIME_7411 || content == RUNTIME_784 || content == RUNTIME_803 || content == RUNTIME_837 || content == RUNTIME_841) content else null
+            if (content == RUNTIME_699 || content == RUNTIME_7411 || content == RUNTIME_784 || content == RUNTIME_803 || content == RUNTIME_837 || content == RUNTIME_841 || content == RUNTIME_853) content else null
         } catch (e: Exception) {
             null
         }
@@ -132,6 +133,7 @@ class ExperimentsActivity : GameWindowActivity() {
             File(gameFolder, ".runtime_803.version").delete()
             File(gameFolder, ".runtime_837.version").delete()
             File(gameFolder, ".runtime_841.version").delete()
+            File(gameFolder, ".runtime_853.version").delete()
             File(gameFolder, "private.version").delete()
             File(gameFolder, ".private.version").delete()
         } catch (e: Exception) {
@@ -142,6 +144,7 @@ class ExperimentsActivity : GameWindowActivity() {
     private fun showRuntimeSelectorDialog(gameFolder: File, onSelected: ((String) -> Unit)? = null) {
         val currentEngine = getGameEngine(gameFolder)
         var selectedIndex = when (currentEngine) {
+            RUNTIME_853 -> 6
             RUNTIME_841 -> 5
             RUNTIME_837 -> 4
             RUNTIME_803 -> 3
@@ -157,6 +160,7 @@ class ExperimentsActivity : GameWindowActivity() {
             }
             .setPositiveButton(getString(R.string.experiments_select)) { dialog, _ ->
                 val chosenEngine = when (selectedIndex) {
+                    6 -> RUNTIME_853
                     5 -> RUNTIME_841
                     4 -> RUNTIME_837
                     3 -> RUNTIME_803
@@ -182,6 +186,7 @@ class ExperimentsActivity : GameWindowActivity() {
         lifecycleScope.launch {
             val ok = withContext(Dispatchers.IO) {
                 when (engine) {
+                    RUNTIME_853 -> Renpy853Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
                     RUNTIME_841 -> Renpy841Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
                     RUNTIME_837 -> Renpy837Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
                     RUNTIME_803 -> Renpy803Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
@@ -193,6 +198,7 @@ class ExperimentsActivity : GameWindowActivity() {
 
             if (ok) {
                 val targetIntent = when (engine) {
+                    RUNTIME_853 -> Intent(this@ExperimentsActivity, PythonSDLActivity853::class.java)
                     RUNTIME_841 -> Intent(this@ExperimentsActivity, PythonSDLActivity841::class.java)
                     RUNTIME_837 -> Intent(this@ExperimentsActivity, PythonSDLActivity837::class.java)
                     RUNTIME_803 -> Intent(this@ExperimentsActivity, PythonSDLActivity803::class.java)

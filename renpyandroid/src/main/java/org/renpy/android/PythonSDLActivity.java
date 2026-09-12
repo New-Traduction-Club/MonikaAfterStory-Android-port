@@ -177,6 +177,11 @@ public class PythonSDLActivity extends SDLActivity {
     ResourceManager resourceManager;
 
     protected String[] getLibraries() {
+        if (isRenpy853Engine) {
+            return new String[] {
+                "853renpython",
+            };
+        }
         if (isRenpy841Engine) {
             return new String[] {
                 "841renpython",
@@ -542,12 +547,13 @@ public class PythonSDLActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity803) && !(this instanceof PythonSDLActivity837) && !(this instanceof PythonSDLActivity841)) {
+        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity803) && !(this instanceof PythonSDLActivity837) && !(this instanceof PythonSDLActivity841) && !(this instanceof PythonSDLActivity853)) {
             isRenpy7Engine = false;
             isRenpy7411Engine = false;
             isRenpy803Engine = false;
             isRenpy8Engine = false;
             isRenpy841Engine = false;
+            isRenpy853Engine = false;
         }
         mActivity = this;
         logLifecycle("onCreate()");
