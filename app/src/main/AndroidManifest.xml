@@ -27,7 +27,9 @@
     
     <activity
         android:name="org.renpy.android.SetupActivity"
-        android:exported="false" />
+        android:exported="false"
+        android:screenOrientation="sensorLandscape"
+        android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
 
     <activity
         android:name="org.renpy.android.DiscordLoginActivity"

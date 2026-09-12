@@ -1,9 +1,18 @@
 package org.renpy.android
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
+import android.util.DisplayMetrics
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -12,40 +21,63 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.view.WindowManager
+import com.google.android.material.color.DynamicColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.security.MessageDigest
-import java.util.zip.ZipFile
 import java.io.InputStream
-import java.io.BufferedOutputStream
-import java.io.BufferedInputStream
+import java.security.MessageDigest
+import java.util.Locale
+import java.util.zip.ZipFile
 import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.IntentFilter
-import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
-import android.os.Build
-import android.provider.OpenableColumns
-import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.google.android.material.color.DynamicColors
 
 class SetupActivity : BaseActivity() {
 
-    override val preferredOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+    override val preferredOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val language = prefs.getString("language", "English") ?: "English"
+        val locale = when (language) {
+            "Español" -> Locale("es")
+            "Português" -> Locale("pt")
+            else -> Locale.ENGLISH
+        }
+        Locale.setDefault(locale)
+
+        val config = Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+        val localeContext = newBase.createConfigurationContext(config)
+
+        val metrics = localeContext.resources.displayMetrics
+        val virtualHeight = 500f
+        val rawHeight = Math.min(metrics.widthPixels, metrics.heightPixels)
+        val targetDensity = rawHeight / virtualHeight
+        val targetDensityDpi = (targetDensity * DisplayMetrics.DENSITY_DEFAULT).toInt()
+
+        val dpiConfig = Configuration(localeContext.resources.configuration)
+        dpiConfig.densityDpi = targetDensityDpi
+        dpiConfig.fontScale = 1.0f
+
+        val finalContext = localeContext.createConfigurationContext(dpiConfig)
+        super.attachBaseContext(finalContext)
+    }
 
     private var ddlcUri: Uri? = null
     private var masUri: Uri? = null
     private var selectedPackage: PackageInfo? = null
-    
+
     private var deleteDdlcAfterInstall = false
     private var deleteMasAfterInstall = false
 
@@ -69,12 +101,13 @@ class SetupActivity : BaseActivity() {
     private lateinit var btnContinueAfterNotifications: Button
     private lateinit var tvNotificationPermissionStatus: TextView
     private lateinit var notificationPermissionBottomActions: View
-    
+
     private lateinit var btnLanguage: LinearLayout
     private lateinit var tvCurrentLanguage: TextView
 
     private val CHECKSUM_DDLC = "2a3dd7969a06729a32ace0a6ece5f2327e29bdf460b8b39e6a8b0875e545632e"
-    private val PACKAGES_JSON_URL = "https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-port/refs/heads/main/.utilityfiles/packages_list.json"
+    private val PACKAGES_JSON_URL =
+        "https://raw.githubusercontent.com/New-Traduction-Club/MonikaAfterStory-Android-port/refs/heads/main/.utilityfiles/packages_list.json"
 
     companion object {
         private const val TAG = "SetupActivity"
@@ -87,6 +120,21 @@ class SetupActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         DynamicColors.applyIfAvailable(this)
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && !isChromeOsDevice()) {
+            try {
+                window.attributes = window.attributes.apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    } else {
+                        @Suppress("DEPRECATION")
+                        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Unable to apply display cutout mode", e)
+            }
+        }
         setContentView(R.layout.activity_setup)
 
         if (savedInstanceState != null) {
@@ -117,7 +165,7 @@ class SetupActivity : BaseActivity() {
         btnContinueAfterNotifications = findViewById(R.id.btnContinueAfterNotifications)
         tvNotificationPermissionStatus = findViewById(R.id.tvNotificationPermissionStatus)
         notificationPermissionBottomActions = findViewById(R.id.notificationPermissionBottomActions)
-        
+
         btnLanguage = findViewById(R.id.btnLanguage)
         tvCurrentLanguage = findViewById(R.id.tvCurrentLanguage)
 
@@ -147,6 +195,41 @@ class SetupActivity : BaseActivity() {
                 Toast.makeText(this, getString(R.string.setup_error_missing_files), Toast.LENGTH_LONG).show()
             }
         }
+
+        enableImmersiveFullscreen()
+        window.decorView.post {
+            enableImmersiveFullscreen()
+        }
+    }
+
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            enableImmersiveFullscreen()
+            findViewById<View>(R.id.setupRoot)?.let { ViewCompat.requestApplyInsets(it) }
+        }
+    }
+
+    private fun enableImmersiveFullscreen() {
+        if (isChromeOsDevice()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let { controller ->
+                controller.hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
+                controller.systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    )
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -161,22 +244,23 @@ class SetupActivity : BaseActivity() {
     private val downloadReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent == null) return
-            
+
             when (intent.action) {
                 DownloadService.ACTION_DOWNLOAD_PROGRESS -> {
                     val progress = intent.getIntExtra(DownloadService.EXTRA_PROGRESS, 0)
                     val speed = intent.getStringExtra(DownloadService.EXTRA_SPEED) ?: ""
                     val eta = intent.getStringExtra(DownloadService.EXTRA_ETA) ?: ""
-                    
+
                     val currentBytes = intent.getLongExtra(DownloadService.EXTRA_CURRENT_BYTES, 0)
                     val totalBytes = intent.getLongExtra(DownloadService.EXTRA_TOTAL_BYTES, 0)
-                    
+
                     updateDownloadProgressUI(progress, speed, eta, currentBytes, totalBytes)
                 }
+
                 DownloadService.ACTION_DOWNLOAD_COMPLETE -> {
                     val success = intent.getBooleanExtra(DownloadService.EXTRA_SUCCESS, false)
                     val error = intent.getStringExtra(DownloadService.EXTRA_ERROR)
-                    
+
                     if (success) {
                         onDownloadComplete()
                     } else {
@@ -207,24 +291,26 @@ class SetupActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        
+        enableImmersiveFullscreen()
+        findViewById<View>(R.id.setupRoot)?.let { ViewCompat.requestApplyInsets(it) }
+
         // check shared prefs for status
         val prefs = getSharedPreferences(DownloadService.PREFS_NAME, MODE_PRIVATE)
         val status = prefs.getInt(DownloadService.KEY_STATUS, DownloadService.STATUS_IDLE)
         val error = prefs.getString(DownloadService.KEY_ERROR, null)
-        
+
         if (status == DownloadService.STATUS_RUNNING) {
-             isMasDownloadInProgress = true
-             layoutProgress.visibility = View.VISIBLE
-             setUiEnabled(false)
-             // Receiver will update ui
+            isMasDownloadInProgress = true
+            layoutProgress.visibility = View.VISIBLE
+            setUiEnabled(false)
+            // Receiver will update ui
         } else if (status == DownloadService.STATUS_COMPLETE && isMasDownloadInProgress) {
-             onDownloadComplete()
+            onDownloadComplete()
         } else if (status == DownloadService.STATUS_ERROR && isMasDownloadInProgress) {
-             onDownloadError(error)
+            onDownloadError(error)
         } else {
             // Idle or completed previously
-             if (masUri != null) {
+            if (masUri != null) {
                 val fileName = getFileName(masUri!!)
                 tvSelectedMAS.text = getString(R.string.setup_file_selected, fileName)
                 tvSelectedMAS.visibility = View.VISIBLE
@@ -264,27 +350,26 @@ class SetupActivity : BaseActivity() {
 
     private fun showLanguageDialog(cancelable: Boolean) {
         val languages = resources.getStringArray(R.array.languages)
-        
-        MaterialAlertDialogBuilder(this)
+
+        val builder = GameDialogBuilder(this)
             .setTitle(getString(R.string.select_language_title))
             .setItems(languages) { _, which ->
                 val selectedLang = languages[which]
                 val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-                
+
                 prefs.edit()
                     .putBoolean("setup_language_confirmed", true)
                     .putString("language", selectedLang)
                     .apply()
-                
+
                 recreate()
             }
             .setCancelable(cancelable)
-            .apply {
-                if (cancelable) {
-                    setNegativeButton(getString(R.string.cancel), null)
-                }
-            }
-            .show()
+
+        if (cancelable) {
+            builder.setNegativeButton(getString(R.string.cancel), null)
+        }
+        builder.show()
     }
 
     private fun openUrl(url: String) {
@@ -317,7 +402,7 @@ class SetupActivity : BaseActivity() {
                 tvSelectedMAS.visibility = View.VISIBLE
                 confirmDeleteZip(REQUEST_CODE_MAS)
             }
-            if (requestCode == REQUEST_CODE_MAS) deleteMasAfterInstall = false 
+            if (requestCode == REQUEST_CODE_MAS) deleteMasAfterInstall = false
             if (requestCode == REQUEST_CODE_DDLC) deleteDdlcAfterInstall = false
         }
     }
@@ -356,22 +441,22 @@ class SetupActivity : BaseActivity() {
 
     private fun startInstallation() {
         layoutProgress.visibility = View.VISIBLE
-        
+
         // Disable UI
         setUiEnabled(false)
-        
+
         progressBar.isIndeterminate = true
-        
+
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 withContext(Dispatchers.IO) {
                     processInstallation()
                 }
-                
+
                 tvProgress.text = getString(R.string.setup_complete)
                 progressBar.progress = 100
                 progressBar.isIndeterminate = false
-                
+
                 val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
                 prefs.edit()
                     .putBoolean("is_setup_completed", true)
@@ -379,7 +464,7 @@ class SetupActivity : BaseActivity() {
                     .apply()
 
                 Toast.makeText(this@SetupActivity, getString(R.string.setup_complete), Toast.LENGTH_SHORT).show()
-                
+
                 kotlinx.coroutines.delay(1000)
 
                 proceedAfterSetupInstall()
@@ -395,15 +480,15 @@ class SetupActivity : BaseActivity() {
 
     private fun setUiEnabled(enabled: Boolean) {
         val alpha = if (enabled) 1.0f else 0.5f
-        
+
         btnInstall.isEnabled = enabled
         btnInstall.alpha = alpha
-        
+
         findViewById<View>(R.id.btnDownloadDDLC).isEnabled = enabled
         findViewById<View>(R.id.btnSelectDDLC).isEnabled = enabled
         findViewById<View>(R.id.btnAutoDownloadMAS).isEnabled = enabled
         findViewById<View>(R.id.btnLanguage).isEnabled = enabled
-        
+
         findViewById<View>(R.id.btnDownloadDDLC).alpha = alpha
         findViewById<View>(R.id.btnSelectDDLC).alpha = alpha
         findViewById<View>(R.id.btnAutoDownloadMAS).alpha = alpha
@@ -411,50 +496,62 @@ class SetupActivity : BaseActivity() {
     }
 
     private fun setupEdgeToEdgeInsets() {
-        val setupScrollLeft = setupContentScroll.paddingLeft
-        val setupScrollTop = setupContentScroll.paddingTop
-        val setupScrollRight = setupContentScroll.paddingRight
-        val setupScrollBottom = setupContentScroll.paddingBottom
+        val titlebar = findViewById<View>(R.id.setupTitlebar)
+        val initialTitlebarStart = titlebar.paddingStart
+        val initialTitlebarEnd = titlebar.paddingEnd
+        val initialTitlebarTop = titlebar.paddingTop
+        val initialTitlebarBottom = titlebar.paddingBottom
 
-        ViewCompat.setOnApplyWindowInsetsListener(setupContentScroll) { view, windowInsets ->
-            val insets = windowInsets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            view.setPadding(
-                setupScrollLeft + insets.left,
-                setupScrollTop + insets.top,
-                setupScrollRight + insets.right,
-                setupScrollBottom + insets.bottom
-            )
-            windowInsets
-        }
+        val scroll = setupContentScroll
+        val initialScrollLeft = scroll.paddingLeft
+        val initialScrollTop = scroll.paddingTop
+        val initialScrollRight = scroll.paddingRight
+        val initialScrollBottom = scroll.paddingBottom
 
-        val permissionLeft = notificationPermissionScreen.paddingLeft
-        val permissionTop = notificationPermissionScreen.paddingTop
-        val permissionRight = notificationPermissionScreen.paddingRight
-        val permissionBottom = notificationPermissionScreen.paddingBottom
+        val permissionScreen = notificationPermissionScreen
+        val initialPermLeft = permissionScreen.paddingLeft
+        val initialPermTop = permissionScreen.paddingTop
+        val initialPermRight = permissionScreen.paddingRight
+        val initialPermBottom = permissionScreen.paddingBottom
 
-        ViewCompat.setOnApplyWindowInsetsListener(notificationPermissionScreen) { view, windowInsets ->
-            val insets = windowInsets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        val root = findViewById<View>(R.id.setupRoot)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, windowInsets ->
+            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+            val cutout = windowInsets.displayCutout
+
+            val safeLeft = Math.max(cutoutInsets.left, cutout?.safeInsetLeft ?: 0)
+            val safeRight = Math.max(cutoutInsets.right, cutout?.safeInsetRight ?: 0)
+
+            val isRtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+            val cutoutStart = if (isRtl) safeRight else safeLeft
+            val cutoutEnd = if (isRtl) safeLeft else safeRight
+
+            titlebar.setPaddingRelative(
+                initialTitlebarStart + cutoutStart,
+                initialTitlebarTop,
+                initialTitlebarEnd + cutoutEnd,
+                initialTitlebarBottom
             )
-            view.setPadding(
-                permissionLeft + insets.left,
-                permissionTop + insets.top,
-                permissionRight + insets.right,
-                permissionBottom
+
+            scroll.setPadding(
+                initialScrollLeft + safeLeft,
+                initialScrollTop,
+                initialScrollRight + safeRight,
+                initialScrollBottom
             )
-            windowInsets
+
+            permissionScreen.setPadding(
+                initialPermLeft + safeLeft,
+                initialPermTop,
+                initialPermRight + safeRight,
+                initialPermBottom
+            )
+
+            WindowInsetsCompat.CONSUMED
         }
     }
 
-    private fun setupNotificationPermissionScreenInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(notificationPermissionBottomActions) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, insets.bottom + 24)
-            windowInsets
-        }
-    }
+    private fun setupNotificationPermissionScreenInsets() {}
 
     private fun proceedAfterSetupInstall() {
         if (hasNotificationPermission()) {
@@ -528,11 +625,11 @@ class SetupActivity : BaseActivity() {
 
         // Verify and Extract DDLC
         updateStatus(getString(R.string.setup_progress_verifying))
-        
+
         if (!verifyChecksum(ddlcUri!!, CHECKSUM_DDLC)) {
             throw Exception(getString(R.string.setup_error_checksum, "DDLC"))
         }
-        
+
         val modChecksum = selectedPackage?.sha256
         if (modChecksum != null) {
             if (!verifyChecksum(masUri!!, modChecksum)) {
@@ -542,12 +639,12 @@ class SetupActivity : BaseActivity() {
 
         // Extract DDLC relevant files
         updateStatus(getString(R.string.setup_progress_extracting_ddlc))
-        
+
         var ddlcTempFile: File? = null
         try {
             ddlcTempFile = File(cacheDir, "ddlc_temp.zip")
             copyUriToFile(ddlcUri!!, ddlcTempFile)
-            
+
             ZipFile(ddlcTempFile).use { zip ->
                 val entries = zip.entries()
                 while (entries.hasMoreElements()) {
@@ -555,9 +652,9 @@ class SetupActivity : BaseActivity() {
                     val name = entry.name
                     if (!entry.isDirectory && name.contains("game/") && name.endsWith(".rpa")) {
                         val fileName = File(name).name
-                        
+
                         val targetFile = File(gameDir, fileName)
-                        
+
                         zip.getInputStream(entry).use { input ->
                             FileOutputStream(targetFile).use { output ->
                                 input.copyTo(output)
@@ -576,7 +673,7 @@ class SetupActivity : BaseActivity() {
 
         // Extract Mod
         updateStatus(getString(R.string.setup_progress_extracting_mas))
-        
+
         var modTempFile: File? = null
         try {
             // Check if masUri is already a file we created (downloaded)
@@ -592,10 +689,10 @@ class SetupActivity : BaseActivity() {
                 while (entries.hasMoreElements()) {
                     val entry = entries.nextElement()
                     val name = entry.name
-                    
+
                     if (name.startsWith("game/") || name.startsWith("characters/")) {
                         val targetFile = File(installDir, name)
-                        
+
                         if (entry.isDirectory) {
                             targetFile.mkdirs()
                         } else {
@@ -610,21 +707,21 @@ class SetupActivity : BaseActivity() {
                 }
             }
         } finally {
-             if (masUri!!.scheme != "file") {
-                 modTempFile?.delete()
-             }
+            if (masUri!!.scheme != "file") {
+                modTempFile?.delete()
+            }
         }
 
         if (deleteMasAfterInstall && masUri != null) {
             deleteFile(masUri!!)
         }
-        
+
         // Finalizing
         updateStatus(getString(R.string.setup_progress_finalizing))
     }
 
     private fun confirmDeleteZip(requestCode: Int) {
-        MaterialAlertDialogBuilder(this)
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.setup_confirm_delete_zip_title))
             .setMessage(getString(R.string.setup_confirm_delete_zip_message))
             .setPositiveButton(getString(R.string.yes)) { _, _ ->
@@ -640,8 +737,12 @@ class SetupActivity : BaseActivity() {
 
     private fun checkAndStartDownload() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                MaterialAlertDialogBuilder(this)
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                GameDialogBuilder(this)
                     .setTitle(getString(R.string.permission_notification_title))
                     .setMessage(getString(R.string.permission_notification_message))
                     .setPositiveButton(getString(R.string.yes)) { _, _ ->
@@ -676,7 +777,8 @@ class SetupActivity : BaseActivity() {
             setUiEnabled(true)
 
             if (packages.isEmpty()) {
-                Toast.makeText(this@SetupActivity, getString(R.string.setup_error_fetching_packages), Toast.LENGTH_LONG).show()
+                Toast.makeText(this@SetupActivity, getString(R.string.setup_error_fetching_packages), Toast.LENGTH_LONG)
+                    .show()
                 return@launch
             }
 
@@ -686,8 +788,8 @@ class SetupActivity : BaseActivity() {
 
     private fun showVersionSelectionDialog(packages: List<PackageInfo>) {
         val versions = packages.map { it.version }.toTypedArray()
-        
-        MaterialAlertDialogBuilder(this)
+
+        GameDialogBuilder(this)
             .setTitle(getString(R.string.setup_select_version_title))
             .setItems(versions) { _, which ->
                 val selected = packages[which]
@@ -711,7 +813,7 @@ class SetupActivity : BaseActivity() {
         }
 
         if (currentAppVersionCode < packageInfo.min_app_version) {
-            MaterialAlertDialogBuilder(this)
+            GameDialogBuilder(this)
                 .setTitle(getString(R.string.setup_error))
                 .setMessage(getString(R.string.setup_error_incompatible_version, packageInfo.min_app_version))
                 .setPositiveButton(getString(R.string.action_ok), null)
@@ -729,35 +831,43 @@ class SetupActivity : BaseActivity() {
             REQUEST_PERMISSION_NOTIFICATIONS_DOWNLOAD -> {
                 fetchAndSelectVersion()
             }
+
             REQUEST_PERMISSION_NOTIFICATIONS_SETUP -> {
                 refreshNotificationPermissionUi()
             }
         }
     }
 
-    private fun updateDownloadProgressUI(progress: Int, speed: String, eta: String, currentBytes: Long, totalBytes: Long) {
+    private fun updateDownloadProgressUI(
+        progress: Int,
+        speed: String,
+        eta: String,
+        currentBytes: Long,
+        totalBytes: Long
+    ) {
         layoutProgress.visibility = View.VISIBLE
         setUiEnabled(false)
         if (totalBytes > 0) {
             progressBar.isIndeterminate = false
             progressBar.progress = progress
-            
+
             val currentSize = formatBytes(currentBytes)
             val totalSize = formatBytes(totalBytes)
-            
-            tvProgress.text = getString(R.string.setup_download_progress_full, progress, currentSize, totalSize, speed, eta)
+
+            tvProgress.text =
+                getString(R.string.setup_download_progress_full, progress, currentSize, totalSize, speed, eta)
         } else {
-             progressBar.isIndeterminate = true
-             val currentSize = formatBytes(currentBytes)
-             tvProgress.text = getString(R.string.setup_download_progress_indeterminate, currentSize, speed)
+            progressBar.isIndeterminate = true
+            val currentSize = formatBytes(currentBytes)
+            tvProgress.text = getString(R.string.setup_download_progress_indeterminate, currentSize, speed)
         }
     }
 
     private fun formatBytes(bytes: Long): String {
         return if (bytes > 1024 * 1024) {
-             String.format("%.1f MB", bytes / (1024f * 1024f))
+            String.format("%.1f MB", bytes / (1024f * 1024f))
         } else {
-             String.format("%.1f KB", bytes / 1024f)
+            String.format("%.1f KB", bytes / 1024f)
         }
     }
 
@@ -768,10 +878,10 @@ class SetupActivity : BaseActivity() {
         tvSelectedMAS.text = getString(R.string.setup_file_selected, destFile.name)
         tvSelectedMAS.visibility = View.VISIBLE
         deleteMasAfterInstall = true
-        
+
         layoutProgress.visibility = View.GONE
         setUiEnabled(true)
-        
+
         Toast.makeText(this, getString(R.string.notification_download_complete), Toast.LENGTH_SHORT).show()
     }
 
@@ -785,26 +895,26 @@ class SetupActivity : BaseActivity() {
     private fun downloadMod() {
         if (isMasDownloadInProgress) return
         val downloadUrl = selectedPackage?.download_url ?: return
-        
+
         isMasDownloadInProgress = true
         layoutProgress.visibility = View.VISIBLE
         setUiEnabled(false)
         tvProgress.text = getString(R.string.setup_downloading_mod)
         progressBar.progress = 0
         progressBar.isIndeterminate = true
-        
+
         val destFile = File(filesDir, "mod_temp.zip")
-        
+
         // Reset status
         val prefs = getSharedPreferences(DownloadService.PREFS_NAME, MODE_PRIVATE)
         prefs.edit().putInt(DownloadService.KEY_STATUS, DownloadService.STATUS_IDLE).apply()
-        
+
         val intent = Intent(this, DownloadService::class.java).apply {
             action = DownloadService.ACTION_START_DOWNLOAD
             putExtra(DownloadService.EXTRA_URL, downloadUrl)
             putExtra(DownloadService.EXTRA_DEST_PATH, destFile.absolutePath)
         }
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
@@ -831,9 +941,9 @@ class SetupActivity : BaseActivity() {
 
     private fun copyUriToFile(uri: Uri, destFile: File) {
         contentResolver.openInputStream(uri)?.use { input ->
-             FileOutputStream(destFile).use { output ->
-                 input.copyTo(output)
-             }
+            FileOutputStream(destFile).use { output ->
+                input.copyTo(output)
+            }
         } ?: throw Exception("Cannot open input stream for URI: $uri")
     }
 
@@ -848,12 +958,12 @@ class SetupActivity : BaseActivity() {
         val digest = MessageDigest.getInstance("SHA-256")
         val buffer = ByteArray(8192)
         var bytesRead: Int
-        
+
         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
             digest.update(buffer, 0, bytesRead)
         }
         inputStream.close()
-        
+
         val hashBytes = digest.digest()
         val sb = StringBuilder()
         for (b in hashBytes) {

@@ -20,12 +20,17 @@ abstract class BaseActivity : AppCompatActivity() {
         OrientationPolicy.applyRequestedOrientation(this, preferredOrientation)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !isChromeOsDevice()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && !isChromeOsDevice()) {
             try {
                 window.attributes = window.attributes.apply {
-                    layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    } else {
+                        @Suppress("DEPRECATION")
+                        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    }
                 }
-            } catch (e: IllegalArgumentException) {
+            } catch (e: Exception) {
                 Log.w("BaseActivity", "Unable to apply display cutout mode", e)
             }
         }
