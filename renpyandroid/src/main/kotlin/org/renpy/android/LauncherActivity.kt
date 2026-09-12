@@ -760,10 +760,6 @@ class LauncherActivity : BaseActivity() {
             startBootSequence()
         } else {
             ensureStartMenuVisible()
-            lifecycleScope.launch {
-                delay(300)
-                checkAndPromptMigration()
-            }
         }
     }
 
@@ -865,15 +861,13 @@ class LauncherActivity : BaseActivity() {
                     lifecycleScope.launch {
                         delay(1000)
                         showStartMenuAnimated()
-                        delay(600)
-                        checkAndPromptMigration()
                     }
                 }
                 .start()
         }
     }
 
-    private fun checkAndPromptMigration() {
+    private fun checkAndPromptMigration(): Boolean {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val isMigrated = prefs.getBoolean("user_migrated_masl", false)
         if (!isMigrated) {
@@ -881,7 +875,9 @@ class LauncherActivity : BaseActivity() {
                 val intent = Intent(this, MigrationActivity::class.java)
                 launchActivityWindow(intent, MigrationActivity::class.java.name)
             }
+            return false
         }
+        return true
     }
 
     private fun generateHexDumpLine(offset: Int, bytesPerLine: Int = 16): String {
@@ -1069,14 +1065,11 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun checkLanguageAndStartGame() {
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val isMigrated = prefs.getBoolean("user_migrated_masl", false)
-        if (!isMigrated) {
-            val intent = Intent(this, MigrationActivity::class.java)
-            launchActivityWindow(intent, MigrationActivity::class.java.name)
+        if (!checkAndPromptMigration()) {
             return
         }
 
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val language = prefs.getString("language", "English") ?: "English"
         val skipWarning = prefs.getBoolean("skip_language_warning", true)
 
@@ -1505,12 +1498,7 @@ class LauncherActivity : BaseActivity() {
             }
 
             runOnUiThread {
-                val isMigrated = getSharedPreferences("app_prefs", MODE_PRIVATE).getBoolean("user_migrated_masl", false)
-                if (!isMigrated) {
-                    launchActivityWindow(
-                        Intent(this@LauncherActivity, MigrationActivity::class.java),
-                        MigrationActivity::class.java.name
-                    )
+                if (!checkAndPromptMigration()) {
                     return@runOnUiThread
                 }
 
