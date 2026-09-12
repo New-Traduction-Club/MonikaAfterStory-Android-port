@@ -71,6 +71,17 @@ class BlurGlassView @JvmOverloads constructor(
         cornerRadiusPx = cornerRadiusDp * resources.displayMetrics.density
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val wMode = MeasureSpec.getMode(widthMeasureSpec)
+        val hMode = MeasureSpec.getMode(heightMeasureSpec)
+        val wSize = MeasureSpec.getSize(widthMeasureSpec)
+        val hSize = MeasureSpec.getSize(heightMeasureSpec)
+
+        val w = if (wMode == MeasureSpec.EXACTLY) wSize else 0
+        val h = if (hMode == MeasureSpec.EXACTLY) hSize else 0
+        setMeasuredDimension(w, h)
+    }
+
     fun setupWith(rootView: View) {
         targetRootRef = WeakReference(rootView)
         removePreDrawListener()

@@ -72,6 +72,7 @@ class LauncherActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_FROM_LOGIN = "extra_from_login"
+        const val EXTRA_LOGGED_IN_PROFILE = "extra_logged_in_profile"
         private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
         private const val REQUEST_CODE_EXPORT_SAVES = 2001
         private const val REQUEST_CODE_IMPORT_SAVES = 2002
@@ -356,25 +357,14 @@ class LauncherActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-
-        // Check if Setup is completed
-        val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
-        if (!isSetupCompleted) {
-            startActivity(Intent(this, SetupActivity::class.java))
-            finish()
-            return
+        intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
+            intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
+            prefs.edit().putString("active_user_profile", profile).apply()
         }
 
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
         currentLanguage = prefs.getString("language", "English") ?: "English"
         bootSequenceCompleted = savedInstanceState?.getBoolean(STATE_BOOT_SEQUENCE_COMPLETED, false) ?: false
-
-        val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
-        val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
-
-        if (isFirstLaunch && !setupConfirmed) {
-            showLanguageSelectionDialog()
-        }
 
         createLanguageFile(currentLanguage)
 
@@ -574,6 +564,11 @@ class LauncherActivity : BaseActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleShortcutIntent(intent)
+        intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
+            intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
+            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+            prefs.edit().putString("active_user_profile", profile).apply()
+        }
         if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
             intent.removeExtra(EXTRA_FROM_LOGIN)
             resetStartMenuState()
@@ -604,6 +599,11 @@ class LauncherActivity : BaseActivity() {
         }
 
         SoundEffects.initialize(this)
+
+        intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
+            intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
+            prefs.edit().putString("active_user_profile", profile).apply()
+        }
 
         if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
             intent.removeExtra(EXTRA_FROM_LOGIN)
@@ -1095,11 +1095,17 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun checkLanguageAndStartGame() {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
+        if (!isSetupCompleted) {
+            startActivity(Intent(this, SetupActivity::class.java))
+            return
+        }
+
         if (!checkAndPromptMigration()) {
             return
         }
 
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val language = prefs.getString("language", "English") ?: "English"
         val skipWarning = prefs.getBoolean("skip_language_warning", true)
 
@@ -1322,6 +1328,9 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun executeLogOff() {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        prefs.edit().remove("active_user_profile").apply()
+
         resetStartMenuState()
         binding.startMenuPanel.clearAnimation()
         binding.startMenuPanel.visibility = View.GONE

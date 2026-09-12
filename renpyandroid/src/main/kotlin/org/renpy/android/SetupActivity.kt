@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -196,6 +197,12 @@ class SetupActivity : BaseActivity() {
             }
         }
 
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                cleanupAndExit()
+            }
+        })
+
         enableImmersiveFullscreen()
         window.decorView.post {
             enableImmersiveFullscreen()
@@ -338,10 +345,6 @@ class SetupActivity : BaseActivity() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val currentLang = prefs.getString("language", "English") ?: "English"
         tvCurrentLanguage.text = currentLang
-
-        if (!prefs.getBoolean("setup_language_confirmed", false)) {
-            showLanguageDialog(false)
-        }
 
         btnLanguage.setOnClickListener {
             showLanguageDialog(true)
@@ -612,9 +615,35 @@ class SetupActivity : BaseActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    private fun cleanupAndExit() {
+        isMasDownloadInProgress = false
+        try {
+            stopService(Intent(this, DownloadService::class.java))
+        } catch (_: Exception) {}
+
+        val filesToDelete = ProfileNavigationHelper.getTempFilesToDelete(filesDir, cacheDir)
+        for (file in filesToDelete) {
+            try {
+                if (file.exists()) {
+                    file.delete()
+                }
+            } catch (_: Exception) {}
+        }
+        setResult(Activity.RESULT_CANCELED)
+        finish()
+    }
+
     private fun launchLauncher() {
-        val intent = Intent(this@SetupActivity, LauncherActivity::class.java)
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        prefs.edit().putString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS).apply()
+
+        val intent = Intent(this@SetupActivity, LauncherActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            putExtra(LauncherActivity.EXTRA_FROM_LOGIN, true)
+            putExtra(LauncherActivity.EXTRA_LOGGED_IN_PROFILE, ProfileNavigationHelper.PROFILE_MAS)
+        }
         startActivity(intent)
+        setResult(Activity.RESULT_OK)
         finish()
     }
 

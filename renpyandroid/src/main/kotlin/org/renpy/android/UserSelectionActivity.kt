@@ -1,8 +1,10 @@
 package org.renpy.android
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -14,8 +16,12 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
@@ -83,6 +89,18 @@ class UserSelectionActivity : BaseActivity() {
     private lateinit var tvDate: TextView
     private lateinit var ivBattery: ImageView
     private lateinit var tvBatteryPercentage: TextView
+    private lateinit var layoutLanguageContainer: LinearLayout
+    private lateinit var cardLanguageMenu: MaterialCardView
+    private lateinit var blurLanguageMenu: BlurGlassView
+    private lateinit var cardLanguageButton: MaterialCardView
+    private lateinit var blurLanguageButton: BlurGlassView
+    private lateinit var tvCurrentLanguage: TextView
+    private lateinit var ivLanguageChevron: ImageView
+    private lateinit var viewLanguageDismissOverlay: View
+    private lateinit var ivCheckEnglish: ImageView
+    private lateinit var ivCheckSpanish: ImageView
+    private lateinit var ivCheckPortuguese: ImageView
+    private var isLanguageMenuOpen: Boolean = false
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -91,6 +109,12 @@ class UserSelectionActivity : BaseActivity() {
     }
 
     private var clockJob: Job? = null
+
+    private val setupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            finish()
+        }
+    }
 
     companion object {
         private const val TAG = "UserSelectionActivity"
@@ -127,18 +151,36 @@ class UserSelectionActivity : BaseActivity() {
         tvDate = findViewById(R.id.tvDate)
         ivBattery = findViewById(R.id.ivBattery)
         tvBatteryPercentage = findViewById(R.id.tvBatteryPercentage)
+        layoutLanguageContainer = findViewById(R.id.layoutLanguageContainer)
+        cardLanguageMenu = findViewById(R.id.cardLanguageMenu)
+        blurLanguageMenu = findViewById(R.id.blurLanguageMenu)
+        cardLanguageButton = findViewById(R.id.cardLanguageButton)
+        blurLanguageButton = findViewById(R.id.blurLanguageButton)
+        tvCurrentLanguage = findViewById(R.id.tvCurrentLanguage)
+        ivLanguageChevron = findViewById(R.id.ivLanguageChevron)
+        viewLanguageDismissOverlay = findViewById(R.id.viewLanguageDismissOverlay)
+        ivCheckEnglish = findViewById(R.id.ivCheckEnglish)
+        ivCheckSpanish = findViewById(R.id.ivCheckSpanish)
+        ivCheckPortuguese = findViewById(R.id.ivCheckPortuguese)
 
         val root = findViewById<View>(R.id.userSelectionRoot)
         WallpaperManager.applyWallpaper(this, root)
         blurUserMas.setupWith(root)
         blurUserRenpy.setupWith(root)
+        blurLanguageMenu.setupWith(root)
+        blurLanguageButton.setupWith(root)
 
         setupEdgeToEdgeInsets()
         setupProfileInteractions()
+        setupLanguageSelector()
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                moveTaskToBack(true)
+                if (isLanguageMenuOpen) {
+                    closeLanguageMenuAnimated()
+                } else {
+                    moveTaskToBack(true)
+                }
             }
         })
 
@@ -155,6 +197,11 @@ class UserSelectionActivity : BaseActivity() {
         val initialRight = content.paddingRight
         val initialBottom = content.paddingBottom
 
+        val langContainer = findViewById<View>(R.id.layoutLanguageContainer)
+        val langMarginParams = langContainer.layoutParams as? FrameLayout.LayoutParams
+        val initialLangMarginEnd = langMarginParams?.marginEnd ?: 0
+        val initialLangMarginBottom = langMarginParams?.bottomMargin ?: 0
+
         val root = findViewById<View>(R.id.userSelectionRoot)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, windowInsets ->
             val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
@@ -162,6 +209,7 @@ class UserSelectionActivity : BaseActivity() {
 
             val safeLeft = Math.max(cutoutInsets.left, cutout?.safeInsetLeft ?: 0)
             val safeRight = Math.max(cutoutInsets.right, cutout?.safeInsetRight ?: 0)
+            val safeBottom = Math.max(cutoutInsets.bottom, cutout?.safeInsetBottom ?: 0)
 
             content.setPadding(
                 initialLeft + safeLeft,
@@ -169,6 +217,12 @@ class UserSelectionActivity : BaseActivity() {
                 initialRight + safeRight,
                 initialBottom
             )
+
+            langMarginParams?.let { params ->
+                params.marginEnd = initialLangMarginEnd + safeRight
+                params.bottomMargin = initialLangMarginBottom + safeBottom
+                langContainer.layoutParams = params
+            }
 
             WindowInsetsCompat.CONSUMED
         }
@@ -194,13 +248,36 @@ class UserSelectionActivity : BaseActivity() {
 
             lifecycleScope.launch {
                 delay(1800L)
-                val intent = Intent(this@UserSelectionActivity, LauncherActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                    putExtra(LauncherActivity.EXTRA_FROM_LOGIN, true)
+                val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
+
+                val profileName = if (selectedProfile == UserProfile.MAS) {
+                    ProfileNavigationHelper.PROFILE_MAS
+                } else {
+                    ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER
                 }
-                startActivity(intent)
-                applyFadeTransition()
-                finish()
+
+                val target = ProfileNavigationHelper.determineLoginTarget(profileName, isSetupCompleted)
+                if (target == ProfileNavigationHelper.NavigationTarget.SETUP) {
+                    spinnerLogIn.visibility = View.GONE
+                    btnLogIn.isClickable = true
+                    btnLogIn.setText(R.string.user_selection_btn_login)
+
+                    val intent = Intent(this@UserSelectionActivity, SetupActivity::class.java)
+                    setupLauncher.launch(intent)
+                    applyFadeTransition()
+                } else {
+                    prefs.edit().putString("active_user_profile", profileName).apply()
+
+                    val intent = Intent(this@UserSelectionActivity, LauncherActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        putExtra(LauncherActivity.EXTRA_FROM_LOGIN, true)
+                        putExtra(LauncherActivity.EXTRA_LOGGED_IN_PROFILE, profileName)
+                    }
+                    startActivity(intent)
+                    applyFadeTransition()
+                    finish()
+                }
             }
         }
     }
@@ -277,11 +354,23 @@ class UserSelectionActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        if (prefs.getBoolean("is_setup_completed", false) && prefs.getString("active_user_profile", null) == ProfileNavigationHelper.PROFILE_MAS) {
+            finish()
+            return
+        }
+
+        btnLogIn.isClickable = true
+        btnLogIn.setText(R.string.user_selection_btn_login)
+        spinnerLogIn.visibility = View.GONE
+
         enableImmersiveFullscreen()
         findViewById<View>(R.id.userSelectionRoot)?.let { ViewCompat.requestApplyInsets(it) }
         startClock()
         blurUserMas.refreshBlur()
         blurUserRenpy.refreshBlur()
+        blurLanguageMenu.refreshBlur()
+        blurLanguageButton.refreshBlur()
         registerBatteryReceiver()
     }
 
@@ -377,6 +466,132 @@ class UserSelectionActivity : BaseActivity() {
                             or View.SYSTEM_UI_FLAG_FULLSCREEN
                             or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                     )
+        }
+    }
+
+    private fun setupLanguageSelector() {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val currentLang = prefs.getString("language", "English") ?: "English"
+        tvCurrentLanguage.text = ProfileNavigationHelper.getLanguageShortCode(currentLang)
+        updateLanguageCheckmarks(currentLang)
+
+        cardLanguageButton.setOnClickListener {
+            SoundEffects.playClick(this)
+            if (isLanguageMenuOpen) {
+                closeLanguageMenuAnimated()
+            } else {
+                openLanguageMenuAnimated()
+            }
+        }
+
+        viewLanguageDismissOverlay.setOnClickListener {
+            closeLanguageMenuAnimated()
+        }
+
+        findViewById<View>(R.id.itemLangEnglish).setOnClickListener {
+            selectLanguage("English")
+        }
+
+        findViewById<View>(R.id.itemLangSpanish).setOnClickListener {
+            selectLanguage("Español")
+        }
+
+        findViewById<View>(R.id.itemLangPortuguese).setOnClickListener {
+            selectLanguage("Português")
+        }
+    }
+
+    private fun updateLanguageCheckmarks(selectedLang: String) {
+        ivCheckEnglish.visibility = if (selectedLang == "English") View.VISIBLE else View.GONE
+        ivCheckSpanish.visibility = if (selectedLang == "Español") View.VISIBLE else View.GONE
+        ivCheckPortuguese.visibility = if (selectedLang == "Português") View.VISIBLE else View.GONE
+    }
+
+    private fun openLanguageMenuAnimated() {
+        if (isLanguageMenuOpen) return
+        isLanguageMenuOpen = true
+        viewLanguageDismissOverlay.visibility = View.VISIBLE
+
+        cardLanguageMenu.clearAnimation()
+        cardLanguageMenu.visibility = View.INVISIBLE
+        cardLanguageMenu.post {
+            val slideDistance = resources.displayMetrics.density * 24f
+            cardLanguageMenu.translationY = slideDistance
+            cardLanguageMenu.alpha = 0f
+            cardLanguageMenu.visibility = View.VISIBLE
+
+            cardLanguageMenu.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(220)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+
+            ivLanguageChevron.animate()
+                .rotation(0f)
+                .setDuration(220)
+                .start()
+        }
+    }
+
+    private fun closeLanguageMenuAnimated(onEnd: (() -> Unit)? = null) {
+        if (!isLanguageMenuOpen && cardLanguageMenu.visibility != View.VISIBLE) {
+            onEnd?.invoke()
+            return
+        }
+        isLanguageMenuOpen = false
+        viewLanguageDismissOverlay.visibility = View.GONE
+
+        cardLanguageMenu.clearAnimation()
+        val slideDistance = resources.displayMetrics.density * 18f
+
+        cardLanguageMenu.animate()
+            .translationY(slideDistance)
+            .alpha(0f)
+            .setDuration(160)
+            .setInterpolator(AccelerateInterpolator())
+            .withEndAction {
+                cardLanguageMenu.visibility = View.GONE
+                cardLanguageMenu.translationY = 0f
+                onEnd?.invoke()
+            }
+            .start()
+
+        ivLanguageChevron.animate()
+            .rotation(180f)
+            .setDuration(160)
+            .start()
+    }
+
+    private fun selectLanguage(lang: String) {
+        SoundEffects.playClick(this)
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val currentLang = prefs.getString("language", "English") ?: "English"
+
+        if (lang == currentLang) {
+            closeLanguageMenuAnimated()
+            return
+        }
+
+        updateLanguageCheckmarks(lang)
+        closeLanguageMenuAnimated {
+            prefs.edit()
+                .putString("language", lang)
+                .putBoolean("setup_language_confirmed", true)
+                .putBoolean("is_first_launch", false)
+                .apply()
+
+            val locale = when (lang) {
+                "Español" -> Locale("es")
+                "Português" -> Locale("pt")
+                else -> Locale.ENGLISH
+            }
+            Locale.setDefault(locale)
+
+            val intent = Intent(this@UserSelectionActivity, UserSelectionActivity::class.java)
+            finish()
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
     }
 }
