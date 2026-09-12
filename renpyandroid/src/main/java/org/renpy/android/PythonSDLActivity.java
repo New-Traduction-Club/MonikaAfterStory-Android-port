@@ -97,8 +97,10 @@ public class PythonSDLActivity extends SDLActivity {
             if (DesktopWindowManager.ACTION_WINDOW_COMMAND.equals(intent.getAction())) {
                 String targetId = intent.getStringExtra(DesktopWindowManager.EXTRA_ACTIVITY_ID);
                 String command = intent.getStringExtra(DesktopWindowManager.EXTRA_COMMAND);
-                if (targetId != null && targetId.equals(PythonSDLActivity.this.getClass().getName())) {
-                    if (mWindowDecorator != null) {
+                if (targetId != null && (targetId.equals(PythonSDLActivity.this.getClass().getName()) || "ALL".equals(targetId))) {
+                    if (DesktopWindowManager.COMMAND_CLOSE.equals(command) || "CLOSE".equals(command)) {
+                        finish();
+                    } else if (mWindowDecorator != null) {
                         if ("MINIMIZE".equals(command)) {
                             mWindowDecorator.minimizeWindow();
                         } else if ("RESTORE".equals(command)) {

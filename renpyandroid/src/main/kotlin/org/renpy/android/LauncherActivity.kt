@@ -71,6 +71,7 @@ import java.util.concurrent.TimeUnit
 class LauncherActivity : BaseActivity() {
 
     companion object {
+        const val EXTRA_FROM_LOGIN = "extra_from_login"
         private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
         private const val REQUEST_CODE_EXPORT_SAVES = 2001
         private const val REQUEST_CODE_IMPORT_SAVES = 2002
@@ -455,13 +456,16 @@ class LauncherActivity : BaseActivity() {
 
         binding.btnStartMenu.setOnClickListener {
             SoundEffects.playClick(this)
-            isStartMenuExpanded = false
-            hideExpandedMenuAnimated()
             if (binding.startMenuPanel.visibility == View.VISIBLE) {
+                isStartMenuExpanded = false
+                hideExpandedMenuAnimated()
                 binding.startMenuPanel.animate()
                     .translationY(binding.startMenuPanel.height.toFloat())
                     .setDuration(220)
-                    .withEndAction { binding.startMenuPanel.visibility = View.GONE }
+                    .withEndAction {
+                        binding.startMenuPanel.visibility = View.GONE
+                        resetStartMenuState()
+                    }
                     .start()
             } else {
                 showStartMenuAnimated()
@@ -568,7 +572,16 @@ class LauncherActivity : BaseActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handleShortcutIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
+            intent.removeExtra(EXTRA_FROM_LOGIN)
+            resetStartMenuState()
+            lifecycleScope.launch {
+                delay(300)
+                showStartMenuAnimated()
+            }
+        }
     }
 
 
@@ -591,6 +604,15 @@ class LauncherActivity : BaseActivity() {
         }
 
         SoundEffects.initialize(this)
+
+        if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
+            intent.removeExtra(EXTRA_FROM_LOGIN)
+            resetStartMenuState()
+            lifecycleScope.launch {
+                delay(300)
+                showStartMenuAnimated()
+            }
+        }
 
         if (returnFromWindow) {
             returnFromWindow = false
@@ -711,7 +733,8 @@ class LauncherActivity : BaseActivity() {
             DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
             DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
             DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
-            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments")
+            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments"),
+            DesktopShortcut(R.string.launcher_log_off, android.R.drawable.ic_lock_power_off, "switch_user")
         )
     }
 
@@ -759,6 +782,7 @@ class LauncherActivity : BaseActivity() {
         if (!bootSequenceCompleted) {
             startBootSequence()
         } else {
+            binding.bootScreenLayout.visibility = View.GONE
             ensureStartMenuVisible()
         }
     }
@@ -852,18 +876,15 @@ class LauncherActivity : BaseActivity() {
             setBootConsoleText(consoleBuffer.toString())
             delay(450)
 
-            binding.bootScreenLayout.animate()
-                .alpha(0f)
-                .setDuration(600)
-                .withEndAction {
-                    bootSequenceCompleted = true
-                    binding.bootScreenLayout.visibility = View.GONE
-                    lifecycleScope.launch {
-                        delay(1000)
-                        showStartMenuAnimated()
-                    }
-                }
-                .start()
+            bootSequenceCompleted = true
+            val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
+            startActivity(intent)
+            applyFadeTransition()
+
+            binding.bootScreenLayout.postDelayed({
+                binding.bootScreenLayout.visibility = View.GONE
+                binding.bootScreenLayout.alpha = 1f
+            }, 800)
         }
     }
 
@@ -943,25 +964,33 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun showStartMenuAnimated() {
+    private fun resetStartMenuState() {
+        isStartMenuExpanded = false
         binding.expandedProgramsPanel.clearAnimation()
         binding.expandedProgramsPanel.visibility = View.GONE
         binding.expandedProgramsPanel.translationX = 0f
-        binding.startMenuPanel.clearAnimation()
-        binding.startMenuPanel.visibility = View.INVISIBLE
-        binding.startMenuPanel.translationY = 0f
-        binding.startMenuPanel.alpha = 1f
+        updateStartMenuAdapter()
+    }
 
-        binding.startMenuPanel.post {
-            val startHeight = binding.startMenuPanel.height.toFloat()
-            binding.startMenuPanel.translationY = startHeight
-            binding.startMenuPanel.visibility = View.VISIBLE
-            binding.startMenuPanel.animate()
-                .translationY(0f)
-                .setDuration(520)
-                .setInterpolator(DecelerateInterpolator())
-                .start()
+    private fun showStartMenuAnimated() {
+        if (binding.startMenuPanel.visibility == View.VISIBLE && binding.startMenuPanel.translationY == 0f) {
+            return
         }
+        resetStartMenuState()
+
+        binding.startMenuPanel.clearAnimation()
+        val panelHeight = binding.startMenuPanel.height.takeIf { it > 0 }
+            ?: resources.getDimensionPixelSize(R.dimen.start_menu_collapsed_height)
+        binding.startMenuPanel.translationY = panelHeight.toFloat()
+        binding.startMenuPanel.alpha = 1f
+        binding.startMenuPanel.visibility = View.VISIBLE
+        binding.startMenuPanel.bringToFront()
+
+        binding.startMenuPanel.animate()
+            .translationY(0f)
+            .setDuration(400)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
     }
 
     private fun showExpandedMenuAnimated() {
@@ -969,6 +998,7 @@ class LauncherActivity : BaseActivity() {
         panel.clearAnimation()
         panel.visibility = View.INVISIBLE
         panel.alpha = 1f
+        binding.expandedRecyclerView.adapter?.notifyDataSetChanged()
         panel.post {
             val slideDistance = binding.startMenuPanel.width
                 .takeIf { it > 0 }
@@ -1270,6 +1300,44 @@ class LauncherActivity : BaseActivity() {
                 }
                 launchActivityWindow(intent, ExperimentsActivity::class.java.name)
             }
+
+            "switch_user" -> {
+                if (LogOffManager.hasRunningGamesOrWindows(
+                        this,
+                        runningApps,
+                        ActiveActivityRegistry.activeActivities
+                    )
+                ) {
+                    LogOffConfirmationActivity.start(this) {
+                        LogOffManager.closeAllWindowsAndGames(this, runningApps, renpyMonitorJobs)
+                        lastFocusedAppId = null
+                        updateTaskbarApps()
+                        executeLogOff()
+                    }
+                } else {
+                    executeLogOff()
+                }
+            }
+        }
+    }
+
+    private fun executeLogOff() {
+        resetStartMenuState()
+        binding.startMenuPanel.clearAnimation()
+        binding.startMenuPanel.visibility = View.GONE
+        binding.logOffOverlayLayout.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate().alpha(1f).setDuration(250).start()
+        }
+        binding.spinnerLogOff.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            delay(2000L)
+            val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
+            startActivity(intent)
+            applyFadeTransition()
+            delay(500L)
+            binding.logOffOverlayLayout.visibility = View.GONE
         }
     }
 

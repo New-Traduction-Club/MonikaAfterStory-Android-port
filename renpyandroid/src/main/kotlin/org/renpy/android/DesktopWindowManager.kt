@@ -7,6 +7,36 @@ object ActiveActivityRegistry {
     val activeActivities: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf<String>())
     @Volatile
     var currentActivity: android.app.Activity? = null
+
+    private val activityInstances: MutableSet<android.app.Activity> = java.util.Collections.newSetFromMap(java.util.WeakHashMap())
+
+    fun registerActivity(activity: android.app.Activity) {
+        synchronized(activityInstances) {
+            activityInstances.add(activity)
+        }
+    }
+
+    fun unregisterActivity(activity: android.app.Activity) {
+        synchronized(activityInstances) {
+            activityInstances.remove(activity)
+        }
+    }
+
+    fun finishAll() {
+        val toFinish: List<android.app.Activity>
+        synchronized(activityInstances) {
+            toFinish = activityInstances.toList()
+            activityInstances.clear()
+        }
+        for (act in toFinish) {
+            try {
+                if (!act.isFinishing && !act.isDestroyed) {
+                    act.finish()
+                }
+            } catch (e: Exception) {
+            }
+        }
+    }
 }
 
 object DesktopWindowManager {
@@ -16,7 +46,11 @@ object DesktopWindowManager {
     const val EXTRA_ACTIVITY_ID = "activity_id"
     const val EXTRA_ACTIVITY_NAME = "activity_name"
     const val EXTRA_STATE = "state" // "RUNNING", "MINIMIZED", "DESTROYED"
-    const val EXTRA_COMMAND = "command" // "RESTORE", "MINIMIZE"
+    const val EXTRA_COMMAND = "command" // "RESTORE", "MINIMIZE", "CLOSE"
+
+    const val COMMAND_RESTORE = "RESTORE"
+    const val COMMAND_MINIMIZE = "MINIMIZE"
+    const val COMMAND_CLOSE = "CLOSE"
 
     fun notifyStateChanged(context: Context, activityId: String, activityName: String, state: String) {
         val intent = Intent(ACTION_WINDOW_STATE_CHANGED).apply {

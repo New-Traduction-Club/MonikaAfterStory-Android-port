@@ -41,10 +41,11 @@ abstract class GameWindowActivity : BaseActivity() {
                 val targetId = intent.getStringExtra(DesktopWindowManager.EXTRA_ACTIVITY_ID) ?: return
                 val command = intent.getStringExtra(DesktopWindowManager.EXTRA_COMMAND) ?: return
 
-                if (targetId == this@GameWindowActivity::class.java.name) {
+                if (targetId == this@GameWindowActivity::class.java.name || targetId == "ALL") {
                     when (command) {
-                        "MINIMIZE" -> minimizeWindow()
-                        "RESTORE" -> restoreWindow()
+                        DesktopWindowManager.COMMAND_MINIMIZE, "MINIMIZE" -> minimizeWindow()
+                        DesktopWindowManager.COMMAND_RESTORE, "RESTORE" -> restoreWindow()
+                        DesktopWindowManager.COMMAND_CLOSE, "CLOSE" -> finish()
                     }
                 }
             }
@@ -91,6 +92,7 @@ abstract class GameWindowActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ActiveActivityRegistry.activeActivities.add(this::class.java.name)
+        ActiveActivityRegistry.registerActivity(this)
         super.onCreate(savedInstanceState)
         
         supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
@@ -112,6 +114,7 @@ abstract class GameWindowActivity : BaseActivity() {
 
     override fun finish() {
         ActiveActivityRegistry.activeActivities.remove(this::class.java.name)
+        ActiveActivityRegistry.unregisterActivity(this)
         super.finish()
         overridePendingTransition(R.anim.window_fade_in, R.anim.window_scale_out)
     }
@@ -141,6 +144,7 @@ abstract class GameWindowActivity : BaseActivity() {
 
     override fun onDestroy() {
         ActiveActivityRegistry.activeActivities.remove(this::class.java.name)
+        ActiveActivityRegistry.unregisterActivity(this)
         notifyState("DESTROYED")
         try {
             unregisterReceiver(commandReceiver)

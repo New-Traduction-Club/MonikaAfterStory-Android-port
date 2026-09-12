@@ -32,6 +32,19 @@
         android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
 
     <activity
+        android:name="org.renpy.android.UserSelectionActivity"
+        android:exported="false"
+        android:screenOrientation="sensorLandscape"
+        android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+    <activity
+        android:name="org.renpy.android.LogOffConfirmationActivity"
+        android:exported="false"
+        android:theme="@style/Theme.TranslucentDialogHost"
+        android:screenOrientation="sensorLandscape"
+        android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+    <activity
         android:name="org.renpy.android.DiscordLoginActivity"
         android:exported="false" />
 

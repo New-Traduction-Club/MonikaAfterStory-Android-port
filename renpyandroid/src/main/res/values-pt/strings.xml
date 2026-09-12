@@ -510,4 +510,14 @@
     <string name="migration_btn_start">Iniciar Migração</string>
     <string name="migration_btn_okay">Ok</string>
     <string name="migration_dialog_warning">A migração está em andamento. Fechar esta janela agora pode corromper os arquivos do jogo. Por favor, aguarde até o término.</string>
+
+    <!-- User Selection Strings -->
+    <string name="user_selection_title_mas">MAS</string>
+    <string name="user_selection_desc_mas">Recomendado para usuários do MAS.</string>
+    <string name="user_selection_title_renpy">Ren\'Py Launcher</string>
+    <string name="user_selection_desc_renpy">A experiência completa para jogar jogos do Ren\'Py.</string>
+    <string name="user_selection_btn_login">Entrar</string>
+    <string name="user_selection_footer">Traduction Club\'s virtual desktop</string>
+    <string name="launcher_log_off">Encerrar sessão</string>
+    <string name="launcher_log_off_warning_message">Encerrar a sessão fechará todos os jogos e janelas abertas. Qualquer progresso não salvo poderá ser perdido. Deseja continuar?</string>
 </resources>
