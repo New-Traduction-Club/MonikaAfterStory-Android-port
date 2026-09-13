@@ -354,11 +354,6 @@ class UserSelectionActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        if (prefs.getBoolean("is_setup_completed", false) && prefs.getString("active_user_profile", null) == ProfileNavigationHelper.PROFILE_MAS) {
-            finish()
-            return
-        }
 
         btnLogIn.isClickable = true
         btnLogIn.setText(R.string.user_selection_btn_login)

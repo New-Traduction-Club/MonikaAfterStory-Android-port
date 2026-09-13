@@ -357,6 +357,9 @@ class LauncherActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        if (savedInstanceState == null && !intent.hasExtra(EXTRA_LOGGED_IN_PROFILE)) {
+            prefs.edit().remove("active_user_profile").apply()
+        }
         intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
             intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
             prefs.edit().putString("active_user_profile", profile).apply()

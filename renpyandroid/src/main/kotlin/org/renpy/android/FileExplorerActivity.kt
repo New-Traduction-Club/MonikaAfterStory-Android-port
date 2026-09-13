@@ -117,6 +117,24 @@ open class FileExplorerActivity : GameWindowActivity() {
             updateActionUI()
         }
 
+        viewModel.isImportingZip.observe(this) { isImporting ->
+            if (isImporting) {
+                binding.importLoadingOverlay.visibility = View.VISIBLE
+                binding.importLoadingOverlay.alpha = 0f
+                binding.importLoadingOverlay.animate().alpha(1f).setDuration(200).start()
+            } else {
+                if (binding.importLoadingOverlay.visibility == View.VISIBLE) {
+                    binding.importLoadingOverlay.animate()
+                        .alpha(0f)
+                        .setDuration(150)
+                        .withEndAction {
+                            binding.importLoadingOverlay.visibility = View.GONE
+                        }
+                        .start()
+                }
+            }
+        }
+
         binding.btnDelete.setOnClickListener { SoundEffects.playClick(this); confirmDelete() }
         binding.btnCopy.setOnClickListener { SoundEffects.playClick(this); copyToClipboard(false) }
         binding.btnCut.setOnClickListener { SoundEffects.playClick(this); copyToClipboard(true) }
@@ -934,6 +952,9 @@ open class FileExplorerActivity : GameWindowActivity() {
     }
 
     override fun onBackPressed() {
+        if (viewModel.isImportingZip.value == true) {
+            return
+        }
         if (isSearchMode) {
             exitSearchMode()
         } else if (fileAdapter.getSelectedCount() > 0) {

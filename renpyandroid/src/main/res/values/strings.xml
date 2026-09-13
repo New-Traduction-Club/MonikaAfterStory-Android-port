@@ -66,6 +66,7 @@
     <string name="import_files">Import Files</string>
     <string name="import_folder">Import Folder</string>
     <string name="import_zip">Import ZIP</string>
+    <string name="import_zip_loading">Importing ZIP file... Please wait.</string>
     <string name="create_folder">Create Folder</string>
     <string name="create_file">Create File</string>
     <string name="cancel">Cancel</string>
