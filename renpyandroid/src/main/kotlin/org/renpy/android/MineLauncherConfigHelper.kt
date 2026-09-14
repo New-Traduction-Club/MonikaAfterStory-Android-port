@@ -161,6 +161,30 @@ object MineLauncherConfigHelper {
         saveGameConfig(gameFolder, config)
     }
 
+    fun getCoverArtFile(gameFolder: File): File {
+        return File(File(gameFolder, ".mine"), "cover.png")
+    }
+
+    fun hasCoverArt(gameFolder: File): Boolean {
+        return getCoverArtFile(gameFolder).exists()
+    }
+
+    fun deleteCoverArt(gameFolder: File): Boolean {
+        val file = getCoverArtFile(gameFolder)
+        return if (file.exists()) file.delete() else false
+    }
+
+    fun saveCoverArt(gameFolder: File, sourceFile: File): Boolean {
+        return try {
+            val target = getCoverArtFile(gameFolder)
+            target.parentFile?.mkdirs()
+            sourceFile.copyTo(target, overwrite = true)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun sortGames(games: List<File>): List<File> {
         return games.sortedWith { f1, f2 ->
             val comp = String.CASE_INSENSITIVE_ORDER.compare(getGameTitle(f1), getGameTitle(f2))

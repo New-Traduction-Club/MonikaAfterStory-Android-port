@@ -607,5 +607,31 @@ class ProfileNavigationTest {
         assertTrue(File(targetDir, "renpy/__init__.py").exists())
         assertTrue(File(targetDir, "notes.txt").exists())
     }
+
+    @Test
+    fun testMineLauncherCoverArtFileHelper() {
+        val gameFolder = tempFolder.newFolder("cover_art_test_game")
+        assertFalse(MineLauncherConfigHelper.hasCoverArt(gameFolder))
+
+        val expectedFile = File(File(gameFolder, ".mine"), "cover.png")
+        assertEquals(expectedFile.absolutePath, MineLauncherConfigHelper.getCoverArtFile(gameFolder).absolutePath)
+
+        val tempImage = tempFolder.newFile("dummy_cover.png").apply {
+            writeBytes(byteArrayOf(1, 2, 3, 4))
+        }
+
+        val saved = MineLauncherConfigHelper.saveCoverArt(gameFolder, tempImage)
+        assertTrue(saved)
+        assertTrue(MineLauncherConfigHelper.hasCoverArt(gameFolder))
+        assertTrue(expectedFile.exists())
+        assertEquals(4L, expectedFile.length())
+
+        val deleted = MineLauncherConfigHelper.deleteCoverArt(gameFolder)
+        assertTrue(deleted)
+        assertFalse(MineLauncherConfigHelper.hasCoverArt(gameFolder))
+        assertFalse(expectedFile.exists())
+
+        assertFalse(MineLauncherConfigHelper.deleteCoverArt(gameFolder))
+    }
 }
 

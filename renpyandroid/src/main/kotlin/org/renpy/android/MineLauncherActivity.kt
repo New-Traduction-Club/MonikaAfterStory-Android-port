@@ -1,8 +1,12 @@
 package org.renpy.android
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -14,12 +18,16 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.collection.LruCache
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.canhub.cropper.CropImage
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,6 +37,7 @@ import org.renpy.android.databinding.DialogMineGameSettingsBinding
 import org.renpy.android.databinding.ItemMineGameCardBinding
 import org.renpy.android.databinding.ItemMineGameListBinding
 import java.io.File
+import java.io.FileOutputStream
 
 class MineLauncherActivity : GameWindowActivity() {
 
@@ -56,6 +65,111 @@ class MineLauncherActivity : GameWindowActivity() {
     private var isGridView: Boolean = true
     private var selectedGame: File? = null
 
+    private val coverArtCache = LruCache<String, Bitmap>(16)
+    private val ambientBlurCache = LruCache<String, Bitmap>(16)
+
+    private var pendingCoverArtGameFolder: File? = null
+    private var tempCoverSourceFile: File? = null
+    private var tempCoverOutputFile: File? = null
+    private var activeSettingsDialogBinding: DialogMineGameSettingsBinding? = null
+
+    private val cropCoverArtLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val folder = pendingCoverArtGameFolder
+        val output = tempCoverOutputFile
+        if (result.resultCode == Activity.RESULT_OK && folder != null && output != null && output.exists()) {
+            MineLauncherConfigHelper.saveCoverArt(folder, output)
+            invalidateCoverArt(folder)
+            refreshGameViews(folder)
+            activeSettingsDialogBinding?.let { db ->
+                val hasCover = MineLauncherConfigHelper.hasCoverArt(folder)
+                db.tvCoverArtActionTitle.text = getString(
+                    if (hasCover) R.string.mine_launcher_change_cover_art
+                    else R.string.mine_launcher_add_cover_art
+                )
+                db.rowRemoveCoverArt.visibility = if (hasCover) View.VISIBLE else View.GONE
+            }
+            InAppNotifier.show(this, getString(R.string.mine_launcher_cover_art_updated))
+        }
+        tempCoverSourceFile?.delete()
+        tempCoverOutputFile?.delete()
+        tempCoverSourceFile = null
+        tempCoverOutputFile = null
+    }
+
+    private val pickCoverArtLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri == null) return@registerForActivityResult
+        val folder = pendingCoverArtGameFolder ?: return@registerForActivityResult
+        try {
+            val sourceFile = File(cacheDir, "cover_src_${System.currentTimeMillis()}.png").also {
+                tempCoverSourceFile = it
+            }
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(sourceFile).use { output ->
+                    input.copyTo(output)
+                }
+            } ?: return@registerForActivityResult
+
+            val outputFile = File(cacheDir, "cover_out_${System.currentTimeMillis()}.png").also {
+                tempCoverOutputFile = it
+            }
+
+            launchCoverArtCrop(Uri.fromFile(sourceFile), Uri.fromFile(outputFile))
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun launchCoverArtCrop(sourceUri: Uri, outputUri: Uri) {
+        val cropOptions = CropImageOptions(
+            imageSourceIncludeGallery = false,
+            imageSourceIncludeCamera = false,
+            guidelines = CropImageView.Guidelines.ON,
+            fixAspectRatio = true,
+            aspectRatioX = 16,
+            aspectRatioY = 9,
+            autoZoomEnabled = true,
+            multiTouchEnabled = true,
+            centerMoveEnabled = true,
+            canChangeCropWindow = true,
+            initialCropWindowPaddingRatio = 0f,
+            maxZoom = 8,
+            outputCompressFormat = Bitmap.CompressFormat.PNG,
+            outputCompressQuality = 100,
+            outputRequestWidth = 960,
+            outputRequestHeight = 540,
+            outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_EXACT,
+            customOutputUri = outputUri,
+            activityTitle = getString(R.string.mine_launcher_cover_art_crop_title),
+            cropMenuCropButtonTitle = getString(R.string.mine_launcher_save),
+            activityBackgroundColor = ContextCompat.getColor(this, R.color.colorWindowContentBackground),
+            toolbarColor = ContextCompat.getColor(this, R.color.colorWindowHeaderBackground),
+            toolbarTitleColor = ContextCompat.getColor(this, R.color.colorTextPrimary),
+            toolbarBackButtonColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            toolbarTintColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            activityMenuTextColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            activityMenuIconColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            backgroundColor = 0x88000000.toInt(),
+            borderLineColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            borderCornerColor = ContextCompat.getColor(this, R.color.colorPrimary),
+            guidelinesColor = ContextCompat.getColor(this, R.color.colorDivider)
+        )
+
+        val cropIntent = Intent(this, FullscreenCropImageActivity::class.java).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            putExtra(
+                CropImage.CROP_IMAGE_EXTRA_BUNDLE,
+                Bundle(2).apply {
+                    putParcelable(CropImage.CROP_IMAGE_EXTRA_SOURCE, sourceUri)
+                    putParcelable(CropImage.CROP_IMAGE_EXTRA_OPTIONS, cropOptions)
+                }
+            )
+        }
+        cropCoverArtLauncher.launch(cropIntent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMineLauncherBinding.inflate(layoutInflater)
@@ -72,11 +186,18 @@ class MineLauncherActivity : GameWindowActivity() {
         loadGames()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        tempCoverSourceFile?.delete()
+        tempCoverOutputFile?.delete()
+    }
+
     private fun setupRecyclerView() {
         gamesAdapter = MineGamesAdapter(
             isGridView = isGridView,
             getEngine = { file -> getGameEngine(file) },
             getTitle = { file -> getGameTitle(file) },
+            getCoverArt = { file -> getCoverArtBitmap(file) },
             onCardClick = { file -> showDetailsView(file) },
             onPlayClick = { file -> launchSelectedGame(file) },
             onSettingsClick = { file -> showGameSettingsDialog(file) }
@@ -208,6 +329,7 @@ class MineLauncherActivity : GameWindowActivity() {
         val title = getGameTitle(game)
         binding.tvHeroRotatedWatermark.text = title
         binding.tvDetailsTitle.text = title
+        binding.tvHeroDetailsTitle.text = title
         binding.tvDetailsSelectedTitle.text = title
         binding.tvDetailsPath.text = "filesDir/${game.name}/"
 
@@ -218,7 +340,38 @@ class MineLauncherActivity : GameWindowActivity() {
             getString(R.string.experiments_runtime_not_selected)
         }
         binding.tvDetailsRuntimeBadge.text = runtimeText
+        binding.tvHeroDetailsRuntimeBadge.text = runtimeText
         binding.tvDetailsSelectedRuntime.text = runtimeText
+
+        if (MineLauncherConfigHelper.hasCoverArt(game)) {
+            val coverBmp = getCoverArtBitmap(game)
+            if (coverBmp != null) {
+                binding.tvHeroRotatedWatermark.visibility = View.GONE
+                binding.ivHeroAmbientBlur.visibility = View.VISIBLE
+                binding.viewHeroGradient.visibility = View.VISIBLE
+                binding.layoutHeroHeaderInfo.visibility = View.VISIBLE
+                binding.layoutDetailsDefaultHeader.visibility = View.GONE
+
+                binding.ivHeroCoverArt.setImageBitmap(coverBmp)
+                val ambientBmp = getAmbientBlurBitmap(game, coverBmp)
+                binding.ivHeroAmbientBlur.setImageBitmap(ambientBmp)
+            } else {
+                showDefaultHeroBanner(title)
+            }
+        } else {
+            showDefaultHeroBanner(title)
+        }
+    }
+
+    private fun showDefaultHeroBanner(title: String) {
+        binding.tvHeroRotatedWatermark.visibility = View.VISIBLE
+        binding.tvHeroRotatedWatermark.text = title
+        binding.ivHeroAmbientBlur.visibility = View.GONE
+        binding.viewHeroGradient.visibility = View.GONE
+        binding.layoutHeroHeaderInfo.visibility = View.GONE
+        binding.layoutDetailsDefaultHeader.visibility = View.VISIBLE
+        binding.ivHeroCoverArt.setImageDrawable(null)
+        binding.ivHeroAmbientBlur.setImageDrawable(null)
     }
 
     private fun showLibraryView() {
@@ -229,6 +382,7 @@ class MineLauncherActivity : GameWindowActivity() {
 
     private fun refreshGameViews(gameFolder: File) {
         allGames = MineLauncherConfigHelper.sortGames(allGames)
+        gamesAdapter.notifyDataSetChanged()
         filterGames(binding.etSearch.text?.toString().orEmpty())
         selectedGame?.let {
             if (it.absolutePath == gameFolder.absolutePath) {
@@ -570,9 +724,35 @@ class MineLauncherActivity : GameWindowActivity() {
             }
         }
 
+        fun updateCoverArtRowState() {
+            val hasCover = MineLauncherConfigHelper.hasCoverArt(gameFolder)
+            dialogBinding.tvCoverArtActionTitle.text = getString(
+                if (hasCover) R.string.mine_launcher_change_cover_art
+                else R.string.mine_launcher_add_cover_art
+            )
+            dialogBinding.rowRemoveCoverArt.visibility = if (hasCover) View.VISIBLE else View.GONE
+        }
+        updateCoverArtRowState()
+
         dialogBinding.rowSettingTitle.setOnClickListener {
             SoundEffects.playClick(this)
             transitionTo(SettingsScreen.EDIT_TITLE)
+        }
+
+        dialogBinding.rowSettingCoverArt.setOnClickListener {
+            SoundEffects.playClick(this)
+            pendingCoverArtGameFolder = gameFolder
+            activeSettingsDialogBinding = dialogBinding
+            pickCoverArtLauncher.launch("image/*")
+        }
+
+        dialogBinding.rowRemoveCoverArt.setOnClickListener {
+            SoundEffects.playClick(this)
+            MineLauncherConfigHelper.deleteCoverArt(gameFolder)
+            invalidateCoverArt(gameFolder)
+            updateCoverArtRowState()
+            refreshGameViews(gameFolder)
+            InAppNotifier.show(this, getString(R.string.mine_launcher_cover_art_removed))
         }
 
         dialogBinding.rowSettingRuntime.setOnClickListener {
@@ -596,6 +776,9 @@ class MineLauncherActivity : GameWindowActivity() {
                 d.dismiss()
             }
             .setOnDismissListener {
+                if (activeSettingsDialogBinding == dialogBinding) {
+                    activeSettingsDialogBinding = null
+                }
                 onDismissed?.invoke()
             }
             .create()
@@ -726,10 +909,49 @@ class MineLauncherActivity : GameWindowActivity() {
         }
     }
 
+    fun getCoverArtBitmap(gameFolder: File): Bitmap? {
+        val path = gameFolder.absolutePath
+        coverArtCache.get(path)?.let { if (!it.isRecycled) return it }
+        val file = MineLauncherConfigHelper.getCoverArtFile(gameFolder)
+        if (!file.exists()) return null
+        return try {
+            val bmp = BitmapFactory.decodeFile(file.absolutePath)
+            if (bmp != null) {
+                coverArtCache.put(path, bmp)
+            }
+            bmp
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun getAmbientBlurBitmap(gameFolder: File, sourceBitmap: Bitmap?): Bitmap? {
+        val path = gameFolder.absolutePath
+        ambientBlurCache.get(path)?.let { if (!it.isRecycled) return it }
+        val src = sourceBitmap ?: getCoverArtBitmap(gameFolder) ?: return null
+        return try {
+            val smallWidth = 120
+            val smallHeight = 68
+            val downscaled = Bitmap.createScaledBitmap(src, smallWidth, smallHeight, true)
+            val blurred = FastBlur.stackBlur(downscaled, 12)
+            ambientBlurCache.put(path, blurred)
+            blurred
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun invalidateCoverArt(gameFolder: File) {
+        val path = gameFolder.absolutePath
+        coverArtCache.remove(path)
+        ambientBlurCache.remove(path)
+    }
+
     private class MineGamesAdapter(
         private var isGridView: Boolean,
         private val getEngine: (File) -> String?,
         private val getTitle: (File) -> String,
+        private val getCoverArt: (File) -> Bitmap?,
         private val onCardClick: (File) -> Unit,
         private val onPlayClick: (File) -> Unit,
         private val onSettingsClick: (File) -> Unit
@@ -779,11 +1001,22 @@ class MineLauncherActivity : GameWindowActivity() {
             } else {
                 context.getString(R.string.experiments_runtime_not_selected)
             }
+            val coverBmp = getCoverArt(file)
 
             if (holder is CardViewHolder) {
-                holder.binding.tvRotatedFolderName.text = title
                 holder.binding.tvGameTitle.text = title
                 holder.binding.tvRuntimeBadge.text = runtimeText
+
+                if (coverBmp != null) {
+                    holder.binding.ivCoverArt.visibility = View.VISIBLE
+                    holder.binding.ivCoverArt.setImageBitmap(coverBmp)
+                    holder.binding.tvRotatedFolderName.visibility = View.GONE
+                } else {
+                    holder.binding.ivCoverArt.visibility = View.GONE
+                    holder.binding.ivCoverArt.setImageDrawable(null)
+                    holder.binding.tvRotatedFolderName.visibility = View.VISIBLE
+                    holder.binding.tvRotatedFolderName.text = title
+                }
 
                 holder.binding.cardContainer.setOnClickListener {
                     onCardClick(file)
@@ -798,6 +1031,14 @@ class MineLauncherActivity : GameWindowActivity() {
                 holder.binding.tvGameTitle.text = title
                 holder.binding.tvGamePath.text = "filesDir/${file.name}/"
                 holder.binding.tvRuntimeBadge.text = runtimeText
+
+                if (coverBmp != null) {
+                    holder.binding.cardListCover.visibility = View.VISIBLE
+                    holder.binding.ivListCoverArt.setImageBitmap(coverBmp)
+                } else {
+                    holder.binding.cardListCover.visibility = View.GONE
+                    holder.binding.ivListCoverArt.setImageDrawable(null)
+                }
 
                 holder.binding.cardContainer.setOnClickListener {
                     onCardClick(file)

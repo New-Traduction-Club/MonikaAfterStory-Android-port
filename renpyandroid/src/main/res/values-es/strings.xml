@@ -565,4 +565,12 @@
     <string name="add_game_error_invalid_base_ddlc">Por favor, selecciona un archivo ddlc-win.zip válido.</string>
     <string name="add_game_success">¡Juego instalado!</string>
     <string name="dialog_error_title">Error</string>
+
+    <string name="mine_launcher_cover_art_option">Portada</string>
+    <string name="mine_launcher_add_cover_art">Añadir portada</string>
+    <string name="mine_launcher_change_cover_art">Cambiar portada</string>
+    <string name="mine_launcher_remove_cover_art">Eliminar portada</string>
+    <string name="mine_launcher_cover_art_updated">Portada actualizada</string>
+    <string name="mine_launcher_cover_art_removed">Portada eliminada</string>
+    <string name="mine_launcher_cover_art_crop_title">Ajustar portada</string>
 </resources>

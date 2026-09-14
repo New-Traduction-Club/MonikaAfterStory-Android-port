@@ -566,4 +566,12 @@
     <string name="add_game_error_invalid_base_ddlc">Por favor, selecione um arquivo ddlc-win.zip válido.</string>
     <string name="add_game_success">Jogo instalado!</string>
     <string name="dialog_error_title">Erro</string>
+
+    <string name="mine_launcher_cover_art_option">Capa</string>
+    <string name="mine_launcher_add_cover_art">Adicionar capa</string>
+    <string name="mine_launcher_change_cover_art">Alterar capa</string>
+    <string name="mine_launcher_remove_cover_art">Remover capa</string>
+    <string name="mine_launcher_cover_art_updated">Capa atualizada</string>
+    <string name="mine_launcher_cover_art_removed">Capa removida</string>
+    <string name="mine_launcher_cover_art_crop_title">Ajustar capa</string>
 </resources>

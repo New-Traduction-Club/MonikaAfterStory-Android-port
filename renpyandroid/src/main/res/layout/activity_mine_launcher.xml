@@ -180,9 +180,88 @@
                 <FrameLayout
                     android:id="@+id/heroBannerFrame"
                     android:layout_width="match_parent"
-                    android:layout_height="150dp"
+                    android:layout_height="160dp"
                     android:background="#15151D"
                     android:clipChildren="true">
+
+                    <ImageView
+                        android:id="@+id/ivHeroAmbientBlur"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
+
+                    <View
+                        android:id="@+id/viewHeroGradient"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_hero_gradient"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutHeroHeaderInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:paddingBottom="14dp"
+                        android:visibility="gone">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardHeroCover"
+                            android:layout_width="160dp"
+                            android:layout_height="90dp"
+                            app:cardCornerRadius="8dp"
+                            app:cardElevation="6dp"
+                            app:strokeColor="#44FFFFFF"
+                            app:strokeWidth="1dp"
+                            app:cardBackgroundColor="#16161D">
+
+                            <ImageView
+                                android:id="@+id/ivHeroCoverArt"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvHeroDetailsTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/colorTextPrimary"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:maxLines="2"
+                                android:ellipsize="end"
+                                android:shadowColor="#CC000000"
+                                android:shadowRadius="8"
+                                android:shadowDx="0"
+                                android:shadowDy="2"
+                                tools:text="Game Title" />
+
+                            <TextView
+                                android:id="@+id/tvHeroDetailsRuntimeBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:textColor="@color/colorPrimary"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                tools:text="Ren'Py 8.3.7" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvHeroRotatedWatermark"
@@ -200,6 +279,7 @@
                 </FrameLayout>
 
                 <LinearLayout
+                    android:id="@+id/layoutDetailsDefaultHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
