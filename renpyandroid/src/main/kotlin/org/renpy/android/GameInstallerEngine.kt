@@ -503,6 +503,7 @@ object GameInstallerEngine {
                 val targetName = when {
                     item.isDirectory && item.name.equals("game", ignoreCase = true) -> "game"
                     item.isDirectory && item.name.equals("renpy", ignoreCase = true) -> "renpy"
+                    item.isDirectory && item.name.equals("lib", ignoreCase = true) -> "lib"
                     else -> item.name
                 }
                 val dest = File(targetDir, targetName)
@@ -583,20 +584,32 @@ object GameInstallerEngine {
             val baseEntries = baseRoot.listFiles() ?: emptyArray()
             for (entry in baseEntries) {
                 if (entry.name == "temp_ddlc" || entry.name == "temp_mod") continue
-                val dest = File(targetDir, entry.name)
+                val targetName = when {
+                    entry.isDirectory && entry.name.equals("game", ignoreCase = true) -> "game"
+                    entry.isDirectory && entry.name.equals("renpy", ignoreCase = true) -> "renpy"
+                    entry.isDirectory && entry.name.equals("lib", ignoreCase = true) -> "lib"
+                    else -> entry.name
+                }
+                val dest = File(targetDir, targetName)
                 recursiveCopy(entry, dest, isCancelled)
             }
 
             if (isCancelled()) throw CancellationException("Cancelled")
 
             val modRoot = resolveEffectiveSourceRoot(tempMod)
-            val hasGameDir = File(modRoot, "game").isDirectory || File(modRoot, "Game").isDirectory
+            val hasGameDir = modRoot.listFiles()?.any { it.isDirectory && it.name.equals("game", ignoreCase = true) } == true
 
             if (hasGameDir) {
                 val modEntries = modRoot.listFiles() ?: emptyArray()
                 for (entry in modEntries) {
                     if (entry.name == "temp_ddlc" || entry.name == "temp_mod") continue
-                    val dest = File(targetDir, entry.name)
+                    val targetName = when {
+                        entry.isDirectory && entry.name.equals("game", ignoreCase = true) -> "game"
+                        entry.isDirectory && entry.name.equals("renpy", ignoreCase = true) -> "renpy"
+                        entry.isDirectory && entry.name.equals("lib", ignoreCase = true) -> "lib"
+                        else -> entry.name
+                    }
+                    val dest = File(targetDir, targetName)
                     recursiveCopy(entry, dest, isCancelled)
                 }
             } else {
