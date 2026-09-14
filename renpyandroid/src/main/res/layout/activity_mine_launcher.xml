@@ -124,380 +124,696 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/detailsContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorCardBackground"
-        android:orientation="vertical"
         android:visibility="gone">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="8dp">
-
-            <ImageButton
-                android:id="@+id/btnBackToLibrary"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_arrow_back"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/colorIconTint"
-                android:contentDescription="@string/mine_launcher_back" />
-
-            <TextView
-                android:id="@+id/tvDetailsNavTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="@string/mine_launcher_details"
-                android:textColor="@color/colorTextPrimary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/colorDivider" />
-
-        <ScrollView
+        <FrameLayout
+            android:id="@+id/layoutCoverArtDetails"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:background="#15151D"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/ivHeroAmbientBlur"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
+
+            <View
+                android:id="@+id/viewHeroGradient"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_hero_gradient" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingBottom="24dp">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp"
+                    android:background="#40000000">
+
+                    <ImageButton
+                        android:id="@+id/btnBackToLibrary"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:src="@drawable/ic_arrow_back"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        app:tint="#FFFFFF"
+                        android:contentDescription="@string/mine_launcher_back" />
+
+                    <TextView
+                        android:id="@+id/tvDetailsNavTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/mine_launcher_details"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#26FFFFFF" />
 
                 <FrameLayout
-                    android:id="@+id/heroBannerFrame"
                     android:layout_width="match_parent"
-                    android:layout_height="160dp"
-                    android:background="#15151D"
-                    android:clipChildren="true">
+                    android:layout_height="match_parent">
 
-                    <ImageView
-                        android:id="@+id/ivHeroAmbientBlur"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:visibility="gone" />
-
-                    <View
-                        android:id="@+id/viewHeroGradient"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_hero_gradient"
-                        android:visibility="gone" />
-
-                    <LinearLayout
-                        android:id="@+id/layoutHeroHeaderInfo"
+                    <HorizontalScrollView
+                        android:id="@+id/hsvDetailsCards"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp"
-                        android:paddingBottom="14dp"
-                        android:visibility="gone">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/cardHeroCover"
-                            android:layout_width="160dp"
-                            android:layout_height="90dp"
-                            app:cardCornerRadius="8dp"
-                            app:cardElevation="6dp"
-                            app:strokeColor="#44FFFFFF"
-                            app:strokeWidth="1dp"
-                            app:cardBackgroundColor="#16161D">
-
-                            <ImageView
-                                android:id="@+id/ivHeroCoverArt"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:scaleType="centerCrop" />
-
-                        </com.google.android.material.card.MaterialCardView>
+                        android:layout_gravity="center"
+                        android:fillViewport="true"
+                        android:clipToPadding="false"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="12dp"
+                        android:scrollbars="none"
+                        android:overScrollMode="never">
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
+                            android:orientation="horizontal"
+                            android:layout_gravity="center_vertical"
+                            android:gravity="center">
 
-                            <TextView
-                                android:id="@+id/tvHeroDetailsTitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/colorTextPrimary"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:maxLines="2"
-                                android:ellipsize="end"
-                                android:shadowColor="#CC000000"
-                                android:shadowRadius="8"
-                                android:shadowDx="0"
-                                android:shadowDy="2"
-                                tools:text="Game Title" />
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardHeroCover"
+                                android:layout_width="270dp"
+                                android:layout_height="285dp"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="10dp"
+                                app:strokeWidth="0dp"
+                                app:cardBackgroundColor="#E61A1A26">
 
-                            <TextView
-                                android:id="@+id/tvHeroDetailsRuntimeBadge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:textColor="@color/colorPrimary"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                tools:text="Ren'Py 8.3.7" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="vertical"
+                                    android:padding="14dp">
+
+                                    <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="140dp"
+                                        app:cardCornerRadius="10dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeWidth="0dp"
+                                        app:cardBackgroundColor="#12121A">
+
+                                        <ImageView
+                                            android:id="@+id/ivHeroCoverArt"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:scaleType="centerCrop" />
+
+                                    </com.google.android.material.card.MaterialCardView>
+
+                                    <TextView
+                                        android:id="@+id/tvHeroDetailsTitle"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="10dp"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="17sp"
+                                        android:textStyle="bold"
+                                        android:maxLines="2"
+                                        android:ellipsize="end"
+                                        android:shadowColor="#D9000000"
+                                        android:shadowRadius="10"
+                                        android:shadowDx="0"
+                                        android:shadowDy="2"
+                                        tools:text="Game Title" />
+
+                                    <TextView
+                                        android:id="@+id/tvHeroDetailsRuntimeBadge"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:background="@drawable/bg_hero_runtime_badge"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="3dp"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"
+                                        android:letterSpacing="0.02"
+                                        tools:text="Ren'Py 8.3.7" />
+
+                                </LinearLayout>
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardDetailsActions"
+                                android:layout_width="220dp"
+                                android:layout_height="285dp"
+                                android:layout_marginStart="16dp"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="10dp"
+                                app:strokeWidth="0dp"
+                                app:cardBackgroundColor="#E61A1A26">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="vertical"
+                                    android:gravity="center_horizontal"
+                                    android:padding="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/mine_launcher_play"
+                                        android:textColor="#B3FFFFFF"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"
+                                        android:letterSpacing="0.08"
+                                        android:textAllCaps="true" />
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        android:layout_weight="1" />
+
+                                    <com.google.android.material.button.MaterialButton
+                                        android:id="@+id/btnDetailsPlay"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="50dp"
+                                        android:text="@string/mine_launcher_play"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold"
+                                        app:icon="@drawable/ic_play_arrow"
+                                        app:iconSize="20dp"
+                                        app:cornerRadius="10dp"
+                                        app:backgroundTint="@color/colorPrimary" />
+
+                                    <com.google.android.material.button.MaterialButton
+                                        android:id="@+id/btnDetailsSettings"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="46dp"
+                                        android:layout_marginTop="12dp"
+                                        android:text="@string/mine_launcher_settings"
+                                        android:textSize="13sp"
+                                        app:icon="@drawable/ic_launcher_settings"
+                                        app:iconSize="18dp"
+                                        app:cornerRadius="10dp"
+                                        style="@style/Widget.Material3.Button.TonalButton" />
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        android:layout_weight="1" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/mine_launcher_details"
+                                        android:textColor="#66FFFFFF"
+                                        android:textSize="11sp" />
+
+                                </LinearLayout>
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardDetailsOptions"
+                                android:layout_width="290dp"
+                                android:layout_height="285dp"
+                                android:layout_marginStart="16dp"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="10dp"
+                                app:strokeWidth="0dp"
+                                app:cardBackgroundColor="#E61A1A26">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="vertical"
+                                    android:padding="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/mine_launcher_options_title"
+                                        android:textColor="#B3FFFFFF"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"
+                                        android:letterSpacing="0.08"
+                                        android:textAllCaps="true" />
+
+                                    <LinearLayout
+                                        android:id="@+id/rowTitleOption"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="10dp"
+                                        android:background="?attr/selectableItemBackground"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal"
+                                        android:paddingVertical="6dp">
+
+                                        <LinearLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_weight="1"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/mine_launcher_title_option"
+                                                android:textColor="#80FFFFFF"
+                                                android:textSize="11sp" />
+
+                                            <TextView
+                                                android:id="@+id/tvDetailsSelectedTitle"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="1dp"
+                                                android:textColor="#FFFFFF"
+                                                android:textSize="13sp"
+                                                android:textStyle="bold"
+                                                android:maxLines="1"
+                                                android:ellipsize="end"
+                                                tools:text="Doki Doki Mod" />
+
+                                        </LinearLayout>
+
+                                        <ImageView
+                                            android:layout_width="18dp"
+                                            android:layout_height="18dp"
+                                            android:src="@android:drawable/ic_menu_edit"
+                                            app:tint="#FFFFFF" />
+
+                                    </LinearLayout>
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="1dp"
+                                        android:layout_marginVertical="6dp"
+                                        android:background="#26FFFFFF" />
+
+                                    <LinearLayout
+                                        android:id="@+id/rowRuntimeOption"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:background="?attr/selectableItemBackground"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal"
+                                        android:paddingVertical="6dp">
+
+                                        <LinearLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_weight="1"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/mine_launcher_runtime_option"
+                                                android:textColor="#80FFFFFF"
+                                                android:textSize="11sp" />
+
+                                            <TextView
+                                                android:id="@+id/tvDetailsSelectedRuntime"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="1dp"
+                                                android:textColor="#FF9AC3"
+                                                android:textSize="13sp"
+                                                android:textStyle="bold"
+                                                tools:text="Ren'Py 8.3.7" />
+
+                                        </LinearLayout>
+
+                                        <ImageView
+                                            android:layout_width="18dp"
+                                            android:layout_height="18dp"
+                                            android:src="@drawable/ic_launcher_settings"
+                                            app:tint="#FFFFFF" />
+
+                                    </LinearLayout>
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="1dp"
+                                        android:layout_marginVertical="6dp"
+                                        android:background="#26FFFFFF" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical"
+                                        android:paddingVertical="2dp">
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/file_col_name"
+                                            android:textColor="#80FFFFFF"
+                                            android:textSize="11sp" />
+
+                                        <TextView
+                                            android:id="@+id/tvDetailsPath"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="1dp"
+                                            android:textColor="#B3FFFFFF"
+                                            android:textSize="11sp"
+                                            android:maxLines="2"
+                                            android:ellipsize="end"
+                                            tools:text="filesDir/my_game/" />
+
+                                    </LinearLayout>
+
+                                </LinearLayout>
+
+                            </com.google.android.material.card.MaterialCardView>
 
                         </LinearLayout>
 
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvHeroRotatedWatermark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:rotation="45"
-                        android:gravity="center"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        android:textColor="#26FFFFFF"
-                        android:letterSpacing="0.08"
-                        tools:text="game_folder" />
+                    </HorizontalScrollView>
 
                 </FrameLayout>
 
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutDefaultDetails"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/colorCardBackground"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="8dp">
+
+                <ImageButton
+                    android:id="@+id/btnDefaultBackToLibrary"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_arrow_back"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="@color/colorIconTint"
+                    android:contentDescription="@string/mine_launcher_back" />
+
+                <TextView
+                    android:id="@+id/tvDefaultNavTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/mine_launcher_details"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
                 <LinearLayout
-                    android:id="@+id/layoutDetailsDefaultHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="8dp">
+                    android:paddingBottom="24dp">
 
-                    <TextView
-                        android:id="@+id/tvDetailsTitle"
+                    <FrameLayout
+                        android:id="@+id/heroBannerFrame"
+                        android:layout_width="match_parent"
+                        android:layout_height="160dp"
+                        android:background="#15151D"
+                        android:clipChildren="true">
+
+                        <TextView
+                            android:id="@+id/tvHeroRotatedWatermark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:rotation="45"
+                            android:gravity="center"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="#26FFFFFF"
+                            android:letterSpacing="0.08"
+                            tools:text="game_folder" />
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layoutDetailsDefaultHeader"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/colorTextPrimary"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        tools:text="Game Title" />
-
-                    <TextView
-                        android:id="@+id/tvDetailsRuntimeBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/colorPrimary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        tools:text="Ren'Py 8.3.7" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="12dp">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDetailsPlay"
-                        android:layout_width="wrap_content"
-                        android:layout_height="44dp"
-                        android:paddingHorizontal="24dp"
-                        android:text="@string/mine_launcher_play"
-                        android:textSize="14sp"
-                        app:icon="@drawable/ic_play_arrow"
-                        app:iconSize="18dp"
-                        app:cornerRadius="6dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDetailsSettings"
-                        android:layout_width="wrap_content"
-                        android:layout_height="44dp"
-                        android:layout_marginStart="12dp"
+                        android:orientation="vertical"
                         android:paddingHorizontal="16dp"
-                        android:text="@string/mine_launcher_settings"
-                        android:textSize="14sp"
-                        app:icon="@drawable/ic_launcher_settings"
-                        app:iconSize="18dp"
-                        app:cornerRadius="6dp"
-                        style="@style/Widget.Material3.Button.TonalButton" />
+                        android:paddingTop="16dp"
+                        android:paddingBottom="8dp">
 
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/tvDetailsTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/colorTextPrimary"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="Game Title" />
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="8dp"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="1dp"
-                    app:strokeColor="@color/colorDivider"
-                    app:strokeWidth="1dp"
-                    app:cardBackgroundColor="@color/colorSurface">
+                        <TextView
+                            android:id="@+id/tvDetailsRuntimeBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/colorPrimary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            tools:text="Ren'Py 8.3.7" />
+
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="12dp">
 
-                        <TextView
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDefaultPlay"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/mine_launcher_options_title"
-                            android:textColor="@color/colorTextPrimary"
+                            android:layout_height="44dp"
+                            android:paddingHorizontal="24dp"
+                            android:text="@string/mine_launcher_play"
                             android:textSize="14sp"
-                            android:textStyle="bold" />
+                            app:icon="@drawable/ic_play_arrow"
+                            app:iconSize="18dp"
+                            app:cornerRadius="6dp" />
 
-                        <LinearLayout
-                            android:id="@+id/rowTitleOption"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingVertical="8dp">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDefaultSettings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="44dp"
+                            android:layout_marginStart="12dp"
+                            android:paddingHorizontal="16dp"
+                            android:text="@string/mine_launcher_settings"
+                            android:textSize="14sp"
+                            app:icon="@drawable/ic_launcher_settings"
+                            app:iconSize="18dp"
+                            app:cornerRadius="6dp"
+                            style="@style/Widget.Material3.Button.TonalButton" />
 
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
+                    </LinearLayout>
 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/mine_launcher_title_option"
-                                    android:textColor="@color/colorTextPrimary"
-                                    android:textSize="13sp" />
-
-                                <TextView
-                                    android:id="@+id/tvDetailsSelectedTitle"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:textColor="@color/colorTextSecondary"
-                                    android:textSize="12sp"
-                                    tools:text="Doki Doki Mod" />
-
-                            </LinearLayout>
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@android:drawable/ic_menu_edit"
-                                app:tint="@color/colorIconTint" />
-
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginVertical="8dp"
-                            android:background="@color/colorDivider" />
-
-                        <LinearLayout
-                            android:id="@+id/rowRuntimeOption"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingVertical="8dp">
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/mine_launcher_runtime_option"
-                                    android:textColor="@color/colorTextPrimary"
-                                    android:textSize="13sp" />
-
-                                <TextView
-                                    android:id="@+id/tvDetailsSelectedRuntime"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:textColor="@color/colorPrimary"
-                                    android:textSize="12sp"
-                                    tools:text="Ren'Py 8.3.7" />
-
-                            </LinearLayout>
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_launcher_settings"
-                                app:tint="@color/colorIconTint" />
-
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginVertical="8dp"
-                            android:background="@color/colorDivider" />
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="8dp"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="1dp"
+                        app:strokeColor="@color/colorDivider"
+                        app:strokeWidth="1dp"
+                        app:cardBackgroundColor="@color/colorSurface">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:paddingVertical="4dp">
+                            android:padding="16dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/file_col_name"
-                                android:textColor="@color/colorTextSecondary"
-                                android:textSize="11sp" />
-
-                            <TextView
-                                android:id="@+id/tvDetailsPath"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:text="@string/mine_launcher_options_title"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textSize="12sp"
-                                tools:text="filesDir/my_game/" />
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:id="@+id/rowDefaultTitleOption"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingVertical="8dp">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/mine_launcher_title_option"
+                                        android:textColor="@color/colorTextPrimary"
+                                        android:textSize="13sp" />
+
+                                    <TextView
+                                        android:id="@+id/tvDefaultSelectedTitle"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:textColor="@color/colorTextSecondary"
+                                        android:textSize="12sp"
+                                        tools:text="Doki Doki Mod" />
+
+                                </LinearLayout>
+
+                                <ImageView
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:src="@android:drawable/ic_menu_edit"
+                                    app:tint="@color/colorIconTint" />
+
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginVertical="8dp"
+                                android:background="@color/colorDivider" />
+
+                            <LinearLayout
+                                android:id="@+id/rowDefaultRuntimeOption"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingVertical="8dp">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/mine_launcher_runtime_option"
+                                        android:textColor="@color/colorTextPrimary"
+                                        android:textSize="13sp" />
+
+                                    <TextView
+                                        android:id="@+id/tvDefaultSelectedRuntime"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:textColor="@color/colorPrimary"
+                                        android:textSize="12sp"
+                                        tools:text="Ren'Py 8.3.7" />
+
+                                </LinearLayout>
+
+                                <ImageView
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:src="@drawable/ic_launcher_settings"
+                                    app:tint="@color/colorIconTint" />
+
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginVertical="8dp"
+                                android:background="@color/colorDivider" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:paddingVertical="4dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/file_col_name"
+                                    android:textColor="@color/colorTextSecondary"
+                                    android:textSize="11sp" />
+
+                                <TextView
+                                    android:id="@+id/tvDefaultDetailsPath"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:textColor="@color/colorTextPrimary"
+                                    android:textSize="12sp"
+                                    tools:text="filesDir/my_game/" />
+
+                            </LinearLayout>
 
                         </LinearLayout>
 
-                    </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
-                </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
 
-            </LinearLayout>
+            </ScrollView>
 
-        </ScrollView>
+        </LinearLayout>
 
-    </LinearLayout>
+    </FrameLayout>
 
 </FrameLayout>

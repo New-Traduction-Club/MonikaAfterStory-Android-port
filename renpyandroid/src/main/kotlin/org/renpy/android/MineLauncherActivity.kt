@@ -263,10 +263,12 @@ class MineLauncherActivity : GameWindowActivity() {
     }
 
     private fun setupDetailsView() {
-        binding.btnBackToLibrary.setOnClickListener {
+        val onBackClick = View.OnClickListener {
             SoundEffects.playClick(this)
             showLibraryView()
         }
+        binding.btnBackToLibrary.setOnClickListener(onBackClick)
+        binding.btnDefaultBackToLibrary.setOnClickListener(onBackClick)
     }
 
     private fun loadGames() {
@@ -299,27 +301,34 @@ class MineLauncherActivity : GameWindowActivity() {
         selectedGame = game
         updateDetailsViewContent(game)
 
-        binding.btnDetailsPlay.setOnClickListener {
+        val onPlayClick = View.OnClickListener {
             SoundEffects.playClick(this)
             launchSelectedGame(game)
         }
-
-        binding.btnDetailsSettings.setOnClickListener {
+        val onSettingsClick = View.OnClickListener {
             SoundEffects.playClick(this)
             showGameSettingsDialog(game)
         }
-
-        binding.rowTitleOption.setOnClickListener {
+        val onTitleClick = View.OnClickListener {
             SoundEffects.playClick(this)
             showEditTitleDialog(game)
         }
-
-        binding.rowRuntimeOption.setOnClickListener {
+        val onRuntimeClick = View.OnClickListener {
             SoundEffects.playClick(this)
             showRuntimeDialog(game) {
                 refreshGameViews(game)
             }
         }
+
+        binding.btnDetailsPlay.setOnClickListener(onPlayClick)
+        binding.btnDetailsSettings.setOnClickListener(onSettingsClick)
+        binding.rowTitleOption.setOnClickListener(onTitleClick)
+        binding.rowRuntimeOption.setOnClickListener(onRuntimeClick)
+
+        binding.btnDefaultPlay.setOnClickListener(onPlayClick)
+        binding.btnDefaultSettings.setOnClickListener(onSettingsClick)
+        binding.rowDefaultTitleOption.setOnClickListener(onTitleClick)
+        binding.rowDefaultRuntimeOption.setOnClickListener(onRuntimeClick)
 
         binding.libraryContainer.visibility = View.GONE
         binding.detailsContainer.visibility = View.VISIBLE
@@ -327,51 +336,54 @@ class MineLauncherActivity : GameWindowActivity() {
 
     private fun updateDetailsViewContent(game: File) {
         val title = getGameTitle(game)
-        binding.tvHeroRotatedWatermark.text = title
-        binding.tvDetailsTitle.text = title
-        binding.tvHeroDetailsTitle.text = title
-        binding.tvDetailsSelectedTitle.text = title
-        binding.tvDetailsPath.text = "filesDir/${game.name}/"
-
         val engine = getGameEngine(game)
         val runtimeText = if (engine != null) {
             getString(R.string.experiments_runtime_badge, engine)
         } else {
             getString(R.string.experiments_runtime_not_selected)
         }
-        binding.tvDetailsRuntimeBadge.text = runtimeText
-        binding.tvHeroDetailsRuntimeBadge.text = runtimeText
-        binding.tvDetailsSelectedRuntime.text = runtimeText
+        val pathText = "filesDir/${game.name}/"
 
         if (MineLauncherConfigHelper.hasCoverArt(game)) {
             val coverBmp = getCoverArtBitmap(game)
             if (coverBmp != null) {
-                binding.tvHeroRotatedWatermark.visibility = View.GONE
-                binding.ivHeroAmbientBlur.visibility = View.VISIBLE
-                binding.viewHeroGradient.visibility = View.VISIBLE
-                binding.layoutHeroHeaderInfo.visibility = View.VISIBLE
-                binding.layoutDetailsDefaultHeader.visibility = View.GONE
+                binding.layoutCoverArtDetails.visibility = View.VISIBLE
+                binding.layoutDefaultDetails.visibility = View.GONE
+                binding.hsvDetailsCards.post {
+                    val containerWidth = binding.hsvDetailsCards.width
+                    val contentWidth = binding.hsvDetailsCards.getChildAt(0)?.width ?: 0
+                    if (contentWidth > containerWidth) {
+                        val targetScrollX = (contentWidth - containerWidth) / 2
+                        binding.hsvDetailsCards.scrollTo(targetScrollX, 0)
+                    } else {
+                        binding.hsvDetailsCards.scrollTo(0, 0)
+                    }
+                }
 
-                binding.ivHeroCoverArt.setImageBitmap(coverBmp)
                 val ambientBmp = getAmbientBlurBitmap(game, coverBmp)
                 binding.ivHeroAmbientBlur.setImageBitmap(ambientBmp)
-            } else {
-                showDefaultHeroBanner(title)
-            }
-        } else {
-            showDefaultHeroBanner(title)
-        }
-    }
+                binding.ivHeroCoverArt.setImageBitmap(coverBmp)
 
-    private fun showDefaultHeroBanner(title: String) {
-        binding.tvHeroRotatedWatermark.visibility = View.VISIBLE
-        binding.tvHeroRotatedWatermark.text = title
-        binding.ivHeroAmbientBlur.visibility = View.GONE
-        binding.viewHeroGradient.visibility = View.GONE
-        binding.layoutHeroHeaderInfo.visibility = View.GONE
-        binding.layoutDetailsDefaultHeader.visibility = View.VISIBLE
+                binding.tvHeroDetailsTitle.text = title
+                binding.tvHeroDetailsRuntimeBadge.text = runtimeText
+                binding.tvDetailsSelectedTitle.text = title
+                binding.tvDetailsSelectedRuntime.text = runtimeText
+                binding.tvDetailsPath.text = pathText
+                return
+            }
+        }
+
+        binding.layoutCoverArtDetails.visibility = View.GONE
+        binding.layoutDefaultDetails.visibility = View.VISIBLE
         binding.ivHeroCoverArt.setImageDrawable(null)
         binding.ivHeroAmbientBlur.setImageDrawable(null)
+
+        binding.tvHeroRotatedWatermark.text = title
+        binding.tvDetailsTitle.text = title
+        binding.tvDetailsRuntimeBadge.text = runtimeText
+        binding.tvDefaultSelectedTitle.text = title
+        binding.tvDefaultSelectedRuntime.text = runtimeText
+        binding.tvDefaultDetailsPath.text = pathText
     }
 
     private fun showLibraryView() {
