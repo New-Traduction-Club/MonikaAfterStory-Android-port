@@ -89,6 +89,21 @@ class WindowDecorator(private val activity: Activity) {
         DesktopWindowManager.notifyStateChanged(activity, activityId, activityName, state)
     }
 
+    private fun getRealDisplayMetrics(): android.util.DisplayMetrics {
+        val dm = android.util.DisplayMetrics()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = activity.windowManager.currentWindowMetrics.bounds
+            dm.widthPixels = bounds.width()
+            dm.heightPixels = bounds.height()
+            dm.density = activity.resources.displayMetrics.density
+            dm.densityDpi = activity.resources.displayMetrics.densityDpi
+        } else {
+            @Suppress("DEPRECATION")
+            activity.windowManager.defaultDisplay.getRealMetrics(dm)
+        }
+        return dm
+    }
+
     @android.annotation.SuppressLint("ClickableViewAccessibility")
     private fun setupDragging(headerView: View) {
         var startRawX = 0f
@@ -111,7 +126,7 @@ class WindowDecorator(private val activity: Activity) {
                     val dx = event.rawX - startRawX
                     val dy = event.rawY - startRawY
                     
-                    val displayMetrics = activity.resources.displayMetrics
+                    val displayMetrics = getRealDisplayMetrics()
                     val halfScreenWidth = displayMetrics.widthPixels / 2
                     val halfScreenHeight = displayMetrics.heightPixels / 2
                     
@@ -140,12 +155,14 @@ class WindowDecorator(private val activity: Activity) {
         val screenWidth = Math.max(minSize, displayMetrics.widthPixels)
         val screenHeight = Math.max(minSize, displayMetrics.heightPixels)
 
+        val headerHeight = (31 * displayMetrics.density).toInt()
         val targetHeight = Math.max(minSize, (screenHeight * 0.85).toInt())
-        var targetWidth = Math.max(minSize, (targetHeight * 16.0 / 9.0).toInt())
+        val contentHeight = Math.max(minSize / 2, targetHeight - headerHeight)
+        var targetWidth = Math.max(minSize, (contentHeight * 16.0 / 9.0).toInt())
         if (targetWidth > screenWidth * 0.9) {
             targetWidth = Math.max(minSize, (screenWidth * 0.9).toInt())
-            val adjustedHeight = Math.max(minSize, (targetWidth * 9.0 / 16.0).toInt())
-            return Pair(targetWidth, adjustedHeight)
+            val adjustedContentHeight = Math.max(minSize / 2, (targetWidth * 9.0 / 16.0).toInt())
+            return Pair(targetWidth, adjustedContentHeight + headerHeight)
         }
         return Pair(targetWidth, targetHeight)
     }
@@ -166,7 +183,7 @@ class WindowDecorator(private val activity: Activity) {
 
         w.decorView.setPadding(0, 0, 0, 0)
 
-        val displayMetrics = activity.resources.displayMetrics
+        val displayMetrics = getRealDisplayMetrics()
         val wParams = w.attributes
 
         if (isWindowedMode()) {
@@ -222,7 +239,7 @@ class WindowDecorator(private val activity: Activity) {
             val root = windowRootLayout ?: return@runOnUiThread
             val card = root.findViewById<CardView>(R.id.cardWindowContainer) ?: return@runOnUiThread
             val w = activity.window ?: return@runOnUiThread
-            val displayMetrics = activity.resources.displayMetrics
+            val displayMetrics = getRealDisplayMetrics()
             val screenWidth = displayMetrics.widthPixels
             val screenHeight = displayMetrics.heightPixels
 
@@ -383,7 +400,7 @@ class WindowDecorator(private val activity: Activity) {
         val card = root.findViewById<CardView>(R.id.cardWindowContainer) ?: return
 
         val wParams = w.attributes
-        val displayMetrics = activity.resources.displayMetrics
+        val displayMetrics = getRealDisplayMetrics()
 
         val isCurrentlyMaximized = wParams.width == ViewGroup.LayoutParams.MATCH_PARENT
         if (isCurrentlyMaximized) {

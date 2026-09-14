@@ -189,19 +189,18 @@ abstract class GameWindowActivity : BaseActivity() {
             val density = resources.displayMetrics.density
             val px16 = (16 * density).toInt()
             val px12 = (12 * density).toInt()
-            val extraRightMargin = (24 * density).toInt()
             
-            headerLayout.setPadding(
+            headerLayout?.setPadding(
                 px16,
                 px12,
-                px16 + extraRightMargin,
+                px16,
                 px12
             )
             
             contentContainer.setPadding(
                 0,
                 0,
-                extraRightMargin,
+                0,
                 0
             )
             
@@ -257,16 +256,16 @@ abstract class GameWindowActivity : BaseActivity() {
                     val dx = event.rawX - startRawX
                     val dy = event.rawY - startRawY
                     
-                    val displayMetrics = resources.displayMetrics
-                    val halfScreenWidth = displayMetrics.widthPixels / 2
-                    val halfScreenHeight = displayMetrics.heightPixels / 2
+                    val realMetrics = getRealDisplayMetrics()
+                    val halfScreenWidth = realMetrics.widthPixels / 2
+                    val halfScreenHeight = realMetrics.heightPixels / 2
                     
                     val newX = initialX + dx.toInt()
                     val newY = initialY + dy.toInt()
                     
                     params.x = newX.coerceIn(-halfScreenWidth, halfScreenWidth)
                     
-                    val windowHeight = if (params.height > 0) params.height else displayMetrics.heightPixels
+                    val windowHeight = if (params.height > 0) params.height else realMetrics.heightPixels
                     val minY = (windowHeight / 2) - halfScreenHeight
                     params.y = newY.coerceIn(minY, halfScreenHeight)
                     
@@ -477,7 +476,7 @@ abstract class GameWindowActivity : BaseActivity() {
             card.layoutParams = it
         }
 
-        val displayMetrics = resources.displayMetrics
+        val realMetrics = getRealDisplayMetrics()
         val wParams = w.attributes
         w.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
@@ -492,15 +491,15 @@ abstract class GameWindowActivity : BaseActivity() {
                 card.radius = 0f
             }
             WindowMode.WINDOWED -> {
-                val minSize = (200 * displayMetrics.density).toInt()
-                val targetWidth = Math.max(minSize, (displayMetrics.widthPixels * 0.8).toInt())
-                val targetHeight = Math.max(minSize, (displayMetrics.heightPixels * 0.9).toInt())
+                val minSize = (200 * realMetrics.density).toInt()
+                val targetWidth = Math.max(minSize, (realMetrics.widthPixels * 0.8).toInt())
+                val targetHeight = Math.max(minSize, (realMetrics.heightPixels * 0.9).toInt())
                 wParams.width = targetWidth
                 wParams.height = targetHeight
                 wParams.gravity = Gravity.CENTER
 
-                val halfScreenWidth = displayMetrics.widthPixels / 2
-                val halfScreenHeight = displayMetrics.heightPixels / 2
+                val halfScreenWidth = realMetrics.widthPixels / 2
+                val halfScreenHeight = realMetrics.heightPixels / 2
                 val minY = (targetHeight / 2) - halfScreenHeight
 
                 lastWindowX = lastWindowX.coerceIn(-halfScreenWidth, halfScreenWidth)
@@ -512,6 +511,12 @@ abstract class GameWindowActivity : BaseActivity() {
                 card.cardElevation = dp(12f)
                 card.radius = dp(8f)
             }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            wParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            @Suppress("DEPRECATION")
+            wParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
         w.attributes = wParams
     }
@@ -624,6 +629,21 @@ abstract class GameWindowActivity : BaseActivity() {
             startActivity(intent)
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    private fun getRealDisplayMetrics(): DisplayMetrics {
+        val dm = DisplayMetrics()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            dm.widthPixels = bounds.width()
+            dm.heightPixels = bounds.height()
+            dm.density = resources.displayMetrics.density
+            dm.densityDpi = resources.displayMetrics.densityDpi
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(dm)
+        }
+        return dm
     }
 
     private fun dp(value: Float): Float = value * resources.displayMetrics.density
