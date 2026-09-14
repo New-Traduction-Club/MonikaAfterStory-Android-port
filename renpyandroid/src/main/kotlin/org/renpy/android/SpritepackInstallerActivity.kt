@@ -49,10 +49,15 @@ class SpritepackInstallerActivity : GameWindowActivity() {
         pickArchiveLauncher.launch(
             arrayOf(
                 "application/zip",
+                "application/x-zip",
                 "application/x-zip-compressed",
+                "application/x-rar",
                 "application/x-rar-compressed",
                 "application/vnd.rar",
-                "application/octet-stream"
+                "application/rar",
+                "application/x-compressed",
+                "application/octet-stream",
+                "*/*"
             )
         )
     }

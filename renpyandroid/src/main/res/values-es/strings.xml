@@ -520,5 +520,49 @@
     <string name="user_selection_btn_login">Iniciar sesión</string>
     <string name="user_selection_footer">Traduction Club\'s virtual desktop</string>
     <string name="launcher_log_off">Cerrar sesión</string>
-    <string name="launcher_log_off_warning_message">Cerrar sesión cerrará todos los juegos y ventanas abiertas. Cualquier progreso no guardado podría perderse. ¿Deseas continuar?</string>
+    <string name="launcher_log_off_warning_message">Cerrar la sesión cerrará todos los juegos y ventanas abiertas. Cualquier progreso no guardado podría perderse. ¿Deseas continuar?</string>
+
+    <string name="mine_launcher_search_hint">Buscar juegos...</string>
+    <string name="mine_launcher_no_games">No se encontraron juegos en archivos internos.</string>
+    <string name="mine_launcher_play">Jugar</string>
+    <string name="mine_launcher_settings">Ajustes</string>
+    <string name="mine_launcher_options_title">Ajustes del juego</string>
+    <string name="mine_launcher_runtime_option">Motor Ren\'Py</string>
+    <string name="mine_launcher_view_grid">Vista en cuadrícula</string>
+    <string name="mine_launcher_view_list">Vista en lista</string>
+    <string name="mine_launcher_back">Atrás</string>
+    <string name="mine_launcher_details">Detalles</string>
+    <string name="mine_launcher_title_option">Título del juego</string>
+    <string name="mine_launcher_edit_title">Editar título</string>
+    <string name="mine_launcher_enter_title_hint">Introduce un título personalizado</string>
+    <string name="mine_launcher_reset_default">Restablecer por defecto</string>
+    <string name="mine_launcher_save">Guardar</string>
+
+    <string name="runtime_detection_found">Versión encontrada: %s</string>
+    <string name="runtime_detection_recommended">Versión recomendada: %s</string>
+    <string name="runtime_detection_unknown">Desconocida</string>
+    <string name="runtime_detection_none">Ninguna</string>
+
+    <string name="mine_launcher_add_game">Agregar juego</string>
+    <string name="add_game_title">Agregar juego</string>
+    <string name="add_game_choose_mode">Seleccionar instalación</string>
+    <string name="add_game_mode_renpy">Juego Ren\'Py</string>
+    <string name="add_game_mode_renpy_desc">Instala un juego Ren\'Py normal (.zip, .rar)</string>
+    <string name="add_game_mode_ddlc">Mod de DDLC</string>
+    <string name="add_game_mode_ddlc_desc">Instalar un mod de DDLC</string>
+    <string name="add_game_select_archive">Seleccionar archivo del juego</string>
+    <string name="add_game_select_mod_archive">Seleccionar archivo del mod</string>
+    <string name="add_game_select_base_ddlc">Seleccionar DDLC (ddlc-win.zip)</string>
+    <string name="add_game_title_label">Título del juego</string>
+    <string name="add_game_folder_label">Nombre de la carpeta</string>
+    <string name="add_game_install_btn">Instalar</string>
+    <string name="add_game_error_no_archive">Por favor, selecciona un archivo de juego.</string>
+    <string name="add_game_error_no_base">Por favor, selecciona el archivo ddlc-win.zip.</string>
+    <string name="add_game_error_no_folder">Por favor, indica un nombre de carpeta.</string>
+    <string name="add_game_error_hash">Archivo de DDLC no válido: discrepancia en la verificación (SHA-256).</string>
+    <string name="add_game_error_generic">Error en la instalación: %s</string>
+    <string name="add_game_error_invalid_archive">Por favor, selecciona un archivo .zip o .rar válido.</string>
+    <string name="add_game_error_invalid_base_ddlc">Por favor, selecciona un archivo ddlc-win.zip válido.</string>
+    <string name="add_game_success">¡Juego instalado!</string>
+    <string name="dialog_error_title">Error</string>
 </resources>

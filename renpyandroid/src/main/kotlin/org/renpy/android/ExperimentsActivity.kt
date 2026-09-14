@@ -142,6 +142,7 @@ class ExperimentsActivity : GameWindowActivity() {
             File(gameFolder, ".runtime_853.version").delete()
             File(gameFolder, "private.version").delete()
             File(gameFolder, ".private.version").delete()
+            MineLauncherConfigHelper.setGameEngine(gameFolder, engine)
         } catch (e: Exception) {
             // ignore write errors
         }
@@ -149,18 +150,47 @@ class ExperimentsActivity : GameWindowActivity() {
 
     private fun showRuntimeSelectorDialog(gameFolder: File, onSelected: ((String) -> Unit)? = null) {
         val currentEngine = getGameEngine(gameFolder)
-        var selectedIndex = when (currentEngine) {
+        val (detectedVersion, recommendedVersion) = RenpyVersionDetector.detectAndSave(gameFolder)
+        val recommendedIndex = when (recommendedVersion) {
             RUNTIME_853 -> 6
             RUNTIME_841 -> 5
             RUNTIME_837 -> 4
             RUNTIME_803 -> 3
             RUNTIME_784 -> 2
             RUNTIME_7411 -> 1
+            RUNTIME_699 -> 0
             else -> 0
         }
 
+        var selectedIndex = if (currentEngine != null) {
+            when (currentEngine) {
+                RUNTIME_853 -> 6
+                RUNTIME_841 -> 5
+                RUNTIME_837 -> 4
+                RUNTIME_803 -> 3
+                RUNTIME_784 -> 2
+                RUNTIME_7411 -> 1
+                else -> 0
+            }
+        } else {
+            recommendedIndex
+        }
+
+        val detectedText = if (detectedVersion != null) {
+            getString(R.string.runtime_detection_found, detectedVersion)
+        } else {
+            getString(R.string.runtime_detection_found, getString(R.string.runtime_detection_unknown))
+        }
+        val recommendedText = if (recommendedVersion != null) {
+            getString(R.string.runtime_detection_recommended, recommendedVersion)
+        } else {
+            getString(R.string.runtime_detection_recommended, getString(R.string.runtime_detection_none))
+        }
+        val messageText = "$detectedText\n$recommendedText"
+
         GameDialogBuilder(this)
             .setTitle(getString(R.string.experiments_select_runtime))
+            .setMessage(messageText)
             .setSingleChoiceItems(RUNTIME_OPTIONS, selectedIndex) { _, which ->
                 selectedIndex = which
             }
@@ -263,6 +293,7 @@ class ExperimentsActivity : GameWindowActivity() {
                 val gameSubDir = File(child, "game")
                 if (gameSubDir.exists() && gameSubDir.isDirectory) {
                     list.add(child)
+                    RenpyVersionDetector.detectAndSave(child)
                 }
             }
         }

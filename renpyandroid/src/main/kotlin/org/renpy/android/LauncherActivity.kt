@@ -1298,10 +1298,17 @@ class LauncherActivity : BaseActivity() {
             }
 
             "experiments" -> {
-                val intent = Intent(this, ExperimentsActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                if (getActiveProfile() == ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER) {
+                    val intent = Intent(this, MineLauncherActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    }
+                    launchActivityWindow(intent, MineLauncherActivity::class.java.name)
+                } else {
+                    val intent = Intent(this, ExperimentsActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    }
+                    launchActivityWindow(intent, ExperimentsActivity::class.java.name)
                 }
-                launchActivityWindow(intent, ExperimentsActivity::class.java.name)
             }
 
             "switch_user" -> {

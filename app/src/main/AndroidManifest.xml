@@ -164,6 +164,8 @@
     <activity android:name="org.renpy.android.SubmodInstallerActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.ExperimentsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.MineLauncherActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.AddGameActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.WallpapersActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity
