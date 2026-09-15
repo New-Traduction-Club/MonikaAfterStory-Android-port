@@ -322,8 +322,8 @@ class MineLauncherActivity : GameWindowActivity() {
 
         binding.btnDetailsPlay.setOnClickListener(onPlayClick)
         binding.btnDetailsSettings.setOnClickListener(onSettingsClick)
-        binding.rowTitleOption.setOnClickListener(onTitleClick)
-        binding.rowRuntimeOption.setOnClickListener(onRuntimeClick)
+        binding.tvHeroDetailsTitle.setOnClickListener(onTitleClick)
+        binding.tvHeroDetailsRuntimeBadge.setOnClickListener(onRuntimeClick)
 
         binding.btnDefaultPlay.setOnClickListener(onPlayClick)
         binding.btnDefaultSettings.setOnClickListener(onSettingsClick)
@@ -366,8 +366,6 @@ class MineLauncherActivity : GameWindowActivity() {
 
                 binding.tvHeroDetailsTitle.text = title
                 binding.tvHeroDetailsRuntimeBadge.text = runtimeText
-                binding.tvDetailsSelectedTitle.text = title
-                binding.tvDetailsSelectedRuntime.text = runtimeText
                 binding.tvDetailsPath.text = pathText
                 return
             }

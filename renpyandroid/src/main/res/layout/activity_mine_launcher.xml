@@ -253,6 +253,9 @@
                                         android:textStyle="bold"
                                         android:maxLines="2"
                                         android:ellipsize="end"
+                                        android:background="?attr/selectableItemBackground"
+                                        android:clickable="true"
+                                        android:focusable="true"
                                         android:shadowColor="#D9000000"
                                         android:shadowRadius="10"
                                         android:shadowDx="0"
@@ -271,7 +274,40 @@
                                         android:textSize="11sp"
                                         android:textStyle="bold"
                                         android:letterSpacing="0.02"
+                                        android:clickable="true"
+                                        android:focusable="true"
                                         tools:text="Ren'Py 8.3.7" />
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        android:layout_weight="1" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <ImageView
+                                            android:layout_width="13dp"
+                                            android:layout_height="13dp"
+                                            android:src="@drawable/ic_folder"
+                                            app:tint="#80FFFFFF" />
+
+                                        <TextView
+                                            android:id="@+id/tvDetailsPath"
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_weight="1"
+                                            android:layout_marginStart="6dp"
+                                            android:textColor="#80FFFFFF"
+                                            android:textSize="11sp"
+                                            android:maxLines="1"
+                                            android:ellipsize="middle"
+                                            tools:text="filesDir/my_game/" />
+
+                                    </LinearLayout>
 
                                 </LinearLayout>
 
@@ -279,9 +315,10 @@
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cardDetailsActions"
-                                android:layout_width="220dp"
-                                android:layout_height="285dp"
+                                android:layout_width="84dp"
+                                android:layout_height="170dp"
                                 android:layout_marginStart="16dp"
+                                android:layout_gravity="center_vertical"
                                 app:cardCornerRadius="16dp"
                                 app:cardElevation="10dp"
                                 app:strokeWidth="0dp"
@@ -291,218 +328,43 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:orientation="vertical"
-                                    android:gravity="center_horizontal"
-                                    android:padding="16dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="@string/mine_launcher_play"
-                                        android:textColor="#B3FFFFFF"
-                                        android:textSize="11sp"
-                                        android:textStyle="bold"
-                                        android:letterSpacing="0.08"
-                                        android:textAllCaps="true" />
-
-                                    <View
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1" />
+                                    android:gravity="center"
+                                    android:padding="12dp">
 
                                     <com.google.android.material.button.MaterialButton
                                         android:id="@+id/btnDetailsPlay"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="50dp"
-                                        android:text="@string/mine_launcher_play"
-                                        android:textSize="14sp"
-                                        android:textStyle="bold"
+                                        android:layout_width="56dp"
+                                        android:layout_height="56dp"
+                                        android:contentDescription="@string/mine_launcher_play"
+                                        android:insetLeft="0dp"
+                                        android:insetTop="0dp"
+                                        android:insetRight="0dp"
+                                        android:insetBottom="0dp"
+                                        android:padding="0dp"
                                         app:icon="@drawable/ic_play_arrow"
-                                        app:iconSize="20dp"
-                                        app:cornerRadius="10dp"
+                                        app:iconSize="28dp"
+                                        app:iconGravity="textStart"
+                                        app:iconPadding="0dp"
+                                        app:cornerRadius="16dp"
                                         app:backgroundTint="@color/colorPrimary" />
 
                                     <com.google.android.material.button.MaterialButton
                                         android:id="@+id/btnDetailsSettings"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="46dp"
-                                        android:layout_marginTop="12dp"
-                                        android:text="@string/mine_launcher_settings"
-                                        android:textSize="13sp"
+                                        android:layout_width="48dp"
+                                        android:layout_height="48dp"
+                                        android:layout_marginTop="14dp"
+                                        android:contentDescription="@string/mine_launcher_settings"
+                                        android:insetLeft="0dp"
+                                        android:insetTop="0dp"
+                                        android:insetRight="0dp"
+                                        android:insetBottom="0dp"
+                                        android:padding="0dp"
                                         app:icon="@drawable/ic_launcher_settings"
-                                        app:iconSize="18dp"
-                                        app:cornerRadius="10dp"
+                                        app:iconSize="22dp"
+                                        app:iconGravity="textStart"
+                                        app:iconPadding="0dp"
+                                        app:cornerRadius="14dp"
                                         style="@style/Widget.Material3.Button.TonalButton" />
-
-                                    <View
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="@string/mine_launcher_details"
-                                        android:textColor="#66FFFFFF"
-                                        android:textSize="11sp" />
-
-                                </LinearLayout>
-
-                            </com.google.android.material.card.MaterialCardView>
-
-                            <com.google.android.material.card.MaterialCardView
-                                android:id="@+id/cardDetailsOptions"
-                                android:layout_width="290dp"
-                                android:layout_height="285dp"
-                                android:layout_marginStart="16dp"
-                                app:cardCornerRadius="16dp"
-                                app:cardElevation="10dp"
-                                app:strokeWidth="0dp"
-                                app:cardBackgroundColor="#E61A1A26">
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:orientation="vertical"
-                                    android:padding="16dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="@string/mine_launcher_options_title"
-                                        android:textColor="#B3FFFFFF"
-                                        android:textSize="11sp"
-                                        android:textStyle="bold"
-                                        android:letterSpacing="0.08"
-                                        android:textAllCaps="true" />
-
-                                    <LinearLayout
-                                        android:id="@+id/rowTitleOption"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="10dp"
-                                        android:background="?attr/selectableItemBackground"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:gravity="center_vertical"
-                                        android:orientation="horizontal"
-                                        android:paddingVertical="6dp">
-
-                                        <LinearLayout
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:orientation="vertical">
-
-                                            <TextView
-                                                android:layout_width="wrap_content"
-                                                android:layout_height="wrap_content"
-                                                android:text="@string/mine_launcher_title_option"
-                                                android:textColor="#80FFFFFF"
-                                                android:textSize="11sp" />
-
-                                            <TextView
-                                                android:id="@+id/tvDetailsSelectedTitle"
-                                                android:layout_width="wrap_content"
-                                                android:layout_height="wrap_content"
-                                                android:layout_marginTop="1dp"
-                                                android:textColor="#FFFFFF"
-                                                android:textSize="13sp"
-                                                android:textStyle="bold"
-                                                android:maxLines="1"
-                                                android:ellipsize="end"
-                                                tools:text="Doki Doki Mod" />
-
-                                        </LinearLayout>
-
-                                        <ImageView
-                                            android:layout_width="18dp"
-                                            android:layout_height="18dp"
-                                            android:src="@android:drawable/ic_menu_edit"
-                                            app:tint="#FFFFFF" />
-
-                                    </LinearLayout>
-
-                                    <View
-                                        android:layout_width="match_parent"
-                                        android:layout_height="1dp"
-                                        android:layout_marginVertical="6dp"
-                                        android:background="#26FFFFFF" />
-
-                                    <LinearLayout
-                                        android:id="@+id/rowRuntimeOption"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:background="?attr/selectableItemBackground"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:gravity="center_vertical"
-                                        android:orientation="horizontal"
-                                        android:paddingVertical="6dp">
-
-                                        <LinearLayout
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:orientation="vertical">
-
-                                            <TextView
-                                                android:layout_width="wrap_content"
-                                                android:layout_height="wrap_content"
-                                                android:text="@string/mine_launcher_runtime_option"
-                                                android:textColor="#80FFFFFF"
-                                                android:textSize="11sp" />
-
-                                            <TextView
-                                                android:id="@+id/tvDetailsSelectedRuntime"
-                                                android:layout_width="wrap_content"
-                                                android:layout_height="wrap_content"
-                                                android:layout_marginTop="1dp"
-                                                android:textColor="#FF9AC3"
-                                                android:textSize="13sp"
-                                                android:textStyle="bold"
-                                                tools:text="Ren'Py 8.3.7" />
-
-                                        </LinearLayout>
-
-                                        <ImageView
-                                            android:layout_width="18dp"
-                                            android:layout_height="18dp"
-                                            android:src="@drawable/ic_launcher_settings"
-                                            app:tint="#FFFFFF" />
-
-                                    </LinearLayout>
-
-                                    <View
-                                        android:layout_width="match_parent"
-                                        android:layout_height="1dp"
-                                        android:layout_marginVertical="6dp"
-                                        android:background="#26FFFFFF" />
-
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="vertical"
-                                        android:paddingVertical="2dp">
-
-                                        <TextView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="@string/file_col_name"
-                                            android:textColor="#80FFFFFF"
-                                            android:textSize="11sp" />
-
-                                        <TextView
-                                            android:id="@+id/tvDetailsPath"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:layout_marginTop="1dp"
-                                            android:textColor="#B3FFFFFF"
-                                            android:textSize="11sp"
-                                            android:maxLines="2"
-                                            android:ellipsize="end"
-                                            tools:text="filesDir/my_game/" />
-
-                                    </LinearLayout>
 
                                 </LinearLayout>
 
