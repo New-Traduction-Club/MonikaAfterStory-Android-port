@@ -518,12 +518,26 @@
     <string name="mine_launcher_view_grid">Visualização em grade</string>
     <string name="mine_launcher_view_list">Visualização em lista</string>
     <string name="mine_launcher_back">Voltar</string>
+    <string name="mine_launcher_close">Fechar</string>
     <string name="mine_launcher_details">Detalhes</string>
     <string name="mine_launcher_title_option">Título do jogo</string>
     <string name="mine_launcher_edit_title">Editar título</string>
     <string name="mine_launcher_enter_title_hint">Insira um título personalizado</string>
     <string name="mine_launcher_reset_default">Restaurar padrão</string>
     <string name="mine_launcher_save">Salvar</string>
+    <string name="mine_launcher_env_vars_option">Variáveis de ambiente</string>
+    <string name="mine_launcher_env_vars_title">Variáveis de ambiente</string>
+    <string name="mine_launcher_add_env_var">Adicionar variável</string>
+    <string name="mine_launcher_edit_env_var">Editar variável</string>
+    <string name="mine_launcher_var_name">Nome da variável</string>
+    <string name="mine_launcher_var_type">Tipo</string>
+    <string name="mine_launcher_type_boolean">Booleano</string>
+    <string name="mine_launcher_type_number">Número (Int/Float)</string>
+    <string name="mine_launcher_type_custom">Personalizado</string>
+    <string name="mine_launcher_var_value">Valor</string>
+    <string name="mine_launcher_error_invalid_var_name">Nome de variável inválido</string>
+    <string name="mine_launcher_error_invalid_number">Formato de número inválido</string>
+    <string name="mine_launcher_error_duplicate_var">A variável já existe</string>
 
     <string name="runtime_detection_found">Versão encontrada: %s</string>
     <string name="runtime_detection_recommended">Versão recomendada: %s</string>

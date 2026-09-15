@@ -85,6 +85,7 @@ dependencies {
 
     // Unit Test Dependencies
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20231013'
 
     // Instrumented Test Dependencies
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'

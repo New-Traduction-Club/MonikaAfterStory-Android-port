@@ -13,6 +13,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
@@ -33,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.renpy.android.databinding.ActivityMineLauncherBinding
+import org.renpy.android.databinding.DialogAddEnvVarBinding
 import org.renpy.android.databinding.DialogMineGameSettingsBinding
 import org.renpy.android.databinding.ItemMineGameCardBinding
 import org.renpy.android.databinding.ItemMineGameListBinding
@@ -505,7 +507,8 @@ class MineLauncherActivity : GameWindowActivity() {
     private enum class SettingsScreen {
         MENU,
         EDIT_TITLE,
-        SELECT_RUNTIME
+        SELECT_RUNTIME,
+        ENV_VARS
     }
 
     private fun showGameSettingsDialog(
@@ -523,6 +526,170 @@ class MineLauncherActivity : GameWindowActivity() {
             getString(R.string.experiments_runtime_badge, currentEngine)
         } else {
             getString(R.string.experiments_runtime_not_selected)
+        }
+
+        val currentAndroidMode = DeandroidHelper.isAndroidMode(gameFolder)
+        val currentCustomVars = DeandroidHelper.getCustomEnvVars(gameFolder).toMutableList()
+        dialogBinding.tvCurrentEnvVarsValue.text =
+            DeandroidHelper.getFormattedStatus(currentAndroidMode, currentCustomVars.size)
+        dialogBinding.switchRenpyAndroid.isChecked = currentAndroidMode
+        dialogBinding.tvRenpyAndroidStatus.text = if (currentAndroidMode) "True" else "False"
+
+        fun updateEnvVarsSummary() {
+            dialogBinding.tvCurrentEnvVarsValue.text =
+                DeandroidHelper.getFormattedStatus(dialogBinding.switchRenpyAndroid.isChecked, currentCustomVars.size)
+        }
+
+        dialogBinding.switchRenpyAndroid.setOnCheckedChangeListener { _, isChecked ->
+            dialogBinding.tvRenpyAndroidStatus.text = if (isChecked) "True" else "False"
+        }
+
+        dialogBinding.rowVarRenpyAndroid.setOnClickListener {
+            SoundEffects.playClick(this)
+            dialogBinding.switchRenpyAndroid.toggle()
+        }
+
+        lateinit var envVarsAdapter: CustomEnvVarsAdapter
+
+        fun showAddOrEditEnvVarDialog(existingIndex: Int? = null) {
+            val addBinding = DialogAddEnvVarBinding.inflate(layoutInflater)
+            val isEditing = existingIndex != null
+            val existingVar = if (isEditing) currentCustomVars[existingIndex!!] else null
+
+            if (existingVar != null) {
+                addBinding.etVarName.setText(existingVar.name)
+                when (existingVar.type) {
+                    DeandroidHelper.TYPE_BOOLEAN -> {
+                        addBinding.rbTypeBoolean.isChecked = true
+                        addBinding.rgBoolValue.visibility = View.VISIBLE
+                        addBinding.etNumberValue.visibility = View.GONE
+                        addBinding.etCustomValue.visibility = View.GONE
+                        if (existingVar.value.equals("False", ignoreCase = true)) {
+                            addBinding.rbBoolFalse.isChecked = true
+                        } else {
+                            addBinding.rbBoolTrue.isChecked = true
+                        }
+                    }
+                    DeandroidHelper.TYPE_NUMBER -> {
+                        addBinding.rbTypeNumber.isChecked = true
+                        addBinding.rgBoolValue.visibility = View.GONE
+                        addBinding.etNumberValue.visibility = View.VISIBLE
+                        addBinding.etCustomValue.visibility = View.GONE
+                        addBinding.etNumberValue.setText(existingVar.value)
+                    }
+                    else -> {
+                        addBinding.rbTypeCustom.isChecked = true
+                        addBinding.rgBoolValue.visibility = View.GONE
+                        addBinding.etNumberValue.visibility = View.GONE
+                        addBinding.etCustomValue.visibility = View.VISIBLE
+                        addBinding.etCustomValue.setText(existingVar.value)
+                    }
+                }
+            }
+
+            addBinding.rgVarType.setOnCheckedChangeListener { _, checkedId ->
+                when (checkedId) {
+                    R.id.rbTypeNumber -> {
+                        addBinding.rgBoolValue.visibility = View.GONE
+                        addBinding.etNumberValue.visibility = View.VISIBLE
+                        addBinding.etCustomValue.visibility = View.GONE
+                        addBinding.root.post {
+                            addBinding.root.fullScroll(View.FOCUS_DOWN)
+                            addBinding.etNumberValue.requestFocus()
+                        }
+                    }
+                    R.id.rbTypeCustom -> {
+                        addBinding.rgBoolValue.visibility = View.GONE
+                        addBinding.etNumberValue.visibility = View.GONE
+                        addBinding.etCustomValue.visibility = View.VISIBLE
+                        addBinding.root.post {
+                            addBinding.root.fullScroll(View.FOCUS_DOWN)
+                            addBinding.etCustomValue.requestFocus()
+                        }
+                    }
+                    else -> {
+                        addBinding.rgBoolValue.visibility = View.VISIBLE
+                        addBinding.etNumberValue.visibility = View.GONE
+                        addBinding.etCustomValue.visibility = View.GONE
+                    }
+                }
+            }
+
+            val dialog = GameDialogBuilder(this)
+                .setTitle(getString(if (isEditing) R.string.mine_launcher_edit_env_var else R.string.mine_launcher_add_env_var))
+                .setView(addBinding.root)
+                .setPositiveButton(getString(R.string.mine_launcher_save)) { d, _ ->
+                    val name = addBinding.etVarName.text?.toString()?.trim() ?: ""
+                    if (!DeandroidHelper.isValidVarName(name)) {
+                        Toast.makeText(this, R.string.mine_launcher_error_invalid_var_name, Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
+                    val isDuplicate = currentCustomVars.indices.any { idx ->
+                        idx != existingIndex && currentCustomVars[idx].name.equals(name, ignoreCase = true)
+                    }
+                    if (isDuplicate) {
+                        Toast.makeText(this, R.string.mine_launcher_error_duplicate_var, Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
+
+                    val (type, value) = when {
+                        addBinding.rbTypeNumber.isChecked -> {
+                            val numStr = addBinding.etNumberValue.text?.toString()?.trim() ?: ""
+                            if (!DeandroidHelper.isValidNumber(numStr)) {
+                                Toast.makeText(this, R.string.mine_launcher_error_invalid_number, Toast.LENGTH_SHORT).show()
+                                return@setPositiveButton
+                            }
+                            DeandroidHelper.TYPE_NUMBER to numStr
+                        }
+                        addBinding.rbTypeCustom.isChecked -> {
+                            val custStr = addBinding.etCustomValue.text?.toString()?.trim() ?: ""
+                            if (custStr.isEmpty()) {
+                                return@setPositiveButton
+                            }
+                            DeandroidHelper.TYPE_CUSTOM to custStr
+                        }
+                        else -> {
+                            val boolStr = if (addBinding.rbBoolTrue.isChecked) "True" else "False"
+                            DeandroidHelper.TYPE_BOOLEAN to boolStr
+                        }
+                    }
+
+                    if (isEditing) {
+                        currentCustomVars[existingIndex!!] = CustomEnvVar(name, type, value)
+                    } else {
+                        currentCustomVars.add(CustomEnvVar(name, type, value))
+                    }
+                    envVarsAdapter.notifyDataSetChanged()
+                    updateEnvVarsSummary()
+                    d.dismiss()
+                }
+                .setNegativeButton(getString(R.string.cancel)) { d, _ ->
+                    d.dismiss()
+                }
+                .create()
+            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            dialog.show()
+        }
+
+        envVarsAdapter = CustomEnvVarsAdapter(
+            currentCustomVars,
+            onItemClick = { index, _ ->
+                SoundEffects.playClick(this)
+                showAddOrEditEnvVarDialog(index)
+            },
+            onDeleteClick = { index, _ ->
+                SoundEffects.playClick(this)
+                currentCustomVars.removeAt(index)
+                envVarsAdapter.notifyDataSetChanged()
+                updateEnvVarsSummary()
+            }
+        )
+        dialogBinding.rvCustomEnvVars.layoutManager = LinearLayoutManager(this)
+        dialogBinding.rvCustomEnvVars.adapter = envVarsAdapter
+
+        dialogBinding.btnAddEnvVar.setOnClickListener {
+            SoundEffects.playClick(this)
+            showAddOrEditEnvVarDialog(null)
         }
 
         val config = getGameConfig(gameFolder)
@@ -608,7 +775,8 @@ class MineLauncherActivity : GameWindowActivity() {
         val allScreens = listOf(
             dialogBinding.layoutSettingsMenu,
             dialogBinding.layoutEditTitle,
-            dialogBinding.layoutSelectRuntime
+            dialogBinding.layoutSelectRuntime,
+            dialogBinding.layoutEnvironmentVariables
         )
 
         fun transitionTo(nextScreen: SettingsScreen, animate: Boolean = true) {
@@ -620,11 +788,13 @@ class MineLauncherActivity : GameWindowActivity() {
                 SettingsScreen.MENU -> dialogBinding.layoutSettingsMenu
                 SettingsScreen.EDIT_TITLE -> dialogBinding.layoutEditTitle
                 SettingsScreen.SELECT_RUNTIME -> dialogBinding.layoutSelectRuntime
+                SettingsScreen.ENV_VARS -> dialogBinding.layoutEnvironmentVariables
             }
             val toView = when (nextScreen) {
                 SettingsScreen.MENU -> dialogBinding.layoutSettingsMenu
                 SettingsScreen.EDIT_TITLE -> dialogBinding.layoutEditTitle
                 SettingsScreen.SELECT_RUNTIME -> dialogBinding.layoutSelectRuntime
+                SettingsScreen.ENV_VARS -> dialogBinding.layoutEnvironmentVariables
             }
             currentScreen = nextScreen
 
@@ -658,7 +828,7 @@ class MineLauncherActivity : GameWindowActivity() {
                 SettingsScreen.MENU -> {
                     titleView?.text = getString(R.string.mine_launcher_options_title)
                     positiveButton?.visibility = View.GONE
-                    negativeButton?.text = getString(R.string.cancel)
+                    negativeButton?.text = getString(R.string.mine_launcher_close)
                     negativeButton?.visibility = View.VISIBLE
                     negativeButton?.setOnClickListener {
                         SoundEffects.playClick(this)
@@ -731,6 +901,32 @@ class MineLauncherActivity : GameWindowActivity() {
                         }
                     }
                 }
+
+                SettingsScreen.ENV_VARS -> {
+                    titleView?.text = getString(R.string.mine_launcher_env_vars_title)
+                    negativeButton?.text = getString(R.string.mine_launcher_back)
+                    negativeButton?.visibility = View.VISIBLE
+                    negativeButton?.setOnClickListener {
+                        SoundEffects.playClick(this)
+                        val diskAndroid = DeandroidHelper.isAndroidMode(gameFolder)
+                        dialogBinding.switchRenpyAndroid.isChecked = diskAndroid
+                        dialogBinding.tvRenpyAndroidStatus.text = if (diskAndroid) "True" else "False"
+                        currentCustomVars.clear()
+                        currentCustomVars.addAll(DeandroidHelper.getCustomEnvVars(gameFolder))
+                        envVarsAdapter.notifyDataSetChanged()
+                        updateEnvVarsSummary()
+                        transitionTo(SettingsScreen.MENU)
+                    }
+                    positiveButton?.text = getString(R.string.mine_launcher_save)
+                    positiveButton?.visibility = View.VISIBLE
+                    positiveButton?.setOnClickListener {
+                        SoundEffects.playClick(this)
+                        val newAndroidValue = dialogBinding.switchRenpyAndroid.isChecked
+                        DeandroidHelper.saveEnvVars(gameFolder, newAndroidValue, currentCustomVars)
+                        updateEnvVarsSummary()
+                        transitionTo(SettingsScreen.MENU)
+                    }
+                }
             }
         }
 
@@ -770,10 +966,16 @@ class MineLauncherActivity : GameWindowActivity() {
             transitionTo(SettingsScreen.SELECT_RUNTIME)
         }
 
+        dialogBinding.rowSettingEnvVars.setOnClickListener {
+            SoundEffects.playClick(this)
+            transitionTo(SettingsScreen.ENV_VARS)
+        }
+
         val initialTitleRes = when (initialScreen) {
             SettingsScreen.MENU -> R.string.mine_launcher_options_title
             SettingsScreen.EDIT_TITLE -> R.string.mine_launcher_edit_title
             SettingsScreen.SELECT_RUNTIME -> R.string.experiments_select_runtime
+            SettingsScreen.ENV_VARS -> R.string.mine_launcher_env_vars_title
         }
 
         dialog = GameDialogBuilder(this)
@@ -782,7 +984,7 @@ class MineLauncherActivity : GameWindowActivity() {
             .setHeightPercentage(0.80f)
             .setFadeAnimation(true)
             .setPositiveButton(getString(R.string.mine_launcher_save)) { _, _ -> }
-            .setNegativeButton(getString(R.string.cancel)) { d, _ ->
+            .setNegativeButton(getString(R.string.mine_launcher_close)) { d, _ ->
                 d.dismiss()
             }
             .setOnDismissListener {
@@ -797,6 +999,15 @@ class MineLauncherActivity : GameWindowActivity() {
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
                 if (currentScreen != SettingsScreen.MENU && initialScreen == SettingsScreen.MENU) {
                     SoundEffects.playClick(this)
+                    if (currentScreen == SettingsScreen.ENV_VARS) {
+                        val diskAndroid = DeandroidHelper.isAndroidMode(gameFolder)
+                        dialogBinding.switchRenpyAndroid.isChecked = diskAndroid
+                        dialogBinding.tvRenpyAndroidStatus.text = if (diskAndroid) "True" else "False"
+                        currentCustomVars.clear()
+                        currentCustomVars.addAll(DeandroidHelper.getCustomEnvVars(gameFolder))
+                        envVarsAdapter.notifyDataSetChanged()
+                        updateEnvVarsSummary()
+                    }
                     transitionTo(SettingsScreen.MENU)
                     return@setOnKeyListener true
                 }
@@ -1066,5 +1277,47 @@ class MineLauncherActivity : GameWindowActivity() {
 
         class CardViewHolder(val binding: ItemMineGameCardBinding) : RecyclerView.ViewHolder(binding.root)
         class ListViewHolder(val binding: ItemMineGameListBinding) : RecyclerView.ViewHolder(binding.root)
+    }
+
+    private class CustomEnvVarsAdapter(
+        private val items: List<CustomEnvVar>,
+        private val onItemClick: (Int, CustomEnvVar) -> Unit,
+        private val onDeleteClick: (Int, CustomEnvVar) -> Unit
+    ) : RecyclerView.Adapter<CustomEnvVarsAdapter.ViewHolder>() {
+
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val tvVarName: TextView = view.findViewById(R.id.tvVarName)
+            val tvVarSubtitle: TextView = view.findViewById(R.id.tvVarSubtitle)
+            val btnDeleteVar: View = view.findViewById(R.id.btnDeleteVar)
+            val rowEnvVarItem: View = view.findViewById(R.id.rowEnvVarItem)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_mine_env_var, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val item = items[position]
+            val context = holder.itemView.context
+            holder.tvVarName.text = item.name
+
+            val typeLabel = when (item.type) {
+                DeandroidHelper.TYPE_BOOLEAN -> context.getString(R.string.mine_launcher_type_boolean)
+                DeandroidHelper.TYPE_NUMBER -> context.getString(R.string.mine_launcher_type_number)
+                else -> context.getString(R.string.mine_launcher_type_custom)
+            }
+            holder.tvVarSubtitle.text = "$typeLabel: ${item.value}"
+
+            holder.rowEnvVarItem.setOnClickListener {
+                onItemClick(position, item)
+            }
+            holder.btnDeleteVar.setOnClickListener {
+                onDeleteClick(position, item)
+            }
+        }
+
+        override fun getItemCount(): Int = items.size
     }
 }

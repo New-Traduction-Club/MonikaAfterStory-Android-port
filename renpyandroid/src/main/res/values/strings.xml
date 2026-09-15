@@ -502,12 +502,26 @@
     <string name="mine_launcher_view_grid">Grid view</string>
     <string name="mine_launcher_view_list">List view</string>
     <string name="mine_launcher_back">Back</string>
+    <string name="mine_launcher_close">Close</string>
     <string name="mine_launcher_details">Details</string>
     <string name="mine_launcher_title_option">Game Title</string>
     <string name="mine_launcher_edit_title">Edit Title</string>
     <string name="mine_launcher_enter_title_hint">Enter custom title</string>
     <string name="mine_launcher_reset_default">Reset to Default</string>
     <string name="mine_launcher_save">Save</string>
+    <string name="mine_launcher_env_vars_option">Environment variables</string>
+    <string name="mine_launcher_env_vars_title">Environment variables</string>
+    <string name="mine_launcher_add_env_var">Add variable</string>
+    <string name="mine_launcher_edit_env_var">Edit variable</string>
+    <string name="mine_launcher_var_name">Variable name</string>
+    <string name="mine_launcher_var_type">Type</string>
+    <string name="mine_launcher_type_boolean">Boolean</string>
+    <string name="mine_launcher_type_number">Number (Int/Float)</string>
+    <string name="mine_launcher_type_custom">Custom</string>
+    <string name="mine_launcher_var_value">Value</string>
+    <string name="mine_launcher_error_invalid_var_name">Invalid variable name</string>
+    <string name="mine_launcher_error_invalid_number">Invalid number format</string>
+    <string name="mine_launcher_error_duplicate_var">Variable already exists</string>
 
     <string name="runtime_detection_found">Version found: %s</string>
     <string name="runtime_detection_recommended">Version recommended: %s</string>
