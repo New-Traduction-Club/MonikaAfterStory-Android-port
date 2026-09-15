@@ -54,7 +54,12 @@ import android.view.animation.LinearInterpolator
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 
 
 import android.graphics.RectF
@@ -404,9 +409,6 @@ class LauncherActivity : BaseActivity() {
         startSystemClockWorker()
         setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         setupDesktopSelection()
-
-        startBootCrtAnimations()
-
         createNotificationChannel()
 
         // Register window state broadcast receiver
@@ -806,70 +808,119 @@ class LauncherActivity : BaseActivity() {
         val availableStorage = Formatter.formatFileSize(this, availableStorageBytes)
 
         lifecycleScope.launch {
-            delay(1_500)
+            delay(200)
 
-            val consoleBuffer = StringBuilder()
-            var cursorVisible = true
+            val consoleBuffer = SpannableStringBuilder()
 
             fun renderBootConsole() {
-                val output = if (cursorVisible) {
-                    "${consoleBuffer}_"
-                } else {
-                    consoleBuffer.toString()
-                }
-                setBootConsoleText(output)
+                setBootConsoleText(consoleBuffer)
             }
 
-            fun appendBootText(text: String) {
-                consoleBuffer.append(text)
+            fun appendKernelLine(timestamp: String, message: String) {
+                val tsStart = consoleBuffer.length
+                consoleBuffer.append("[$timestamp] ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#78909C")),
+                    tsStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                val msgStart = consoleBuffer.length
+                consoleBuffer.append(message).append("\n")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    msgStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
                 renderBootConsole()
             }
 
-            val cursorJob = launch {
-                while (true) {
-                    delay(280)
-                    cursorVisible = !cursorVisible
-                    renderBootConsole()
-                }
+            fun appendSystemdService(service: String) {
+                val b1Start = consoleBuffer.length
+                consoleBuffer.append("[ ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    b1Start,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                val okStart = consoleBuffer.length
+                consoleBuffer.append(" OK ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#44D62C")),
+                    okStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                consoleBuffer.setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    okStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                val b2Start = consoleBuffer.length
+                consoleBuffer.append("] ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    b2Start,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                val sStart = consoleBuffer.length
+                consoleBuffer.append(service).append("\n")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    sStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                renderBootConsole()
             }
 
-            val hexPhaseStart = SystemClock.elapsedRealtime()
-            val hexDurationMs = Random.nextLong(2_400L, 5_200L)
-            val hexLineIntervalMs = 100L
-
-            appendBootText("HEX DUMP START\n")
-            var offset = 0
-            while (SystemClock.elapsedRealtime() - hexPhaseStart < hexDurationMs) {
-                appendBootText("${generateHexDumpLine(offset)}\n")
-                offset += 16
-                delay(hexLineIntervalMs)
+            fun appendStatusLine(message: String) {
+                val start = consoleBuffer.length
+                consoleBuffer.append(message).append("\n")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#88C0D0")),
+                    start,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                renderBootConsole()
             }
 
-            appendBootText("\nTraduction Club BIOS v0.3\n")
-            appendBootText("Kernel: $kernelVersion\n")
-            appendBootText("Board: $manufacturer $model\n")
-            appendBootText("OS: Android $androidVersion\n")
-            appendBootText("Architecture: $arch\n")
-            appendBootText("CPU Cores: $cpuCores\n")
-            appendBootText("Resolution: ${screenWidth}x${screenHeight}\n")
-            appendBootText("Storage: $totalStorage total / $availableStorage free\n")
-            appendBootText("Total RAM: ${totalRamMb}MB... OK\n\n")
+            appendKernelLine("    0.000000", "Linux version $kernelVersion (android $androidVersion, $arch)")
+            delay(120)
+            appendKernelLine("    0.038140", "Hardware: $manufacturer $model ($cpuCores CPUs)")
+            delay(120)
+            appendKernelLine("    0.094210", "Memory: ${totalRamMb}MB total")
+            delay(120)
+            appendKernelLine("    0.142050", "Storage: $availableStorage free / $totalStorage total")
+            delay(120)
+            appendKernelLine("    0.201380", "Display: ${screenWidth}x${screenHeight} @ 32bpp Framebuffer")
+            delay(180)
 
-            appendBootText("WAIT")
-            val waitTargetEnd = hexPhaseStart + 8_000L
-            val dotCount = 10
-            repeat(dotCount) { index ->
-                val dotsRemaining = dotCount - index
-                val remainingTimeMs = (waitTargetEnd - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
-                val dotDelayMs = if (dotsRemaining > 0) remainingTimeMs / dotsRemaining else 0L
-                delay(dotDelayMs)
-                appendBootText(".")
-            }
+            appendSystemdService("Started Virtual Filesystem Services.")
+            delay(240)
+            appendSystemdService("Mounted /data/user/0/the.best.mas.port.")
+            delay(240)
+            appendSystemdService("Initialized Ren'Py Engine & Audio Subsystems.")
+            delay(260)
+            appendSystemdService("Started Traduction Club Session Bus.")
+            delay(240)
+            appendSystemdService("Reached target System Initialization.")
+            delay(240)
+            appendSystemdService("Started Desktop Display Manager.")
+            delay(260)
+            appendSystemdService("Reached target Graphical Interface.")
+            delay(280)
 
-            cursorJob.cancel()
-            cursorVisible = false
-            setBootConsoleText(consoleBuffer.toString())
-            delay(450)
+            appendStatusLine("Starting Traduction Club Desktop Session...")
+            delay(350)
 
             bootSequenceCompleted = true
 
@@ -892,7 +943,11 @@ class LauncherActivity : BaseActivity() {
                     AutoLoginHelper.recordLastUsedProfile(this@LauncherActivity, autoProfile)
                     updateStartMenuAdapter()
                     setupDynamicShortcuts(isSetupCompleted)
-                    WallpaperManager.applyWallpaper(this@LauncherActivity, binding.root, WallpaperManager.getCurrentDesktopTarget(this@LauncherActivity))
+                    WallpaperManager.applyWallpaper(
+                        this@LauncherActivity,
+                        binding.root,
+                        WallpaperManager.getCurrentDesktopTarget(this@LauncherActivity)
+                    )
                     resetStartMenuState()
 
                     binding.bootScreenLayout.animate()
@@ -934,15 +989,6 @@ class LauncherActivity : BaseActivity() {
         return true
     }
 
-    private fun generateHexDumpLine(offset: Int, bytesPerLine: Int = 16): String {
-        val values = IntArray(bytesPerLine) { Random.nextInt(0, 256) }
-        val hexBytes = values.joinToString(" ") { String.format(Locale.US, "%02X", it) }
-        val asciiPreview = values.joinToString(separator = "") { value ->
-            if (value in 32..126) value.toChar().toString() else "."
-        }
-        return String.format(Locale.US, "%04X  %s  |%s|", offset, hexBytes, asciiPreview)
-    }
-
     private fun resolveScreenResolution(): Pair<Int, Int> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val bounds = windowManager.currentWindowMetrics.bounds
@@ -958,7 +1004,7 @@ class LauncherActivity : BaseActivity() {
         return statFs.totalBytes to statFs.availableBytes
     }
 
-    private fun setBootConsoleText(text: String) {
+    private fun setBootConsoleText(text: CharSequence) {
         val console = binding.txtBiosConsole
         console.text = text
         console.doOnPreDraw {
@@ -1395,43 +1441,6 @@ class LauncherActivity : BaseActivity() {
             delay(500L)
             binding.logOffOverlayLayout.visibility = View.GONE
         }
-    }
-
-    private fun startBootCrtAnimations() {
-        val scanlineBitmap = Bitmap.createBitmap(1, 2, Bitmap.Config.ARGB_8888)
-        scanlineBitmap.setPixel(0, 0, Color.TRANSPARENT)
-        scanlineBitmap.setPixel(0, 1, Color.argb(45, 0, 0, 0))
-
-        val scanlineDrawable = BitmapDrawable(resources, scanlineBitmap)
-        scanlineDrawable.tileModeY = Shader.TileMode.REPEAT
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.crtOverlay.foreground = scanlineDrawable
-        } else {
-        }
-
-        val rollingLine = binding.bootRollingLine
-        rollingLine.post {
-            val parentHeight = binding.bootScreenLayout.height.toFloat()
-            val lineAnimator = ValueAnimator.ofFloat(-200f, parentHeight + 200f)
-            lineAnimator.duration = 4000
-            lineAnimator.repeatCount = ValueAnimator.INFINITE
-            lineAnimator.interpolator = LinearInterpolator()
-            lineAnimator.addUpdateListener { animator ->
-                rollingLine.translationY = animator.animatedValue as Float
-            }
-            lineAnimator.start()
-        }
-
-        val overlay = binding.crtOverlay
-        val flickerAnimator = ValueAnimator.ofFloat(0.6f, 0.8f)
-        flickerAnimator.duration = 60
-        flickerAnimator.repeatCount = ValueAnimator.INFINITE
-        flickerAnimator.repeatMode = ValueAnimator.REVERSE
-        flickerAnimator.addUpdateListener { animator ->
-            overlay.alpha = animator.animatedValue as Float
-        }
-        flickerAnimator.start()
     }
 
     private fun startSystemClockWorker() {

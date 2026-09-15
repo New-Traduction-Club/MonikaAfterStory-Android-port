@@ -280,14 +280,10 @@
             android:id="@+id/txtBiosConsole"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:padding="24dp"
-            android:textColor="#00FF00"
-            android:textSize="14sp"
+            android:padding="20dp"
+            android:textColor="#ECEFF4"
+            android:textSize="13sp"
             android:typeface="monospace" 
-            android:shadowColor="#00FF00"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="4"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -298,14 +294,14 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/crt_vignette"
-            android:alpha="0.8" />
+            android:visibility="gone" />
 
         <View
             android:id="@+id/bootRollingLine"
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:background="@drawable/crt_rolling_line"
-            android:alpha="0.25"
+            android:visibility="gone"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
