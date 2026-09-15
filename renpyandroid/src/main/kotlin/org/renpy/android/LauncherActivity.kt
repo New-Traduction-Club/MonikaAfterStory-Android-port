@@ -362,6 +362,7 @@ class LauncherActivity : BaseActivity() {
         intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
             intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
             prefs.edit().putString("active_user_profile", profile).apply()
+            AutoLoginHelper.recordLastUsedProfile(this, profile)
         }
 
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
@@ -570,6 +571,7 @@ class LauncherActivity : BaseActivity() {
             intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
             val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
             prefs.edit().putString("active_user_profile", profile).apply()
+            AutoLoginHelper.recordLastUsedProfile(this, profile)
             updateStartMenuAdapter()
             setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         }
@@ -604,6 +606,7 @@ class LauncherActivity : BaseActivity() {
         intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
             intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
             prefs.edit().putString("active_user_profile", profile).apply()
+            AutoLoginHelper.recordLastUsedProfile(this, profile)
             updateStartMenuAdapter()
             setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
             WallpaperManager.applyWallpaper(this, binding.root, WallpaperManager.getCurrentDesktopTarget(this))
@@ -869,14 +872,52 @@ class LauncherActivity : BaseActivity() {
             delay(450)
 
             bootSequenceCompleted = true
-            val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
-            startActivity(intent)
-            applyFadeTransition()
 
-            binding.bootScreenLayout.postDelayed({
-                binding.bootScreenLayout.visibility = View.GONE
-                binding.bootScreenLayout.alpha = 1f
-            }, 800)
+            val autoProfile = AutoLoginHelper.resolveAutoLoginProfile(this@LauncherActivity)
+            if (autoProfile != null) {
+                val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
+                val target = ProfileNavigationHelper.determineLoginTarget(autoProfile, isSetupCompleted)
+                if (target == ProfileNavigationHelper.NavigationTarget.SETUP) {
+                    val intent = Intent(this@LauncherActivity, SetupActivity::class.java)
+                    startActivity(intent)
+                    applyFadeTransition()
+
+                    binding.bootScreenLayout.postDelayed({
+                        binding.bootScreenLayout.visibility = View.GONE
+                        binding.bootScreenLayout.alpha = 1f
+                    }, 800)
+                } else {
+                    prefs.edit().putString("active_user_profile", autoProfile).apply()
+                    AutoLoginHelper.recordLastUsedProfile(this@LauncherActivity, autoProfile)
+                    updateStartMenuAdapter()
+                    setupDynamicShortcuts(isSetupCompleted)
+                    WallpaperManager.applyWallpaper(this@LauncherActivity, binding.root, WallpaperManager.getCurrentDesktopTarget(this@LauncherActivity))
+                    resetStartMenuState()
+
+                    binding.bootScreenLayout.animate()
+                        .alpha(0f)
+                        .setDuration(400)
+                        .withEndAction {
+                            binding.bootScreenLayout.visibility = View.GONE
+                            binding.bootScreenLayout.alpha = 1f
+                            lifecycleScope.launch {
+                                delay(300)
+                                showStartMenuAnimated()
+                            }
+                        }
+                        .start()
+                }
+            } else {
+                val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
+                startActivity(intent)
+                applyFadeTransition()
+
+                binding.bootScreenLayout.postDelayed({
+                    binding.bootScreenLayout.visibility = View.GONE
+                    binding.bootScreenLayout.alpha = 1f
+                }, 800)
+            }
         }
     }
 

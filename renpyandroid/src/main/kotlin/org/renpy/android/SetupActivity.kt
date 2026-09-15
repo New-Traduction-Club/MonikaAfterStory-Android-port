@@ -636,6 +636,7 @@ class SetupActivity : BaseActivity() {
     private fun launchLauncher() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         prefs.edit().putString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS).apply()
+        AutoLoginHelper.recordLastUsedProfile(this, ProfileNavigationHelper.PROFILE_MAS)
 
         val intent = Intent(this@SetupActivity, LauncherActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT

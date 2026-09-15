@@ -207,6 +207,11 @@
     <string name="settings_sound_effect_title">Button sound effect</string>
     <string name="settings_sound_effect_default">Default</string>
     <string name="settings_sound_effect_reimagined">Reimagined</string>
+    <string name="settings_auto_login_title">Auto-Login</string>
+    <string name="settings_auto_login_disabled">Disabled (Always ask)</string>
+    <string name="settings_auto_login_mas">MAS Desktop</string>
+    <string name="settings_auto_login_mine">MINE Desktop</string>
+    <string name="settings_auto_login_last_used">Last used</string>
     <string name="select_language_title">Select Language</string>
     <string name="title_tools">Tools</string>
     <string name="label_internal_files">Browse Internal Files</string>

@@ -268,6 +268,7 @@ class UserSelectionActivity : BaseActivity() {
                     applyFadeTransition()
                 } else {
                     prefs.edit().putString("active_user_profile", profileName).apply()
+                    AutoLoginHelper.recordLastUsedProfile(this@UserSelectionActivity, profileName)
 
                     val intent = Intent(this@UserSelectionActivity, LauncherActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT

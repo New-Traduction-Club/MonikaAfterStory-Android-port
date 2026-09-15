@@ -201,6 +201,11 @@
     <string name="settings_sound_effect_title">Efeito sonoro dos botões</string>
     <string name="settings_sound_effect_default">Padrão</string>
     <string name="settings_sound_effect_reimagined">Reimaginado</string>
+    <string name="settings_auto_login_title">Login automático</string>
+    <string name="settings_auto_login_disabled">Desativado (Sempre perguntar)</string>
+    <string name="settings_auto_login_mas">Área de Trabalho MAS</string>
+    <string name="settings_auto_login_mine">Área de Trabalho MINE</string>
+    <string name="settings_auto_login_last_used">Último usado</string>
     <string name="select_language_title">Selecionar Idioma</string>
     <string name="title_tools">Ferramentas</string>
     <string name="label_internal_files">Explorar Arquivos Internos</string>
