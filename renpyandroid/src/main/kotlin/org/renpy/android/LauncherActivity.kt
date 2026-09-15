@@ -67,7 +67,6 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 class LauncherActivity : BaseActivity() {
 
@@ -121,7 +120,6 @@ class LauncherActivity : BaseActivity() {
     private var progressText: android.widget.TextView? = null
 
     private var pendingExportUri: Uri? = null
-    private var wallpaperRotationJob: Job? = null
 
     private var selectionStartX = 0f
     private var selectionStartY = 0f
@@ -592,10 +590,7 @@ class LauncherActivity : BaseActivity() {
         super.onResume()
         if (!isUiInitialized) return
 
-        WallpaperManager.advanceOnAppToggle(this)
-        WallpaperManager.maybeAdvanceByTime(this)
-        WallpaperManager.applyWallpaper(this, binding.root)
-        startWallpaperRotation()
+        WallpaperManager.applyWallpaper(this, binding.root, WallpaperManager.getCurrentDesktopTarget(this))
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val savedLang = prefs.getString("language", "English") ?: ""
@@ -611,6 +606,7 @@ class LauncherActivity : BaseActivity() {
             prefs.edit().putString("active_user_profile", profile).apply()
             updateStartMenuAdapter()
             setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
+            WallpaperManager.applyWallpaper(this, binding.root, WallpaperManager.getCurrentDesktopTarget(this))
         }
 
         if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
@@ -639,8 +635,6 @@ class LauncherActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         if (!isUiInitialized) return
-        stopWallpaperRotation()
-        WallpaperManager.advanceOnAppToggle(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -1409,29 +1403,6 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun startWallpaperRotation() {
-        wallpaperRotationJob?.cancel()
-
-        val config = WallpaperManager.getSlideshowConfig(this)
-        val intervalMinutes = config.intervalMinutes
-        if (!config.enabled || intervalMinutes == null || intervalMinutes <= 0) return
-
-        val intervalMs = TimeUnit.MINUTES.toMillis(intervalMinutes.toLong())
-        wallpaperRotationJob = lifecycleScope.launch {
-            while (true) {
-                delay(intervalMs)
-                val changed = WallpaperManager.advanceWallpaper(this@LauncherActivity) != null
-                if (changed) {
-                    WallpaperManager.applyWallpaper(this@LauncherActivity, binding.root)
-                }
-            }
-        }
-    }
-
-    private fun stopWallpaperRotation() {
-        wallpaperRotationJob?.cancel()
-        wallpaperRotationJob = null
-    }
 
     private fun setupObservers() {
         viewModel.launchState.observe(this) { state ->

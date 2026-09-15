@@ -38,17 +38,15 @@ import kotlin.math.roundToInt
  */
 object WallpaperManager {
 
-    const val MIN_SLIDESHOW_SELECTION = 2
-    const val MAX_SLIDESHOW_SELECTION = 5
+    enum class WallpaperTarget(val prefsKey: String) {
+        MAS("wallpaper_mas"),
+        MINE("wallpaper_mine"),
+        LOCKSCREEN("wallpaper_lockscreen")
+    }
 
-    private const val PREFS_KEY = "active_wallpaper"
+    private const val PREFS_KEY_LEGACY = "active_wallpaper"
     private const val DEFAULT_ID = "default"
     private const val WALLPAPERS_DIR = "wallpapers"
-    private const val KEY_SLIDESHOW_ENABLED = "wallpaper_slideshow_enabled"
-    private const val KEY_SLIDESHOW_INTERVAL_MINUTES = "wallpaper_slideshow_interval_minutes"
-    private const val KEY_SLIDESHOW_CHANGE_ON_APP_TOGGLE = "wallpaper_slideshow_change_on_app_toggle"
-    private const val KEY_SLIDESHOW_SELECTION = "wallpaper_slideshow_selection"
-    private const val KEY_SLIDESHOW_LAST_CHANGE = "wallpaper_slideshow_last_change"
     private const val KEY_CROP_PREFIX = "wallpaper_crop_"
     private const val VIDEO_WALLPAPER_MARKER = "video_wallpaper_overlay"
     private const val VIDEO_FRAME_THUMB_WIDTH = 512
@@ -99,13 +97,6 @@ object WallpaperManager {
         }
     }
 
-    data class SlideshowConfig(
-        val enabled: Boolean,
-        val intervalMinutes: Int?,
-        val changeOnAppToggle: Boolean,
-        val selectedIds: List<String>
-    )
-
     private fun prefs(context: Context) = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
     private fun getWallpapersDir(context: Context): File {
@@ -116,15 +107,47 @@ object WallpaperManager {
 
     private fun cropPrefsKey(id: String): String = KEY_CROP_PREFIX + id
 
-    fun getActiveId(context: Context): String {
-        return prefs(context).getString(PREFS_KEY, DEFAULT_ID) ?: DEFAULT_ID
+    fun getCurrentDesktopTarget(context: Context): WallpaperTarget {
+        val profile = prefs(context).getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
+        return if (profile == ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER) {
+            WallpaperTarget.MINE
+        } else {
+            WallpaperTarget.MAS
+        }
+    }
+
+    fun getActiveId(context: Context, target: WallpaperTarget = getCurrentDesktopTarget(context)): String {
+        val prefs = prefs(context)
+        return when (target) {
+            WallpaperTarget.MAS -> {
+                prefs.getString(target.prefsKey, null)
+                    ?: prefs.getString(PREFS_KEY_LEGACY, DEFAULT_ID)
+                    ?: DEFAULT_ID
+            }
+            else -> {
+                prefs.getString(target.prefsKey, DEFAULT_ID) ?: DEFAULT_ID
+            }
+        }
+    }
+
+    fun setActive(context: Context, target: WallpaperTarget, id: String) {
+        val editor = prefs(context).edit().putString(target.prefsKey, id)
+        if (target == WallpaperTarget.MAS) {
+            editor.putString(PREFS_KEY_LEGACY, id)
+        }
+        editor.apply()
     }
 
     fun setActive(context: Context, id: String) {
-        prefs(context)
-            .edit()
-            .putString(PREFS_KEY, id)
-            .putLong(KEY_SLIDESHOW_LAST_CHANGE, System.currentTimeMillis())
+        setActive(context, getCurrentDesktopTarget(context), id)
+    }
+
+    fun setAllActive(context: Context, id: String) {
+        prefs(context).edit()
+            .putString(WallpaperTarget.MAS.prefsKey, id)
+            .putString(WallpaperTarget.MINE.prefsKey, id)
+            .putString(WallpaperTarget.LOCKSCREEN.prefsKey, id)
+            .putString(PREFS_KEY_LEGACY, id)
             .apply()
     }
 
@@ -218,8 +241,10 @@ object WallpaperManager {
         if (deleted) {
             removeThumbnailsFor(name)
             clearWallpaperCrop(context, name)
-            if (getActiveId(context) == name) {
-                setActive(context, DEFAULT_ID)
+            WallpaperTarget.values().forEach { target ->
+                if (getActiveId(context, target) == name) {
+                    setActive(context, target, DEFAULT_ID)
+                }
             }
         }
         return deleted
@@ -271,10 +296,14 @@ object WallpaperManager {
         keys.forEach { thumbnailCache.remove(it) }
     }
 
-    fun applyWallpaper(context: Context, rootView: View) {
+    fun applyWallpaper(
+        context: Context,
+        rootView: View,
+        target: WallpaperTarget = getCurrentDesktopTarget(context)
+    ) {
         stopDrawableAnimation(rootView.background)
 
-        val activeId = getActiveId(context)
+        val activeId = getActiveId(context, target)
         if (activeId == DEFAULT_ID) {
             clearVideoWallpaper(rootView)
             rootView.setBackgroundResource(R.drawable.bg_desktop_mas)
@@ -285,7 +314,7 @@ object WallpaperManager {
         if (!file.exists()) {
             clearVideoWallpaper(rootView)
             clearWallpaperCrop(context, activeId)
-            setActive(context, DEFAULT_ID)
+            setActive(context, target, DEFAULT_ID)
             rootView.setBackgroundResource(R.drawable.bg_desktop_mas)
             return
         }
@@ -301,7 +330,7 @@ object WallpaperManager {
             if (!applied) {
                 clearVideoWallpaper(rootView)
                 clearWallpaperCrop(context, activeId)
-                setActive(context, DEFAULT_ID)
+                setActive(context, target, DEFAULT_ID)
                 rootView.setBackgroundResource(R.drawable.bg_desktop_mas)
             }
             return
@@ -318,113 +347,13 @@ object WallpaperManager {
 
         if (drawable == null) {
             clearWallpaperCrop(context, activeId)
-            setActive(context, DEFAULT_ID)
+            setActive(context, target, DEFAULT_ID)
             rootView.setBackgroundResource(R.drawable.bg_desktop_mas)
             return
         }
 
         rootView.background = drawable
         startDrawableAnimation(drawable)
-    }
-
-    fun getSlideshowConfig(context: Context): SlideshowConfig {
-        val prefs = prefs(context)
-        val enabled = prefs.getBoolean(KEY_SLIDESHOW_ENABLED, false)
-        val interval = if (prefs.contains(KEY_SLIDESHOW_INTERVAL_MINUTES)) {
-            prefs.getInt(KEY_SLIDESHOW_INTERVAL_MINUTES, 0).takeIf { it > 0 }
-        } else null
-        val changeOnToggle = prefs.getBoolean(KEY_SLIDESHOW_CHANGE_ON_APP_TOGGLE, false)
-        val rawSelection = prefs.getString(KEY_SLIDESHOW_SELECTION, "") ?: ""
-        val selection = rawSelection.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-        val validSelection = sanitizeSelection(context, selection)
-        val validatedEnabled = enabled && validSelection.size >= MIN_SLIDESHOW_SELECTION
-        return SlideshowConfig(
-            enabled = validatedEnabled,
-            intervalMinutes = interval,
-            changeOnAppToggle = changeOnToggle,
-            selectedIds = validSelection
-        )
-    }
-
-    fun saveSlideshowConfig(context: Context, config: SlideshowConfig) {
-        val prefs = prefs(context)
-        val selection = sanitizeSelection(context, config.selectedIds)
-        val effectiveEnabled = config.enabled &&
-            selection.size >= MIN_SLIDESHOW_SELECTION &&
-            (config.intervalMinutes != null || config.changeOnAppToggle)
-        val editor = prefs.edit()
-        editor.putBoolean(KEY_SLIDESHOW_ENABLED, effectiveEnabled)
-        if (config.intervalMinutes != null && config.intervalMinutes > 0) {
-            editor.putInt(KEY_SLIDESHOW_INTERVAL_MINUTES, config.intervalMinutes)
-        } else {
-            editor.remove(KEY_SLIDESHOW_INTERVAL_MINUTES)
-        }
-        editor.putBoolean(KEY_SLIDESHOW_CHANGE_ON_APP_TOGGLE, config.changeOnAppToggle)
-        editor.putString(KEY_SLIDESHOW_SELECTION, selection.joinToString(","))
-        if (effectiveEnabled) {
-            editor.putLong(KEY_SLIDESHOW_LAST_CHANGE, System.currentTimeMillis())
-        } else {
-            editor.remove(KEY_SLIDESHOW_LAST_CHANGE)
-        }
-        editor.apply()
-    }
-
-    fun disableSlideshow(context: Context) {
-        prefs(context).edit()
-            .putBoolean(KEY_SLIDESHOW_ENABLED, false)
-            .remove(KEY_SLIDESHOW_INTERVAL_MINUTES)
-            .remove(KEY_SLIDESHOW_CHANGE_ON_APP_TOGGLE)
-            .remove(KEY_SLIDESHOW_SELECTION)
-            .remove(KEY_SLIDESHOW_LAST_CHANGE)
-            .apply()
-    }
-
-    fun maybeAdvanceByTime(context: Context, now: Long = System.currentTimeMillis()): Boolean {
-        val config = getSlideshowConfig(context)
-        val intervalMinutes = config.intervalMinutes ?: return false
-        if (!config.enabled || intervalMinutes <= 0) return false
-        val lastChange = prefs(context).getLong(KEY_SLIDESHOW_LAST_CHANGE, 0L)
-        val intervalMs = TimeUnit.MINUTES.toMillis(intervalMinutes.toLong())
-        if (now - lastChange >= intervalMs) {
-            return advanceWallpaper(context) != null
-        }
-        return false
-    }
-
-    fun advanceOnAppToggle(context: Context): Boolean {
-        val config = getSlideshowConfig(context)
-        if (!config.enabled || !config.changeOnAppToggle) return false
-        return advanceWallpaper(context) != null
-    }
-
-    fun advanceWallpaper(context: Context): String? {
-        val config = getSlideshowConfig(context)
-        if (!config.enabled) return null
-        val pool = rotationPool(context, config)
-        if (pool.size < MIN_SLIDESHOW_SELECTION) return null
-
-        val currentId = getActiveId(context)
-        val currentIndex = pool.indexOf(currentId)
-        val nextIndex = if (currentIndex == -1) 0 else (currentIndex + 1) % pool.size
-        val nextId = pool[nextIndex]
-
-        setActive(context, nextId)
-        prefs(context).edit().putLong(KEY_SLIDESHOW_LAST_CHANGE, System.currentTimeMillis()).apply()
-        return nextId
-    }
-
-    fun selectedCount(context: Context): Int {
-        return sanitizeSelection(context, getSlideshowConfig(context).selectedIds).size
-    }
-
-    private fun rotationPool(context: Context, config: SlideshowConfig): List<String> {
-        val selection = sanitizeSelection(context, config.selectedIds)
-        return if (selection.size >= MIN_SLIDESHOW_SELECTION) selection else emptyList()
-    }
-
-    private fun sanitizeSelection(context: Context, selection: List<String>): List<String> {
-        val available = getWallpaperList(context).toSet()
-        return selection.filter { available.contains(it) }.take(MAX_SLIDESHOW_SELECTION)
     }
 
     private fun tryCreateWallpaperDrawable(

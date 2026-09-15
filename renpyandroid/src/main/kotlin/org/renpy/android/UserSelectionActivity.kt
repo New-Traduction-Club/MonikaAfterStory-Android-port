@@ -164,7 +164,7 @@ class UserSelectionActivity : BaseActivity() {
         ivCheckPortuguese = findViewById(R.id.ivCheckPortuguese)
 
         val root = findViewById<View>(R.id.userSelectionRoot)
-        WallpaperManager.applyWallpaper(this, root)
+        WallpaperManager.applyWallpaper(this, root, WallpaperManager.WallpaperTarget.LOCKSCREEN)
         blurUserMas.setupWith(root)
         blurUserRenpy.setupWith(root)
         blurLanguageMenu.setupWith(root)
@@ -360,7 +360,10 @@ class UserSelectionActivity : BaseActivity() {
         spinnerLogIn.visibility = View.GONE
 
         enableImmersiveFullscreen()
-        findViewById<View>(R.id.userSelectionRoot)?.let { ViewCompat.requestApplyInsets(it) }
+        findViewById<View>(R.id.userSelectionRoot)?.let { root ->
+            WallpaperManager.applyWallpaper(this, root, WallpaperManager.WallpaperTarget.LOCKSCREEN)
+            ViewCompat.requestApplyInsets(root)
+        }
         startClock()
         blurUserMas.refreshBlur()
         blurUserRenpy.refreshBlur()
