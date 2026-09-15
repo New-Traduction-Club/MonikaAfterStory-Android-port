@@ -573,4 +573,14 @@
     <string name="mine_launcher_cover_art_updated">Portada actualizada</string>
     <string name="mine_launcher_cover_art_removed">Portada eliminada</string>
     <string name="mine_launcher_cover_art_crop_title">Ajustar portada</string>
+
+    <string name="title_tc_blog">TC Blog</string>
+    <string name="tc_blog_tab_all">Todo</string>
+    <string name="tc_blog_back_to_feed">Volver</string>
+    <string name="tc_blog_retry">Reintentar</string>
+    <string name="tc_blog_no_articles">No se encontraron publicaciones</string>
+    <string name="tc_blog_pinned">FIJADO</string>
+    <string name="tc_blog_loading">Cargando...</string>
+    <string name="tc_blog_error_loading">Error al cargar. Por favor, comprueba tu conexión a internet.</string>
+    <string name="tc_blog_read_more">Leer →</string>
 </resources>

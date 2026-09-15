@@ -64,6 +64,7 @@ object ProfileNavigationHelper {
     fun getExpandedItems(profile: String): List<DesktopShortcut> {
         return if (profile == PROFILE_RENPY_LAUNCHER) {
             listOf(
+                DesktopShortcut(R.string.title_tc_blog, R.drawable.ic_tc_blog, "tc_blog"),
                 DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
                 DesktopShortcut(R.string.launcher_log_off, android.R.drawable.ic_lock_power_off, "switch_user")
             )
@@ -75,6 +76,7 @@ object ProfileNavigationHelper {
                 DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
                 DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
                 DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
+                DesktopShortcut(R.string.title_tc_blog, R.drawable.ic_tc_blog, "tc_blog"),
                 DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
                 DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments"),
                 DesktopShortcut(R.string.launcher_log_off, android.R.drawable.ic_lock_power_off, "switch_user")

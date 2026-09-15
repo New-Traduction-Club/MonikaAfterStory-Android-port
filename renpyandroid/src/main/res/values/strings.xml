@@ -558,4 +558,14 @@
     <string name="mine_launcher_cover_art_updated">Cover art updated</string>
     <string name="mine_launcher_cover_art_removed">Cover art removed</string>
     <string name="mine_launcher_cover_art_crop_title">Adjust Cover Art</string>
+
+    <string name="title_tc_blog">TC Blog</string>
+    <string name="tc_blog_tab_all">All</string>
+    <string name="tc_blog_back_to_feed">Back</string>
+    <string name="tc_blog_retry">Retry</string>
+    <string name="tc_blog_no_articles">No posts found</string>
+    <string name="tc_blog_pinned">PINNED</string>
+    <string name="tc_blog_loading">Loading...</string>
+    <string name="tc_blog_error_loading">Failed to load content. Please check your internet connection.</string>
+    <string name="tc_blog_read_more">Read →</string>
 </resources>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardArticle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="1dp"
+    app:strokeColor="@color/colorDivider"
+    app:strokeWidth="1dp"
+    app:cardBackgroundColor="@color/colorCardBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvCategoryName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                tools:text="ANNOUNCEMENTS" />
+
+            <TextView
+                android:id="@+id/tvDateDot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="6dp"
+                android:text="•"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvPublishDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="11sp"
+                tools:text="Sep 15, 2026" />
+
+            <TextView
+                android:id="@+id/badgePinned"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tc_blog_pinned_badge"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="@string/tc_blog_pinned"
+                android:textColor="@color/colorPrimary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvArticleTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/colorTextPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="Update 0.12.15: Spanish &amp; Portuguese Translation Improvements" />
+
+        <TextView
+            android:id="@+id/tvArticleSummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="13sp"
+            android:lineSpacingMultiplier="1.2"
+            android:maxLines="3"
+            android:ellipsize="end"
+            tools:text="Explore the latest changes in Monika After Story Android port, featuring brand new optimizations and translations." />
+
+        <TextView
+            android:id="@+id/tvReadMore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/colorPrimary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:text="@string/tc_blog_read_more" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -574,4 +574,14 @@
     <string name="mine_launcher_cover_art_updated">Capa atualizada</string>
     <string name="mine_launcher_cover_art_removed">Capa removida</string>
     <string name="mine_launcher_cover_art_crop_title">Ajustar capa</string>
+
+    <string name="title_tc_blog">TC Blog</string>
+    <string name="tc_blog_tab_all">Tudo</string>
+    <string name="tc_blog_back_to_feed">Voltar</string>
+    <string name="tc_blog_retry">Tentar novamente</string>
+    <string name="tc_blog_no_articles">Nenhum artigo encontrado</string>
+    <string name="tc_blog_pinned">FIXADO</string>
+    <string name="tc_blog_loading">Carregando...</string>
+    <string name="tc_blog_error_loading">Falha ao carregar conteúdo. Por favor, verifique sua conexão com a internet.</string>
+    <string name="tc_blog_read_more">Ler →</string>
 </resources>

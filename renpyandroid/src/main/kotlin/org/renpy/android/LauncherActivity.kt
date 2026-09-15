@@ -31,6 +31,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
+import org.renpy.android.tcblog.TcBlogActivity
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -1288,6 +1289,13 @@ class LauncherActivity : BaseActivity() {
                     }
                     launchActivityWindow(intent, FileExplorerActivity::class.java.name)
                 }
+            }
+
+            "tc_blog" -> {
+                val intent = Intent(this, TcBlogActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, TcBlogActivity::class.java.name)
             }
 
             "app_info" -> {
