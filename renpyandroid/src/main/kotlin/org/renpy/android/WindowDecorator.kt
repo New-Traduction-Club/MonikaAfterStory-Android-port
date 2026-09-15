@@ -39,6 +39,12 @@ class WindowDecorator(private val activity: Activity) {
         return prefs.getString("renpy_window_mode", "fullscreen") == "windowed"
     }
 
+    fun isNormalWindowed(): Boolean {
+        val w = activity.window ?: return false
+        val wParams = w.attributes
+        return isWindowedMode() && wParams.width != ViewGroup.LayoutParams.MATCH_PARENT
+    }
+
     fun decorate(view: View, windowTitle: String): View {
         val inflater = LayoutInflater.from(activity)
         val root = inflater.inflate(R.layout.layout_game_window_chrome_renpy, null) as ViewGroup
@@ -228,6 +234,7 @@ class WindowDecorator(private val activity: Activity) {
         }
         
         w.attributes = wParams
+        ToolboxManager.updateWindowMode(isNormalWindowed())
     }
 
     fun setWindowModeDynamically(windowed: Boolean) {
@@ -423,6 +430,7 @@ class WindowDecorator(private val activity: Activity) {
             card.radius = 0f
         }
         w.attributes = wParams
+        ToolboxManager.updateWindowMode(isNormalWindowed())
     }
 
     fun bringToFrontSelf() {

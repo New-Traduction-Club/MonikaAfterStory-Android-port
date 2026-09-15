@@ -916,6 +916,7 @@ public class PythonSDLActivity extends SDLActivity {
             try {
                 mPendingPictureInPictureEnter = true;
                 mIsInPictureInPictureMode = true;
+                ToolboxManager.setPipMode(this, true);
                 PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder();
 
                 Rational aspectRatio = new Rational(16, 9);
@@ -955,6 +956,7 @@ public class PythonSDLActivity extends SDLActivity {
         if (isInPictureInPictureMode) {
             DiscordRpcManager.startIfEnabled(this);
         }
+        ToolboxManager.setPipMode(this, isInPictureInPictureMode);
 
         handleNativeState();
     }
@@ -1014,6 +1016,8 @@ public class PythonSDLActivity extends SDLActivity {
         }
         applyImmersiveFullscreen();
         mPendingPictureInPictureEnter = false;
+        boolean inPip = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode();
+        ToolboxManager.setPipMode(this, inPip);
         DiscordRpcManager.startIfEnabled(this);
 
         // Cancel all scheduled notifications when the user returns to the game
