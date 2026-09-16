@@ -66,6 +66,7 @@
     <string name="import_files">Import Files</string>
     <string name="import_folder">Import Folder</string>
     <string name="import_zip">Import ZIP</string>
+    <string name="import_zip_loading">Importing ZIP file... Please wait.</string>
     <string name="create_folder">Create Folder</string>
     <string name="create_file">Create File</string>
     <string name="cancel">Cancel</string>
@@ -206,6 +207,11 @@
     <string name="settings_sound_effect_title">Button sound effect</string>
     <string name="settings_sound_effect_default">Default</string>
     <string name="settings_sound_effect_reimagined">Reimagined</string>
+    <string name="settings_auto_login_title">Auto-Login</string>
+    <string name="settings_auto_login_disabled">Disabled (Always ask)</string>
+    <string name="settings_auto_login_mas">MAS Desktop</string>
+    <string name="settings_auto_login_mine">MINE Desktop</string>
+    <string name="settings_auto_login_last_used">Last used</string>
     <string name="select_language_title">Select Language</string>
     <string name="title_tools">Tools</string>
     <string name="label_internal_files">Browse Internal Files</string>
@@ -365,6 +371,7 @@
     <string name="wallpaper_delete_title">Delete wallpaper?</string>
     <string name="wallpaper_delete_message">This wallpaper will be permanently removed.</string>
     <string name="wallpaper_applied">Wallpaper applied</string>
+    <string name="wallpaper_added">Wallpaper added</string>
     <string name="wallpaper_crop_title">Adjust wallpaper</string>
     <string name="wallpaper_apply">Apply</string>
     <string name="wallpaper_processing_opening">Preparing wallpaper…</string>
@@ -372,32 +379,12 @@
     <string name="wallpaper_video_too_large">This video file is too large for wallpaper use.</string>
     <string name="wallpaper_video_resolution_too_high">This video resolution is too high for smooth wallpaper playback.</string>
     <string name="wallpaper_video_bitrate_too_high">This video bitrate is too high for smooth wallpaper playback.</string>
-    <string name="wallpaper_slideshow_status_off">Random wallpaper is off</string>
-    <string name="wallpaper_slideshow_configure">Random wallpaper</string>
-    <string name="wallpaper_slideshow_disable">Disable</string>
-    <string name="wallpaper_slideshow_status_on">Random wallpaper on: %1$s</string>
-    <string name="wallpaper_slideshow_selection_count">%1$d wallpapers</string>
-    <string name="wallpaper_slideshow_trigger_app_toggle">on app enter/exit</string>
-    <string name="wallpaper_slideshow_change_on_app_toggle">Change when entering/leaving app</string>
-    <string name="wallpaper_slideshow_title">Random wallpaper</string>
-    <string name="wallpaper_slideshow_save">Save</string>
-    <string name="wallpaper_slideshow_applied">Random wallpaper enabled</string>
-    <string name="wallpaper_slideshow_disabled">Random wallpaper disabled</string>
-    <string name="wallpaper_slideshow_select_button">Choose wallpapers</string>
-    <string name="wallpaper_slideshow_select_title">Choose wallpapers</string>
-    <string name="wallpaper_slideshow_select_apply">Use selection</string>
-    <string name="wallpaper_slideshow_selection_summary">Selected: %1$d wallpapers</string>
-    <string name="wallpaper_slideshow_validation_selection">Choose 2 to 5 wallpapers</string>
-    <string name="wallpaper_slideshow_validation_mode">Select at least one change option</string>
-    <string name="wallpaper_slideshow_validation_interval">Enter a valid interval</string>
-    <string name="wallpaper_slideshow_need_more">Add at least two wallpapers to use random mode.</string>
-    <string name="wallpaper_slideshow_timed_label">Change on a timer</string>
-    <string name="wallpaper_slideshow_interval_hint">Value</string>
-    <string name="wallpaper_slideshow_unit_minutes">Minutes</string>
-    <string name="wallpaper_slideshow_unit_hours">Hours</string>
-    <string name="wallpaper_slideshow_interval_minutes">%1$d min</string>
-    <string name="wallpaper_slideshow_interval_hours">%1$d hr</string>
-    <string name="wallpaper_slideshow_selection_hint">Select 2 to 5 wallpapers for the random wallpaper feature.</string>
+    <string name="wallpaper_target_mas">MAS Desktop</string>
+    <string name="wallpaper_target_mine">MINE Desktop</string>
+    <string name="wallpaper_target_lockscreen">Lockscreen</string>
+    <string name="wallpaper_apply_to_all">Apply to all</string>
+    <string name="wallpaper_applied_target">Wallpaper applied to %1$s</string>
+    <string name="wallpaper_applied_all">Wallpaper applied to all screens</string>
 
     <string name="window_mode_prompt_title">Choose window style</string>
     <string name="window_mode_prompt_body">Pick how the Desktop windows appear.</string>
@@ -461,6 +448,11 @@
     <string name="experiments_description">Select and launch other Ren\'Py games found.</string>
     <string name="experiments_no_games">No other Ren\'Py games detected. Place game folders under InternalFiles/&lt;folder&gt;/game/</string>
     <string name="experiments_launch">Launch</string>
+    <string name="experiments_select_runtime">Select Runtime</string>
+    <string name="experiments_runtime_badge">Runtime: Ren\'Py %1$s</string>
+    <string name="experiments_runtime_not_selected">Runtime: Not selected</string>
+    <string name="experiments_failed_prepare_runtime">Failed to prepare Ren\'Py %1$s</string>
+    <string name="experiments_select">Select</string>
 
     <!-- Migration Feature Strings -->
     <string name="migration_window_title">Engine &amp; Data Migration</string>
@@ -489,4 +481,91 @@
     <string name="migration_btn_start">Start Migration</string>
     <string name="migration_btn_okay">Okay</string>
     <string name="migration_dialog_warning">The migration is currently running. Closing this window now may corrupt your game files. Please wait until it finishes.</string>
+
+    <string name="title_mine" translatable="false">MINE</string>
+    <!-- User Selection Strings -->
+    <string name="user_selection_title_mas">MAS</string>
+    <string name="user_selection_desc_mas">Recommended for MAS users.</string>
+    <string name="user_selection_title_renpy">MINE</string>
+    <string name="user_selection_desc_renpy">The full experience to play Ren\'Py games.</string>
+    <string name="user_selection_btn_login">Log in</string>
+    <string name="user_selection_footer">Traduction Club\'s virtual desktop</string>
+    <string name="launcher_log_off">Log Off</string>
+    <string name="launcher_log_off_warning_message">Logging off will close all open games and windows. Any unsaved progress may be lost. Do you want to proceed?</string>
+
+    <string name="mine_launcher_search_hint">Search games...</string>
+    <string name="mine_launcher_no_games">No games found in internal files.</string>
+    <string name="mine_launcher_play">Play</string>
+    <string name="mine_launcher_settings">Settings</string>
+    <string name="mine_launcher_options_title">Game Settings</string>
+    <string name="mine_launcher_runtime_option">Ren\'Py Runtime</string>
+    <string name="mine_launcher_view_grid">Grid view</string>
+    <string name="mine_launcher_view_list">List view</string>
+    <string name="mine_launcher_back">Back</string>
+    <string name="mine_launcher_close">Close</string>
+    <string name="mine_launcher_details">Details</string>
+    <string name="mine_launcher_title_option">Game Title</string>
+    <string name="mine_launcher_edit_title">Edit Title</string>
+    <string name="mine_launcher_enter_title_hint">Enter custom title</string>
+    <string name="mine_launcher_reset_default">Reset to Default</string>
+    <string name="mine_launcher_save">Save</string>
+    <string name="mine_launcher_env_vars_option">Environment variables</string>
+    <string name="mine_launcher_env_vars_title">Environment variables</string>
+    <string name="mine_launcher_add_env_var">Add variable</string>
+    <string name="mine_launcher_edit_env_var">Edit variable</string>
+    <string name="mine_launcher_var_name">Variable name</string>
+    <string name="mine_launcher_var_type">Type</string>
+    <string name="mine_launcher_type_boolean">Boolean</string>
+    <string name="mine_launcher_type_number">Number (Int/Float)</string>
+    <string name="mine_launcher_type_custom">Custom</string>
+    <string name="mine_launcher_var_value">Value</string>
+    <string name="mine_launcher_error_invalid_var_name">Invalid variable name</string>
+    <string name="mine_launcher_error_invalid_number">Invalid number format</string>
+    <string name="mine_launcher_error_duplicate_var">Variable already exists</string>
+
+    <string name="runtime_detection_found">Version found: %s</string>
+    <string name="runtime_detection_recommended">Version recommended: %s</string>
+    <string name="runtime_detection_unknown">Unknown</string>
+    <string name="runtime_detection_none">None</string>
+
+    <string name="mine_launcher_add_game">Add game</string>
+    <string name="add_game_title">Add Game</string>
+    <string name="add_game_choose_mode">Select Installation Type</string>
+    <string name="add_game_mode_renpy">Ren\'Py game</string>
+    <string name="add_game_mode_renpy_desc">Install a regular Ren\'Py game (.zip, .rar)</string>
+    <string name="add_game_mode_ddlc">DDLC mod</string>
+    <string name="add_game_mode_ddlc_desc">Install a DDLC mod</string>
+    <string name="add_game_select_archive">Select Game Archive</string>
+    <string name="add_game_select_mod_archive">Select Mod Archive</string>
+    <string name="add_game_select_base_ddlc">Select DDLC (ddlc-win.zip)</string>
+    <string name="add_game_title_label">Game Title</string>
+    <string name="add_game_folder_label">Folder Name</string>
+    <string name="add_game_install_btn">Install</string>
+    <string name="add_game_error_no_archive">Please select an archive file.</string>
+    <string name="add_game_error_no_base">Please select the ddlc-win.zip file.</string>
+    <string name="add_game_error_no_folder">Please specify a folder name.</string>
+    <string name="add_game_error_hash">Invalid DDLC archive: SHA-256 mismatch.</string>
+    <string name="add_game_error_generic">Installation failed: %s</string>
+    <string name="add_game_error_invalid_archive">Please select a valid .zip or .rar archive.</string>
+    <string name="add_game_error_invalid_base_ddlc">Please select a valid ddlc-win.zip file.</string>
+    <string name="add_game_success">Game installed successfully!</string>
+    <string name="dialog_error_title">Error</string>
+
+    <string name="mine_launcher_cover_art_option">Cover Art</string>
+    <string name="mine_launcher_add_cover_art">Add cover art</string>
+    <string name="mine_launcher_change_cover_art">Change cover art</string>
+    <string name="mine_launcher_remove_cover_art">Remove cover art</string>
+    <string name="mine_launcher_cover_art_updated">Cover art updated</string>
+    <string name="mine_launcher_cover_art_removed">Cover art removed</string>
+    <string name="mine_launcher_cover_art_crop_title">Adjust Cover Art</string>
+
+    <string name="title_tc_blog">TC Blog</string>
+    <string name="tc_blog_tab_all">All</string>
+    <string name="tc_blog_back_to_feed">Back</string>
+    <string name="tc_blog_retry">Retry</string>
+    <string name="tc_blog_no_articles">No posts found</string>
+    <string name="tc_blog_pinned">PINNED</string>
+    <string name="tc_blog_loading">Loading...</string>
+    <string name="tc_blog_error_loading">Failed to load content. Please check your internet connection.</string>
+    <string name="tc_blog_read_more">Read →</string>
 </resources>

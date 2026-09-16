@@ -10,6 +10,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -47,6 +48,7 @@ class DownloadService : Service() {
     }
 
     private var isDownloading = false
+    private var downloadJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -114,7 +116,7 @@ class DownloadService : Service() {
 
     private fun startDownload(urlString: String, destPath: String) {
         isDownloading = true
-        CoroutineScope(Dispatchers.IO).launch {
+        downloadJob = CoroutineScope(Dispatchers.IO).launch {
             try {
                 updateNotification(0, "...", "...")
                 val url = java.net.URL(urlString)
@@ -236,5 +238,14 @@ class DownloadService : Service() {
             editor.putString(KEY_ERROR, errorMessage)
         }
         editor.apply()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        downloadJob?.cancel()
+        isDownloading = false
+        updateStatus(STATUS_IDLE)
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.cancel(NOTIFICATION_ID)
     }
 }

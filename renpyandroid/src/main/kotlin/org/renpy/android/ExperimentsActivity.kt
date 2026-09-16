@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,11 +22,59 @@ class ExperimentsActivity : GameWindowActivity() {
     private lateinit var rvExperiments: RecyclerView
     private lateinit var tvEmptyState: TextView
 
+    companion object {
+        const val RUNTIME_699 = "6.99"
+        const val RUNTIME_7411 = "7.4.11"
+        const val RUNTIME_784 = "7.8.4"
+        const val RUNTIME_803 = "8.0.3"
+        const val RUNTIME_837 = "8.3.7"
+        const val RUNTIME_841 = "8.4.1"
+        const val RUNTIME_853 = "8.5.3"
+        private val RUNTIME_OPTIONS = arrayOf("Ren'Py 6.99", "Ren'Py 7.4.11", "Ren'Py 7.8.4", "Ren'Py 8.0.3", "Ren'Py 8.3.7", "Ren'Py 8.4.1", "Ren'Py 8.5.3")
+        const val EXCLUDED_MAS_DIR = "monikaafterstory-masl-edition"
+        const val DEANDROID_RPY_CONTENT = "init -999 python:\n    renpy.android = False\n"
+
+        @JvmStatic
+        fun ensureDeandroidPatch(gameFolder: File): Boolean {
+            if (gameFolder.name == EXCLUDED_MAS_DIR) {
+                return false
+            }
+            val gameDir = if (gameFolder.name == "game" && gameFolder.isDirectory) {
+                gameFolder
+            } else {
+                File(gameFolder, "game")
+            }
+            if (!gameDir.exists() || !gameDir.isDirectory) {
+                return false
+            }
+            val patchesDir = File(gameDir, "a_masl_patches")
+            val patchFile = File(patchesDir, "deandroid.rpy")
+            if (!patchFile.exists()) {
+                return try {
+                    if (!patchesDir.exists()) {
+                        patchesDir.mkdirs()
+                    }
+                    patchFile.writeText(DEANDROID_RPY_CONTENT)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            return true
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_experiments)
-        
-        setTitle(R.string.title_experiments)
+
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val activeProfile = prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
+        if (activeProfile == ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER) {
+            setTitle(R.string.title_mine)
+        } else {
+            setTitle(R.string.title_experiments)
+        }
 
         rvExperiments = findViewById(R.id.rvExperiments)
         tvEmptyState = findViewById(R.id.tvEmptyState)
@@ -40,33 +89,181 @@ class ExperimentsActivity : GameWindowActivity() {
             val games = withContext(Dispatchers.IO) {
                 scanForGames()
             }
-            
+
             if (games.isEmpty()) {
                 tvEmptyState.visibility = View.VISIBLE
                 rvExperiments.visibility = View.GONE
             } else {
                 tvEmptyState.visibility = View.GONE
                 rvExperiments.visibility = View.VISIBLE
-                rvExperiments.adapter = GamesAdapter(games) { gameFolder ->
-                    SoundEffects.playClick(this@ExperimentsActivity)
-                    val targetClass = getFreeActivityClass()
-                    val intent = Intent(this@ExperimentsActivity, targetClass).apply {
-                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                        putExtra("base_dir", gameFolder.name)
+                rvExperiments.adapter = GamesAdapter(
+                    games,
+                    getEngine = { gameDir -> getGameEngine(gameDir) },
+                    onLaunchClick = { gameFolder ->
+                        val engine = getGameEngine(gameFolder)
+                        if (engine != null) {
+                            launchGame(gameFolder, engine)
+                        } else {
+                            showRuntimeSelectorDialog(gameFolder) { chosenEngine ->
+                                launchGame(gameFolder, chosenEngine)
+                            }
+                        }
+                    },
+                    onChangeRuntimeClick = { gameFolder ->
+                        showRuntimeSelectorDialog(gameFolder) {
+                            rvExperiments.adapter?.notifyDataSetChanged()
+                        }
                     }
-                    startActivity(intent)
+                )
+            }
+        }
+    }
+
+    private fun getGameEngine(gameFolder: File): String? {
+        val file = File(gameFolder, "engine.txt")
+        if (!file.exists()) return null
+        return try {
+            val content = file.readText().trim()
+            if (content == RUNTIME_699 || content == RUNTIME_7411 || content == RUNTIME_784 || content == RUNTIME_803 || content == RUNTIME_837 || content == RUNTIME_841 || content == RUNTIME_853) content else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun setGameEngine(gameFolder: File, engine: String) {
+        try {
+            File(gameFolder, "engine.txt").writeText(engine)
+            File(gameFolder, ".runtime_699.version").delete()
+            File(gameFolder, ".runtime_7411.version").delete()
+            File(gameFolder, ".runtime_784.version").delete()
+            File(gameFolder, ".runtime_803.version").delete()
+            File(gameFolder, ".runtime_837.version").delete()
+            File(gameFolder, ".runtime_841.version").delete()
+            File(gameFolder, ".runtime_853.version").delete()
+            File(gameFolder, "private.version").delete()
+            File(gameFolder, ".private.version").delete()
+            MineLauncherConfigHelper.setGameEngine(gameFolder, engine)
+        } catch (e: Exception) {
+            // ignore write errors
+        }
+    }
+
+    private fun showRuntimeSelectorDialog(gameFolder: File, onSelected: ((String) -> Unit)? = null) {
+        val currentEngine = getGameEngine(gameFolder)
+        val (detectedVersion, recommendedVersion) = RenpyVersionDetector.detectAndSave(gameFolder)
+        val recommendedIndex = when (recommendedVersion) {
+            RUNTIME_853 -> 6
+            RUNTIME_841 -> 5
+            RUNTIME_837 -> 4
+            RUNTIME_803 -> 3
+            RUNTIME_784 -> 2
+            RUNTIME_7411 -> 1
+            RUNTIME_699 -> 0
+            else -> 0
+        }
+
+        var selectedIndex = if (currentEngine != null) {
+            when (currentEngine) {
+                RUNTIME_853 -> 6
+                RUNTIME_841 -> 5
+                RUNTIME_837 -> 4
+                RUNTIME_803 -> 3
+                RUNTIME_784 -> 2
+                RUNTIME_7411 -> 1
+                else -> 0
+            }
+        } else {
+            recommendedIndex
+        }
+
+        val detectedText = if (detectedVersion != null) {
+            getString(R.string.runtime_detection_found, detectedVersion)
+        } else {
+            getString(R.string.runtime_detection_found, getString(R.string.runtime_detection_unknown))
+        }
+        val recommendedText = if (recommendedVersion != null) {
+            getString(R.string.runtime_detection_recommended, recommendedVersion)
+        } else {
+            getString(R.string.runtime_detection_recommended, getString(R.string.runtime_detection_none))
+        }
+        val messageText = "$detectedText\n$recommendedText"
+
+        GameDialogBuilder(this)
+            .setTitle(getString(R.string.experiments_select_runtime))
+            .setMessage(messageText)
+            .setSingleChoiceItems(RUNTIME_OPTIONS, selectedIndex) { _, which ->
+                selectedIndex = which
+            }
+            .setPositiveButton(getString(R.string.experiments_select)) { dialog, _ ->
+                val chosenEngine = when (selectedIndex) {
+                    6 -> RUNTIME_853
+                    5 -> RUNTIME_841
+                    4 -> RUNTIME_837
+                    3 -> RUNTIME_803
+                    2 -> RUNTIME_784
+                    1 -> RUNTIME_7411
+                    else -> RUNTIME_699
                 }
+                setGameEngine(gameFolder, chosenEngine)
+                rvExperiments.adapter?.notifyDataSetChanged()
+                onSelected?.invoke(chosenEngine)
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun launchGame(gameFolder: File, engine: String) {
+        SoundEffects.playClick(this@ExperimentsActivity)
+        ensureDeandroidPatch(gameFolder)
+
+        lifecycleScope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                when (engine) {
+                    RUNTIME_853 -> Renpy853Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_841 -> Renpy841Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_837 -> Renpy837Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_803 -> Renpy803Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_7411 -> Renpy7411Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    RUNTIME_784 -> Renpy784Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                    else -> Renpy699Installer.ensureInstalled(this@ExperimentsActivity, gameFolder)
+                }
+            }
+
+            if (ok) {
+                val targetIntent = when (engine) {
+                    RUNTIME_853 -> Intent(this@ExperimentsActivity, PythonSDLActivity853::class.java)
+                    RUNTIME_841 -> Intent(this@ExperimentsActivity, PythonSDLActivity841::class.java)
+                    RUNTIME_837 -> Intent(this@ExperimentsActivity, PythonSDLActivity837::class.java)
+                    RUNTIME_803 -> Intent(this@ExperimentsActivity, PythonSDLActivity803::class.java)
+                    RUNTIME_7411 -> Intent(this@ExperimentsActivity, PythonSDLActivity7411::class.java)
+                    RUNTIME_784 -> Intent(this@ExperimentsActivity, PythonSDLActivity784::class.java)
+                    else -> Intent(this@ExperimentsActivity, getFreeActivityClass())
+                }.apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra("base_dir", gameFolder.name)
+                }
+                startActivity(targetIntent)
+            } else {
+                Toast.makeText(
+                    this@ExperimentsActivity,
+                    getString(R.string.experiments_failed_prepare_runtime, engine),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
     private fun getFreeActivityClass(): Class<out PythonSDLActivity> {
-        val manager = getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager ?: return PythonSDLActivity2::class.java
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+            ?: return PythonSDLActivity2::class.java
         val runningProcesses = manager.runningAppProcesses ?: return PythonSDLActivity2::class.java
-        
+
         var isRenpy2Running = false
         var isRenpy3Running = false
-        
+
         val prefix = packageName
         for (processInfo in runningProcesses) {
             if (processInfo.processName == "$prefix:renpy2") {
@@ -76,7 +273,7 @@ class ExperimentsActivity : GameWindowActivity() {
                 isRenpy3Running = true
             }
         }
-        
+
         return if (!isRenpy2Running) {
             PythonSDLActivity2::class.java
         } else if (!isRenpy3Running) {
@@ -90,12 +287,13 @@ class ExperimentsActivity : GameWindowActivity() {
         val root = filesDir ?: return emptyList()
         val list = mutableListOf<File>()
         val children = root.listFiles() ?: return emptyList()
-        
+
         for (child in children) {
-            if (child.isDirectory && child.name != "monikaafterstory-masl-edition") {
+            if (child.isDirectory && child.name != EXCLUDED_MAS_DIR) {
                 val gameSubDir = File(child, "game")
                 if (gameSubDir.exists() && gameSubDir.isDirectory) {
                     list.add(child)
+                    RenpyVersionDetector.detectAndSave(child)
                 }
             }
         }
@@ -104,12 +302,15 @@ class ExperimentsActivity : GameWindowActivity() {
 
     private class GamesAdapter(
         private val items: List<File>,
-        private val onLaunchClick: (File) -> Unit
+        private val getEngine: (File) -> String?,
+        private val onLaunchClick: (File) -> Unit,
+        private val onChangeRuntimeClick: (File) -> Unit
     ) : RecyclerView.Adapter<GamesAdapter.ViewHolder>() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val tvGameTitle: TextView = view.findViewById(R.id.tvGameTitle)
             val tvGamePath: TextView = view.findViewById(R.id.tvGamePath)
+            val tvRuntimeBadge: TextView = view.findViewById(R.id.tvRuntimeBadge)
             val btnLaunchGame: Button = view.findViewById(R.id.btnLaunchGame)
         }
 
@@ -129,7 +330,28 @@ class ExperimentsActivity : GameWindowActivity() {
 
             holder.tvGameTitle.text = displayName
             holder.tvGamePath.text = "filesDir/${file.name}/"
-            
+
+            val context = holder.itemView.context
+            val engine = getEngine(file)
+            if (engine != null) {
+                holder.tvRuntimeBadge.text = context.getString(R.string.experiments_runtime_badge, engine)
+            } else {
+                holder.tvRuntimeBadge.text = context.getString(R.string.experiments_runtime_not_selected)
+            }
+
+            holder.tvRuntimeBadge.setOnClickListener {
+                onChangeRuntimeClick(file)
+            }
+
+            holder.itemView.setOnClickListener {
+                onLaunchClick(file)
+            }
+
+            holder.itemView.setOnLongClickListener {
+                onChangeRuntimeClick(file)
+                true
+            }
+
             holder.btnLaunchGame.setOnClickListener {
                 onLaunchClick(file)
             }

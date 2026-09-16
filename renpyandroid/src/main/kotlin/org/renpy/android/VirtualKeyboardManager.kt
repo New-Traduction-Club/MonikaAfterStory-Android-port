@@ -17,9 +17,14 @@ import androidx.core.view.WindowInsetsCompat
 
 @SuppressLint("StaticFieldLeak")
 object VirtualKeyboardManager {
-    private const val TAG = "VirtualKeyboardManager"
-
     private var keyboardView: View? = null
+    private var isManuallyOpened = false
+
+    @JvmStatic
+    fun isKeyboardVisible(): Boolean = keyboardView != null
+
+    @JvmStatic
+    fun isManuallyOpened(): Boolean = isManuallyOpened
     
     // states for modifiers
     private var isShiftActive = false
@@ -78,7 +83,14 @@ object VirtualKeyboardManager {
     }
 
     @JvmStatic
-    fun showKeyboard(activity: PythonSDLActivity) {
+    @JvmOverloads
+    fun showKeyboard(activity: PythonSDLActivity, isManual: Boolean = false) {
+        if (isManual) {
+            isManuallyOpened = true
+            activity.runOnUiThread {
+                org.libsdl.app.SDLActivity.initOrShowTextEdit()
+            }
+        }
         activity.runOnUiThread {
             if (keyboardView != null) return@runOnUiThread
 
@@ -169,8 +181,13 @@ object VirtualKeyboardManager {
     }
 
     @JvmStatic
-    fun hideKeyboard(activity: PythonSDLActivity) {
+    @JvmOverloads
+    fun hideKeyboard(activity: PythonSDLActivity, force: Boolean = false) {
         activity.runOnUiThread {
+            if (isManuallyOpened && !force) {
+                return@runOnUiThread
+            }
+            isManuallyOpened = false
             val view = keyboardView ?: return@runOnUiThread
             val keyboardDrawer = view.findViewById<CardView>(R.id.keyboard_drawer) ?: return@runOnUiThread
 
@@ -304,7 +321,8 @@ object VirtualKeyboardManager {
                 updateKeysVisuals(context)
             }
             "CLOSE" -> {
-                hideKeyboard(activity)
+                hideKeyboard(activity, force = true)
+                org.libsdl.app.SDLActivity.executeTextEditHide(activity)
             }
             "EN" -> {
                 switchLayout(activity, LayoutMode.ENGLISH, context)
@@ -325,7 +343,10 @@ object VirtualKeyboardManager {
                     isDieresisPending = false
                     updateKeysVisuals(context)
                 }
-                injectKeyEvent(activity, KeyEvent.KEYCODE_SPACE)
+                val committed = org.libsdl.app.SDLActivity.commitText(" ")
+                if (!committed) {
+                    injectKeyEvent(activity, KeyEvent.KEYCODE_SPACE)
+                }
             }
             "´" -> {
                 isAccentPending = !isAccentPending

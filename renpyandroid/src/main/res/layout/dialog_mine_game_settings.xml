@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:id="@+id/layoutSettingsMenu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp">
+
+            <LinearLayout
+                android:id="@+id/rowSettingTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mine_launcher_title_option"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentTitleValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/colorTextSecondary"
+                        android:textSize="12sp"
+                        tools:text="Doki Doki Mod" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    app:tint="@color/colorIconTint" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider" />
+
+            <LinearLayout
+                android:id="@+id/rowSettingCoverArt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvCoverArtActionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mine_launcher_add_cover_art"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCoverArtSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/mine_launcher_cover_art_option"
+                        android:textColor="@color/colorTextSecondary"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivCoverArtActionIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_file_image"
+                    app:tint="@color/colorIconTint" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowRemoveCoverArt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="10dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mine_launcher_remove_cover_art"
+                    android:textColor="#FF5252"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider" />
+
+            <LinearLayout
+                android:id="@+id/rowSettingRuntime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mine_launcher_runtime_option"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentRuntimeValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="12sp"
+                        tools:text="Ren'Py 8.3.7" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_launcher_settings"
+                    app:tint="@color/colorIconTint" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider" />
+
+            <LinearLayout
+                android:id="@+id/rowSettingEnvVars"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mine_launcher_env_vars_option"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentEnvVarsValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/colorTextSecondary"
+                        android:textSize="12sp"
+                        tools:text="renpy.android = False" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_launcher_settings"
+                    app:tint="@color/colorIconTint" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/layoutEditTitle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etGameTitle"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_taskbar"
+            android:hint="@string/mine_launcher_enter_title_hint"
+            android:imeOptions="actionDone"
+            android:paddingHorizontal="12dp"
+            android:singleLine="true"
+            android:textColor="@color/colorTextPrimary"
+            android:textColorHint="@color/colorTextSecondary"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/btnResetDefaultTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="6dp"
+            android:paddingHorizontal="4dp"
+            android:text="@string/mine_launcher_reset_default"
+            android:textColor="@color/colorPrimary"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutSelectRuntime"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/layoutRuntimeDetection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvRuntimeDetectedVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/runtime_detection_found"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvRuntimeRecommendedVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/runtime_detection_recommended"
+                android:textColor="@color/colorPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/colorDivider" />
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listViewRuntime"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:choiceMode="singleChoice"
+            android:divider="@color/colorDivider"
+            android:dividerHeight="1dp" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/layoutEnvironmentVariables"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp">
+
+            <LinearLayout
+                android:id="@+id/rowVarRenpyAndroid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="renpy.android"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvRenpyAndroidStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="False"
+                        android:textColor="@color/colorTextSecondary"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchRenpyAndroid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCustomEnvVars"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+            <LinearLayout
+                android:id="@+id/btnAddEnvVar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="10dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_input_add"
+                    app:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/mine_launcher_add_env_var"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

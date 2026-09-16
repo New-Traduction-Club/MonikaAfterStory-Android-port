@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,6 +24,8 @@ object ToolboxManager {
 
     private var triggerView: View? = null
     private var panelView: View? = null
+    private var isWindowedNotMaximized: Boolean = false
+    private var isInPip: Boolean = false
 
     data class ToolItem(
         val nameResId: Int,
@@ -32,10 +35,17 @@ object ToolboxManager {
     @JvmStatic
     fun initialize(activity: PythonSDLActivity) {
         activity.runOnUiThread {
+            val normalWindowed = activity.windowDecorator?.isNormalWindowed() ?: false
+            isWindowedNotMaximized = normalWindowed
+
             if (triggerView != null) {
                 val parent = triggerView?.parent as? ViewGroup
                 if (parent == null) {
                     activity.mFrameLayout.addView(triggerView)
+                }
+                triggerView?.let { v ->
+                    applyTriggerLayout(v, normalWindowed)
+                    v.visibility = if (isInPip) View.GONE else View.VISIBLE
                 }
                 return@runOnUiThread
             }
@@ -44,6 +54,11 @@ object ToolboxManager {
             val binding = ToolboxTriggerBinding.inflate(inflater, activity.mFrameLayout, false)
             val view = binding.root
             triggerView = view
+
+            applyTriggerLayout(view, normalWindowed)
+            if (isInPip) {
+                view.visibility = View.GONE
+            }
 
             view.isFocusable = false
             view.isFocusableInTouchMode = false
@@ -55,17 +70,72 @@ object ToolboxManager {
                 view.systemUiVisibility = activity.window.decorView.systemUiVisibility
             }
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                view.post {
-                    view.systemGestureExclusionRects = listOf(
-                        android.graphics.Rect(0, 0, view.width, view.height)
-                    )
-                }
-            }
-
             setupTriggerGesture(activity, view)
 
             activity.mFrameLayout.addView(view)
+        }
+    }
+
+    @JvmStatic
+    fun updateWindowMode(isWindowedNotMaximized: Boolean) {
+        this.isWindowedNotMaximized = isWindowedNotMaximized
+        val view = triggerView ?: return
+        view.post {
+            applyTriggerLayout(view, isWindowedNotMaximized)
+        }
+    }
+
+    @JvmStatic
+    fun setPipMode(activity: PythonSDLActivity?, inPip: Boolean) {
+        this.isInPip = inPip
+        if (inPip) {
+            activity?.let { hideToolbox(it) }
+            triggerView?.post {
+                triggerView?.visibility = View.GONE
+            }
+        } else {
+            triggerView?.post {
+                triggerView?.visibility = View.VISIBLE
+                triggerView?.let { applyTriggerLayout(it, isWindowedNotMaximized) }
+            }
+        }
+    }
+
+    @JvmStatic
+    fun setPipMode(inPip: Boolean) {
+        setPipMode(null, inPip)
+    }
+
+    private fun applyTriggerLayout(root: View, windowedNotMaximized: Boolean) {
+        val handle = root.findViewById<View>(R.id.toolbox_trigger_handle) ?: return
+        val density = root.resources.displayMetrics.density
+
+        val rootWidth = (if (windowedNotMaximized) 32 else 48).let { (it * density).toInt() }
+        val rootHeight = (if (windowedNotMaximized) 90 else 180).let { (it * density).toInt() }
+        val rootTopMargin = (if (windowedNotMaximized) 12 else 24).let { (it * density).toInt() }
+
+        val handleWidth = (if (windowedNotMaximized) 7 else 12).let { (it * density).toInt() }
+        val handleHeight = (if (windowedNotMaximized) 55 else 120).let { (it * density).toInt() }
+
+        val rootParams = (root.layoutParams as? FrameLayout.LayoutParams) ?: FrameLayout.LayoutParams(rootWidth, rootHeight)
+        rootParams.width = rootWidth
+        rootParams.height = rootHeight
+        rootParams.topMargin = rootTopMargin
+        rootParams.gravity = android.view.Gravity.START or android.view.Gravity.TOP
+        root.layoutParams = rootParams
+
+        val handleParams = (handle.layoutParams as? FrameLayout.LayoutParams) ?: FrameLayout.LayoutParams(handleWidth, handleHeight)
+        handleParams.width = handleWidth
+        handleParams.height = handleHeight
+        handleParams.gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
+        handle.layoutParams = handleParams
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            root.post {
+                root.systemGestureExclusionRects = listOf(
+                    android.graphics.Rect(0, 0, root.width, root.height)
+                )
+            }
         }
     }
 
@@ -85,7 +155,8 @@ object ToolboxManager {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - startRawX
                     val dy = Math.abs(event.y - startY)
-                    if (dx > 40 && dx > dy && !isSwiping) {
+                    val swipeThreshold = if (isWindowedNotMaximized) 25 else 40
+                    if (dx > swipeThreshold && dx > dy && !isSwiping) {
                         isSwiping = true
                         showToolbox(activity)
                     }
@@ -256,7 +327,12 @@ object ToolboxManager {
         return listOf(
             ToolItem(R.string.tool_virtual_keyboard) { ctx ->
                 hideToolbox(activity)
-                VirtualKeyboardManager.showKeyboard(activity)
+                if (VirtualKeyboardManager.isKeyboardVisible()) {
+                    VirtualKeyboardManager.hideKeyboard(activity, force = true)
+                    org.libsdl.app.SDLActivity.executeTextEditHide(activity)
+                } else {
+                    VirtualKeyboardManager.showKeyboard(activity, isManual = true)
+                }
             },
             ToolItem(R.string.tool_window_controller) { ctx ->
                 hideToolbox(activity)
