@@ -188,6 +188,42 @@ class UserSelectionActivity : BaseActivity() {
         window.decorView.post {
             enableImmersiveFullscreen()
         }
+
+        playEntranceAnimation()
+    }
+
+    private fun playEntranceAnimation() {
+        val header = findViewById<View>(R.id.headerContainer)
+        header?.alpha = 0f
+        header?.translationY = -20f * resources.displayMetrics.density
+        header?.animate()
+            ?.alpha(1f)
+            ?.translationY(0f)
+            ?.setDuration(500)
+            ?.setInterpolator(DecelerateInterpolator())
+            ?.start()
+
+        val cards = listOf(cardUserMas, cardUserRenpy)
+        val distance = 30f * resources.displayMetrics.density
+        for ((index, card) in cards.withIndex()) {
+            card.alpha = 0f
+            card.translationY = distance
+            card.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(500)
+                .setStartDelay(100L * index)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+        }
+
+        val langButton = findViewById<View>(R.id.cardLanguageButton)
+        langButton?.alpha = 0f
+        langButton?.animate()
+            ?.alpha(1f)
+            ?.setDuration(400)
+            ?.setStartDelay(200)
+            ?.start()
     }
 
     private fun setupEdgeToEdgeInsets() {

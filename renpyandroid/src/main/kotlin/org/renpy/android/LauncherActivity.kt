@@ -893,51 +893,76 @@ class LauncherActivity : BaseActivity() {
                 renderBootConsole()
             }
 
+            delay(300)
             appendKernelLine("    0.000000", "Linux version $kernelVersion (android $androidVersion, $arch)")
-            delay(120)
-            appendKernelLine("    0.038140", "Hardware: $manufacturer $model ($cpuCores CPUs)")
-            delay(120)
-            appendKernelLine("    0.094210", "Memory: ${totalRamMb}MB total")
-            delay(120)
-            appendKernelLine("    0.142050", "Storage: $availableStorage free / $totalStorage total")
-            delay(120)
-            appendKernelLine("    0.201380", "Display: ${screenWidth}x${screenHeight} @ 32bpp Framebuffer")
             delay(180)
+            appendKernelLine("    0.024180", "Kernel command line: boot=UUID ro quiet splash tradclub.desktop=1")
+            delay(160)
+            appendKernelLine("    0.048310", "Hardware: $manufacturer $model ($cpuCores CPUs, SMP)")
+            delay(180)
+            appendKernelLine("    0.092100", "Memory: ${totalRamMb}MB total, zram swap enabled")
+            delay(160)
+            appendKernelLine("    0.141200", "Storage: $availableStorage free / $totalStorage total")
+            delay(180)
+            appendKernelLine(
+                "    0.189540",
+                "Display: ${screenWidth}x${screenHeight} @ 32bpp Framebuffer (GLES/Vulkan)"
+            )
+            delay(400)
 
-            appendSystemdService("Started Virtual Filesystem Services.")
-            delay(240)
+            appendSystemdService("Mounted Virtual Filesystem (/dev, /proc, /sys).")
+            delay(380)
             appendSystemdService("Mounted /data/user/0/the.best.mas.port.")
-            delay(240)
-            appendSystemdService("Initialized Ren'Py Engine & Audio Subsystems.")
-            delay(260)
+            delay(400)
+            appendSystemdService("Initialized Cryptographic Keystore & Entropy Pool.")
+            delay(380)
+            appendSystemdService("Loaded Ren'Py Engine, SDL2, OpenAL Audio Driver.")
+            delay(420)
+            appendSystemdService("Synchronized Persistent Storage & Character Data.")
+            delay(380)
             appendSystemdService("Started Traduction Club Session Bus.")
-            delay(240)
-            appendSystemdService("Reached target System Initialization.")
-            delay(240)
-            appendSystemdService("Started Desktop Display Manager.")
-            delay(260)
-            appendSystemdService("Reached target Graphical Interface.")
-            delay(280)
+            delay(420)
 
-            appendStatusLine("Starting Traduction Club Desktop Session...")
-            delay(350)
+            appendSystemdService("Started Network Manager & Discovery Daemon.")
+            delay(380)
+            appendSystemdService("Started Discord RPC IPC Bridge Daemon.")
+            delay(380)
+            appendSystemdService("Reached target System Initialization.")
+            delay(400)
+            appendSystemdService("Started Desktop Display Manager.")
+            delay(420)
+            appendSystemdService("Started Window Compositor & Framebuffer Pipeline.")
+            delay(420)
+            appendSystemdService("Reached target Graphical Interface.")
+            delay(500)
 
             bootSequenceCompleted = true
 
             val autoProfile = AutoLoginHelper.resolveAutoLoginProfile(this@LauncherActivity)
             if (autoProfile != null) {
+                appendStatusLine("Detected saved session credentials for user: $autoProfile")
+                delay(450)
+                appendSystemdService("Authenticated auto-login session for user '$autoProfile'.")
+                delay(500)
+                appendStatusLine("Starting Traduction Club Desktop Environment...")
+                delay(600)
+
                 val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
                 val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
                 val target = ProfileNavigationHelper.determineLoginTarget(autoProfile, isSetupCompleted)
                 if (target == ProfileNavigationHelper.NavigationTarget.SETUP) {
                     val intent = Intent(this@LauncherActivity, SetupActivity::class.java)
                     startActivity(intent)
-                    applyFadeTransition()
+                    overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
 
-                    binding.bootScreenLayout.postDelayed({
-                        binding.bootScreenLayout.visibility = View.GONE
-                        binding.bootScreenLayout.alpha = 1f
-                    }, 800)
+                    binding.bootScreenLayout.animate()
+                        .alpha(0f)
+                        .setDuration(400)
+                        .withEndAction {
+                            binding.bootScreenLayout.visibility = View.GONE
+                            binding.bootScreenLayout.alpha = 1f
+                        }
+                        .start()
                 } else {
                     prefs.edit().putString("active_user_profile", autoProfile).apply()
                     AutoLoginHelper.recordLastUsedProfile(this@LauncherActivity, autoProfile)
@@ -964,14 +989,25 @@ class LauncherActivity : BaseActivity() {
                         .start()
                 }
             } else {
+                appendStatusLine("No auto-login profile configured. Starting Display Manager...")
+                delay(450)
+                appendSystemdService("Ready for user authentication.")
+                delay(500)
+                appendStatusLine("Waiting for graphic driver...")
+                delay(600)
+
                 val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
                 startActivity(intent)
-                applyFadeTransition()
+                overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
 
-                binding.bootScreenLayout.postDelayed({
-                    binding.bootScreenLayout.visibility = View.GONE
-                    binding.bootScreenLayout.alpha = 1f
-                }, 800)
+                binding.bootScreenLayout.animate()
+                    .alpha(0f)
+                    .setDuration(400)
+                    .withEndAction {
+                        binding.bootScreenLayout.visibility = View.GONE
+                        binding.bootScreenLayout.alpha = 1f
+                    }
+                    .start()
             }
         }
     }
