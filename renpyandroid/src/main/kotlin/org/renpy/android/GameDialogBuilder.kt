@@ -10,8 +10,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
+import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -34,6 +36,9 @@ class GameDialogBuilder(private val context: Context) {
     private var positiveListener: DialogInterface.OnClickListener? = null
     private var negativeListener: DialogInterface.OnClickListener? = null
     private var cancelable: Boolean = true
+    private var heightPercentage: Float? = null
+    private var dismissListener: DialogInterface.OnDismissListener? = null
+    private var windowAnimations: Int? = null
 
     // List support
     private var items: Array<out CharSequence>? = null
@@ -86,6 +91,26 @@ class GameDialogBuilder(private val context: Context) {
         return this
     }
 
+    fun setHeightPercentage(percentage: Float): GameDialogBuilder {
+        this.heightPercentage = percentage
+        return this
+    }
+
+    fun setOnDismissListener(listener: DialogInterface.OnDismissListener?): GameDialogBuilder {
+        this.dismissListener = listener
+        return this
+    }
+
+    fun setFadeAnimation(fade: Boolean = true): GameDialogBuilder {
+        this.windowAnimations = if (fade) R.style.DialogAnimationFade else null
+        return this
+    }
+
+    fun setWindowAnimations(styleResId: Int): GameDialogBuilder {
+        this.windowAnimations = styleResId
+        return this
+    }
+
     fun setItems(items: Array<out CharSequence>, listener: DialogInterface.OnClickListener): GameDialogBuilder {
         this.items = items
         this.itemsListener = listener
@@ -116,10 +141,25 @@ class GameDialogBuilder(private val context: Context) {
         builder.setCancelable(cancelable)
 
         val dialog = builder.create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val dialogWindow = dialog.window
+        dialogWindow?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialogWindow?.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            dialogWindow?.attributes?.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        dialogWindow?.setGravity(android.view.Gravity.CENTER)
+        if (windowAnimations != null) {
+            dialogWindow?.setWindowAnimations(windowAnimations!!)
+        }
+        applyDialogWindowSize(dialog)
         val hostWasFullscreen = hostIsFullscreen()
 
         if (hostWasFullscreen) {
+            dialogWindow?.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            )
             keepDialogImmersiveIfNeeded(dialog, force = true)
         }
 
@@ -144,6 +184,18 @@ class GameDialogBuilder(private val context: Context) {
             customContainer.setPadding(
                 dpToPx(16), dpToPx(4), dpToPx(16), dpToPx(8)
             )
+            if (heightPercentage != null) {
+                val activity = context as? Activity
+                val appHeight = activity?.window?.decorView?.height?.takeIf { it > 0 }
+                    ?: context.resources.displayMetrics.heightPixels
+                val initialTargetHeight = (appHeight * heightPercentage!!).toInt()
+                val initialContentHeight = (initialTargetHeight - dpToPx(112)).coerceAtLeast(dpToPx(120))
+                val lp = customContainer.layoutParams
+                if (lp != null) {
+                    lp.height = initialContentHeight
+                    customContainer.layoutParams = lp
+                }
+            }
         }
 
         // Items list (simple list)
@@ -181,21 +233,34 @@ class GameDialogBuilder(private val context: Context) {
         dialog.setOnShowListener {
             if (hostWasFullscreen) {
                 keepDialogImmersiveIfNeeded(dialog, force = true)
+                dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             }
             applyDialogWindowSize(dialog)
-            constrainScrollableContentHeight(
-                dialogView = dialogView,
-                titleView = titleView,
-                messageView = messageView,
-                buttonRow = buttonRow,
-                customContainer = customContainer,
-                listView = listView
-            )
+            if (heightPercentage != null) {
+                applyFixedDialogHeight(
+                    dialogView = dialogView,
+                    titleView = titleView,
+                    messageView = messageView,
+                    buttonRow = buttonRow,
+                    customContainer = customContainer,
+                    listView = listView
+                )
+            } else {
+                constrainScrollableContentHeight(
+                    dialogView = dialogView,
+                    titleView = titleView,
+                    messageView = messageView,
+                    buttonRow = buttonRow,
+                    customContainer = customContainer,
+                    listView = listView
+                )
+            }
         }
         dialog.setOnDismissListener {
             if (hostWasFullscreen) {
                 restoreHostImmersive()
             }
+            dismissListener?.onDismiss(dialog)
         }
 
         return dialog
@@ -203,7 +268,18 @@ class GameDialogBuilder(private val context: Context) {
 
     fun show(): AlertDialog {
         val dialog = create()
+        val hostWasFullscreen = hostIsFullscreen()
+        if (hostWasFullscreen) {
+            dialog.window?.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            )
+        }
         dialog.show()
+        if (hostWasFullscreen) {
+            keepDialogImmersiveIfNeeded(dialog, force = true)
+            dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+        }
         return dialog
     }
 
@@ -298,14 +374,61 @@ class GameDialogBuilder(private val context: Context) {
         }
     }
 
+    private fun applyFixedDialogHeight(
+        dialogView: View,
+        titleView: TextView,
+        messageView: TextView,
+        buttonRow: View,
+        customContainer: FrameLayout,
+        listView: ListView
+    ) {
+        val pct = heightPercentage ?: return
+        val activity = context as? Activity
+        val appHeight = activity?.window?.decorView?.height?.takeIf { it > 0 }
+            ?: context.resources.displayMetrics.heightPixels
+        val targetDialogHeight = (appHeight * pct).toInt()
+
+        val fixedHeight = (
+            (if (titleView.visibility == View.VISIBLE) titleView.height else 0) +
+            (if (messageView.visibility == View.VISIBLE) messageView.height else 0) +
+            (if (buttonRow.visibility == View.VISIBLE) buttonRow.height else 0) +
+            dialogView.paddingTop + dialogView.paddingBottom
+        ).takeIf { it > 0 } ?: dpToPx(112)
+
+        val targetContentHeight = (targetDialogHeight - fixedHeight).coerceAtLeast(dpToPx(120))
+
+        val targetView = if (customContainer.visibility == View.VISIBLE) {
+            customContainer
+        } else {
+            listView
+        }
+
+        val params = targetView.layoutParams
+        if (params != null && params.height != targetContentHeight) {
+            params.height = targetContentHeight
+            targetView.layoutParams = params
+            dialogView.requestLayout()
+        }
+    }
+
     private fun applyDialogWindowSize(dialog: AlertDialog) {
         val dialogWindow = dialog.window ?: return
-        val availableWidth = dialogWindow.decorView.rootView.width
-            .takeIf { it > 0 }
+        val activity = context as? Activity
+        val appWidth = activity?.window?.decorView?.width?.takeIf { it > 0 }
             ?: context.resources.displayMetrics.widthPixels
-        val targetWidth = (availableWidth * 0.92f).toInt()
-            .coerceAtMost(availableWidth)
-        dialogWindow.setLayout(targetWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
+        val appHeight = activity?.window?.decorView?.height?.takeIf { it > 0 }
+            ?: context.resources.displayMetrics.heightPixels
+
+        val targetWidth = (appWidth * 0.92f).toInt().coerceAtMost(appWidth)
+
+        val targetHeight = heightPercentage?.let { pct ->
+            (appHeight * pct).toInt().coerceAtMost(appHeight)
+        } ?: ViewGroup.LayoutParams.WRAP_CONTENT
+
+        val currentParams = dialogWindow.attributes
+        if (currentParams.width != targetWidth || currentParams.height != targetHeight) {
+            dialogWindow.setLayout(targetWidth, targetHeight)
+        }
     }
 
     private fun keepDialogImmersiveIfNeeded(dialog: AlertDialog, force: Boolean = false) {

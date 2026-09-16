@@ -26,9 +26,42 @@ class SettingsActivity : GameWindowActivity() {
         setTitle(R.string.settings_title)
         setupLanguageUI()
         setupSoundUI(prefs)
+        setupAutoLoginUI(prefs)
         setupThemeUI(prefs)
         setupWindowModeUI()
         setupNetworkUI(prefs)
+    }
+
+    private fun setupAutoLoginUI(prefs: android.content.SharedPreferences) {
+        val currentMode = AutoLoginHelper.getAutoLoginMode(this)
+        binding.txtCurrentAutoLogin.text = AutoLoginHelper.getModeLabel(this, currentMode)
+
+        binding.cardAutoLogin.setOnClickListener {
+            showAutoLoginDialog(prefs)
+        }
+    }
+
+    private fun showAutoLoginDialog(prefs: android.content.SharedPreferences) {
+        val modes = arrayOf(
+            AutoLoginHelper.MODE_DISABLED,
+            AutoLoginHelper.MODE_MAS,
+            AutoLoginHelper.MODE_MINE,
+            AutoLoginHelper.MODE_LAST_USED
+        )
+        val labels = modes.map { AutoLoginHelper.getModeLabel(this, it) }.toTypedArray()
+        val currentMode = AutoLoginHelper.getAutoLoginMode(this)
+        val checkedIndex = modes.indexOf(currentMode).takeIf { it >= 0 } ?: 0
+
+        GameDialogBuilder(this)
+            .setTitle(getString(R.string.settings_auto_login_title))
+            .setSingleChoiceItems(labels, checkedIndex) { dialog, which ->
+                val chosenMode = modes.getOrNull(which) ?: AutoLoginHelper.MODE_DISABLED
+                AutoLoginHelper.setAutoLoginMode(this, chosenMode)
+                binding.txtCurrentAutoLogin.text = AutoLoginHelper.getModeLabel(this, chosenMode)
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
     }
 
     private fun setupLanguageUI() {

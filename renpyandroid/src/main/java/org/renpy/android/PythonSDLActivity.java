@@ -97,8 +97,10 @@ public class PythonSDLActivity extends SDLActivity {
             if (DesktopWindowManager.ACTION_WINDOW_COMMAND.equals(intent.getAction())) {
                 String targetId = intent.getStringExtra(DesktopWindowManager.EXTRA_ACTIVITY_ID);
                 String command = intent.getStringExtra(DesktopWindowManager.EXTRA_COMMAND);
-                if (targetId != null && targetId.equals(PythonSDLActivity.class.getName())) {
-                    if (mWindowDecorator != null) {
+                if (targetId != null && (targetId.equals(PythonSDLActivity.this.getClass().getName()) || "ALL".equals(targetId))) {
+                    if (DesktopWindowManager.COMMAND_CLOSE.equals(command) || "CLOSE".equals(command)) {
+                        finish();
+                    } else if (mWindowDecorator != null) {
                         if ("MINIMIZE".equals(command)) {
                             mWindowDecorator.minimizeWindow();
                         } else if ("RESTORE".equals(command)) {
@@ -177,6 +179,37 @@ public class PythonSDLActivity extends SDLActivity {
     ResourceManager resourceManager;
 
     protected String[] getLibraries() {
+        if (isRenpy853Engine) {
+            return new String[] {
+                "853renpython",
+            };
+        }
+        if (isRenpy841Engine) {
+            return new String[] {
+                "841renpython",
+            };
+        }
+        if (isRenpy8Engine) {
+            return new String[] {
+                "837renpython",
+            };
+        }
+        if (isRenpy803Engine) {
+            return new String[] {
+                "803renpython",
+            };
+        }
+        if (isRenpy7411Engine) {
+            return new String[] {
+                "7411renpython",
+            };
+        }
+        if (isRenpy7Engine) {
+            return new String[] {
+                "rencompat",
+                "renpython",
+            };
+        }
         return new String[] {
                 "png16",
                 "SDL2",
@@ -187,6 +220,7 @@ public class PythonSDLActivity extends SDLActivity {
                 "python2.7",
                 "pymodules",
                 "main",
+                "rencompat",
         };
     }
 
@@ -314,14 +348,17 @@ public class PythonSDLActivity extends SDLActivity {
             Log.v("python", "Extracting " + resource + " assets.");
 
             /**
-             * Delete main.pyo unconditionally. This fixes a problem where we have
-             * a main.py newer than main.pyo, but start.c won't run it.
+             * Delete main.pyo, main.pyc, main.py unconditionally. This fixes a problem where we have
+             * an old main script from another runtime or start.c won't run it.
              */
             new File(target, "main.pyo").delete();
+            new File(target, "main.pyc").delete();
+            new File(target, "main.py").delete();
 
             // Delete old libraries & renpy files.
             recursiveDelete(new File(target, "lib"));
             recursiveDelete(new File(target, "renpy"));
+            recursiveDelete(new File(target, "include"));
 
             target.mkdirs();
 
@@ -406,23 +443,31 @@ public class PythonSDLActivity extends SDLActivity {
         }
 
         long unpackStart = System.currentTimeMillis();
-        String privateVersion = resourceManager.getString("private_version");
-        if (privateVersion != null) {
-            unpackData("private", path, privateVersion);
-        }
-        String publicVersion = resourceManager.getString("public_version");
-        if (publicVersion != null) {
-            unpackData("public", externalStorage, publicVersion);
+        if (!isRenpy7OrLater()) {
+            String privateVersion = resourceManager.getString("private_version");
+            if (privateVersion != null) {
+                unpackData("private", path, privateVersion);
+            }
+            String publicVersion = resourceManager.getString("public_version");
+            if (publicVersion != null) {
+                unpackData("public", externalStorage, publicVersion);
+            }
         }
         Log.v("python", "unpackData finished. Duration: " + (System.currentTimeMillis() - unpackStart) + "ms");
 
         nativeSetEnv("ANDROID_ARGUMENT", path.getAbsolutePath());
         nativeSetEnv("ANDROID_PRIVATE", path.getAbsolutePath());
         nativeSetEnv("ANDROID_MASBASE", path.getAbsolutePath());
-        nativeSetEnv("REQUESTS_CA_BUNDLE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
-        nativeSetEnv("SSL_CERT_FILE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
+        if (isRenpy7411Engine || isRenpy803Engine) {
+            nativeSetEnv("ANDROID_PACK_FF1", path.getAbsolutePath());
+        }
+        if (!isRenpy7OrLater()) {
+            nativeSetEnv("REQUESTS_CA_BUNDLE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
+            nativeSetEnv("SSL_CERT_FILE", path.getAbsolutePath() + "/game/python-packages/certifi/cacert.pem");
+        }
         if (customBaseDir != null && !customBaseDir.isEmpty()
                 && !customBaseDir.equals("monikaafterstory-masl-edition")) {
+            ExperimentsActivity.ensureDeandroidPatch(path);
             nativeSetEnv("ANDROID_PUBLIC", path.getAbsolutePath());
             nativeSetEnv("ANDROID_OLD_PUBLIC", path.getAbsolutePath());
         } else {
@@ -504,6 +549,14 @@ public class PythonSDLActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (!(this instanceof PythonSDLActivity784) && !(this instanceof PythonSDLActivity7411) && !(this instanceof PythonSDLActivity803) && !(this instanceof PythonSDLActivity837) && !(this instanceof PythonSDLActivity841) && !(this instanceof PythonSDLActivity853)) {
+            isRenpy7Engine = false;
+            isRenpy7411Engine = false;
+            isRenpy803Engine = false;
+            isRenpy8Engine = false;
+            isRenpy841Engine = false;
+            isRenpy853Engine = false;
+        }
         mActivity = this;
         logLifecycle("onCreate()");
         Log.v("python", "onCreate() started");
@@ -566,32 +619,34 @@ public class PythonSDLActivity extends SDLActivity {
     /**
      * Called by Ren'Py to hide the presplash after start.
      */
-    public void hidePresplash() {
+    public static void hidePresplash() {
         Log.v("python", "hidePresplash() called");
-        final PythonSDLActivity activity = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (activity.mPresplash != null) {
-                    ViewGroup parent = (ViewGroup) activity.mPresplash.getParent();
-                    if (parent != null) {
-                        parent.removeView(activity.mPresplash);
+        final PythonSDLActivity activity = mActivity;
+        if (activity != null) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity.mPresplash != null) {
+                        ViewGroup parent = (ViewGroup) activity.mPresplash.getParent();
+                        if (parent != null) {
+                            parent.removeView(activity.mPresplash);
+                        }
+                        activity.mPresplash = null;
                     }
-                    activity.mPresplash = null;
-                }
 
-                if (activity.mProgressBar != null) {
-                    ViewGroup parent = (ViewGroup) activity.mProgressBar.getParent();
-                    if (parent != null) {
-                        parent.removeView(activity.mProgressBar);
+                    if (activity.mProgressBar != null) {
+                        ViewGroup parent = (ViewGroup) activity.mProgressBar.getParent();
+                        if (parent != null) {
+                            parent.removeView(activity.mProgressBar);
+                        }
+                        activity.mProgressBar = null;
                     }
-                    activity.mProgressBar = null;
-                }
 
-                activity.applyImmersiveFullscreen();
-                ToolboxManager.initialize(activity);
-            }
-        });
+                    activity.applyImmersiveFullscreen();
+                    ToolboxManager.initialize(activity);
+                }
+            });
+        }
     }
 
     @Override
@@ -726,6 +781,20 @@ public class PythonSDLActivity extends SDLActivity {
         }
     }
 
+    public void openEditor(String file) {
+        try {
+            File f = new File(file);
+            Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                this, getPackageName() + ".fileprovider", f);
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setDataAndType(uri, "text/plain");
+            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+        } catch (Exception e) {
+            Log.e("python", "Failed to open editor for: " + file, e);
+        }
+    }
+
     public void vibrate(double s) {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (v != null) {
@@ -847,6 +916,7 @@ public class PythonSDLActivity extends SDLActivity {
             try {
                 mPendingPictureInPictureEnter = true;
                 mIsInPictureInPictureMode = true;
+                ToolboxManager.setPipMode(this, true);
                 PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder();
 
                 Rational aspectRatio = new Rational(16, 9);
@@ -886,6 +956,7 @@ public class PythonSDLActivity extends SDLActivity {
         if (isInPictureInPictureMode) {
             DiscordRpcManager.startIfEnabled(this);
         }
+        ToolboxManager.setPipMode(this, isInPictureInPictureMode);
 
         handleNativeState();
     }
@@ -945,6 +1016,8 @@ public class PythonSDLActivity extends SDLActivity {
         }
         applyImmersiveFullscreen();
         mPendingPictureInPictureEnter = false;
+        boolean inPip = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode();
+        ToolboxManager.setPipMode(this, inPip);
         DiscordRpcManager.startIfEnabled(this);
 
         // Cancel all scheduled notifications when the user returns to the game

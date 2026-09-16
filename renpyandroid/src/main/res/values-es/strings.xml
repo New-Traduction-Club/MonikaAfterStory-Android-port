@@ -59,6 +59,7 @@
     <string name="import_files">Importar Archivos</string>
     <string name="import_folder">Importar carpeta</string>
     <string name="import_zip">Importar ZIP</string>
+    <string name="import_zip_loading">Importando archivo ZIP... Por favor, espera.</string>
     <string name="create_folder">Crear Carpeta</string>
     <string name="create_file">Crear Archivo</string>
     <string name="cancel">Cancelar</string>
@@ -199,6 +200,11 @@
     <string name="settings_sound_effect_title">Efecto de sonido de botones</string>
     <string name="settings_sound_effect_default">Predeterminado</string>
     <string name="settings_sound_effect_reimagined">Reimaginado</string>
+    <string name="settings_auto_login_title">Inicio de sesión automático</string>
+    <string name="settings_auto_login_disabled">Desactivado (Preguntar siempre)</string>
+    <string name="settings_auto_login_mas">Escritorio MAS</string>
+    <string name="settings_auto_login_mine">Escritorio MINE</string>
+    <string name="settings_auto_login_last_used">Último usado</string>
     <string name="select_language_title">Seleccionar Idioma</string>
     <string name="title_tools">Herramientas</string>
     <string name="label_internal_files">Explorar Archivos Internos</string>
@@ -388,6 +394,7 @@
     <string name="wallpaper_delete_title">¿Eliminar fondo?</string>
     <string name="wallpaper_delete_message">Este fondo será eliminado permanentemente.</string>
     <string name="wallpaper_applied">Fondo aplicado</string>
+    <string name="wallpaper_added">Fondo agregado</string>
     <string name="wallpaper_crop_title">Ajustar fondo</string>
     <string name="wallpaper_apply">Aplicar</string>
     <string name="wallpaper_processing_opening">Preparando fondo…</string>
@@ -395,32 +402,12 @@
     <string name="wallpaper_video_too_large">Este video es demasiado grande para usarse como fondo.</string>
     <string name="wallpaper_video_resolution_too_high">La resolución de este video es demasiado alta para reproducirse con fluidez como fondo.</string>
     <string name="wallpaper_video_bitrate_too_high">El bitrate de este video es demasiado alto para reproducirse con fluidez como fondo.</string>
-    <string name="wallpaper_slideshow_status_off">Fondo de Pantalla Aleatorio desactivado</string>
-    <string name="wallpaper_slideshow_configure">Fondo de Pantalla Aleatorio</string>
-    <string name="wallpaper_slideshow_disable">Desactivar</string>
-    <string name="wallpaper_slideshow_status_on">Fondo de Pantalla Aleatorio activo: %1$s</string>
-    <string name="wallpaper_slideshow_selection_count">%1$d fondos</string>
-    <string name="wallpaper_slideshow_trigger_app_toggle">al entrar/salir de la app</string>
-    <string name="wallpaper_slideshow_change_on_app_toggle">Cambiar al entrar/salir de la app</string>
-    <string name="wallpaper_slideshow_title">Fondo de Pantalla Aleatorio</string>
-    <string name="wallpaper_slideshow_save">Guardar</string>
-    <string name="wallpaper_slideshow_applied">Fondo de Pantalla Aleatorio activado</string>
-    <string name="wallpaper_slideshow_disabled">Fondo de Pantalla Aleatorio desactivado</string>
-    <string name="wallpaper_slideshow_select_button">Elegir fondos</string>
-    <string name="wallpaper_slideshow_select_title">Elige los fondos</string>
-    <string name="wallpaper_slideshow_select_apply">Usar selección</string>
-    <string name="wallpaper_slideshow_selection_summary">Seleccionados: %1$d fondos</string>
-    <string name="wallpaper_slideshow_validation_selection">Elige entre 2 y 5 fondos</string>
-    <string name="wallpaper_slideshow_validation_mode">Selecciona al menos una opción de cambio</string>
-    <string name="wallpaper_slideshow_validation_interval">Ingresa un intervalo válido</string>
-    <string name="wallpaper_slideshow_need_more">Agrega al menos dos fondos para usar el modo aleatorio.</string>
-    <string name="wallpaper_slideshow_timed_label">Cambiar con temporizador</string>
-    <string name="wallpaper_slideshow_interval_hint">Valor</string>
-    <string name="wallpaper_slideshow_unit_minutes">Minutos</string>
-    <string name="wallpaper_slideshow_unit_hours">Horas</string>
-    <string name="wallpaper_slideshow_interval_minutes">%1$d min</string>
-    <string name="wallpaper_slideshow_interval_hours">%1$d h</string>
-    <string name="wallpaper_slideshow_selection_hint">Selecciona de 2 a 5 fondos para la función Fondo de Pantalla Aleatorio.</string>
+    <string name="wallpaper_target_mas">MAS</string>
+    <string name="wallpaper_target_mine">MINE</string>
+    <string name="wallpaper_target_lockscreen">Pantalla de bloqueo</string>
+    <string name="wallpaper_apply_to_all">Aplicar a todos</string>
+    <string name="wallpaper_applied_target">Fondo aplicado a %1$s</string>
+    <string name="wallpaper_applied_all">Fondo aplicado a todas las pantallas</string>
 
     <string name="window_mode_prompt_title">Elige el estilo de ventana</string>
     <string name="window_mode_prompt_body">Escoge cómo se muestran las ventanas del Escritorio.</string>
@@ -476,6 +463,11 @@
     <string name="experiments_description">Ejecuta otros juegos de Ren\'Py.</string>
     <string name="experiments_no_games">No se detectaron otros juegos. Coloca las carpetas del juego en ArchivosInternos/&lt;carpeta&gt;/game/</string>
     <string name="experiments_launch">Ejecutar</string>
+    <string name="experiments_select_runtime">Seleccionar versión de Ren\'Py</string>
+    <string name="experiments_runtime_badge">Motor: Ren\'Py %1$s</string>
+    <string name="experiments_runtime_not_selected">Motor: No seleccionado</string>
+    <string name="experiments_failed_prepare_runtime">Error al preparar Ren\'Py %1$s</string>
+    <string name="experiments_select">Seleccionar</string>
 
     <!-- Migration Feature Strings -->
     <string name="migration_window_title">Actualización del motor</string>
@@ -504,4 +496,91 @@
     <string name="migration_btn_start">Iniciar Migración</string>
     <string name="migration_btn_okay">Vale</string>
     <string name="migration_dialog_warning">La migración se está ejecutando. Cerrar esta ventana ahora podría dañar los archivos del juego. Por favor, espera a que termine.</string>
+
+    <string name="title_mine">MINE</string>
+    <!-- User Selection Strings -->
+    <string name="user_selection_title_mas">MAS</string>
+    <string name="user_selection_desc_mas">Recomendado para usuarios de MAS.</string>
+    <string name="user_selection_title_renpy">MINE</string>
+    <string name="user_selection_desc_renpy">La mejor experiencia para juegos Ren\'Py.</string>
+    <string name="user_selection_btn_login">Iniciar sesión</string>
+    <string name="user_selection_footer">Traduction Club\'s virtual desktop</string>
+    <string name="launcher_log_off">Cerrar sesión</string>
+    <string name="launcher_log_off_warning_message">Cerrar la sesión cerrará todos los juegos y ventanas abiertas. Cualquier progreso no guardado podría perderse. ¿Deseas continuar?</string>
+
+    <string name="mine_launcher_search_hint">Buscar juegos...</string>
+    <string name="mine_launcher_no_games">No se encontraron juegos en archivos internos.</string>
+    <string name="mine_launcher_play">Jugar</string>
+    <string name="mine_launcher_settings">Ajustes</string>
+    <string name="mine_launcher_options_title">Ajustes del juego</string>
+    <string name="mine_launcher_runtime_option">Motor Ren\'Py</string>
+    <string name="mine_launcher_view_grid">Vista en cuadrícula</string>
+    <string name="mine_launcher_view_list">Vista en lista</string>
+    <string name="mine_launcher_back">Atrás</string>
+    <string name="mine_launcher_close">Cerrar</string>
+    <string name="mine_launcher_details">Detalles</string>
+    <string name="mine_launcher_title_option">Título del juego</string>
+    <string name="mine_launcher_edit_title">Editar título</string>
+    <string name="mine_launcher_enter_title_hint">Introduce un título personalizado</string>
+    <string name="mine_launcher_reset_default">Restablecer por defecto</string>
+    <string name="mine_launcher_save">Guardar</string>
+    <string name="mine_launcher_env_vars_option">Variables de entorno</string>
+    <string name="mine_launcher_env_vars_title">Variables de entorno</string>
+    <string name="mine_launcher_add_env_var">Agregar variable</string>
+    <string name="mine_launcher_edit_env_var">Editar variable</string>
+    <string name="mine_launcher_var_name">Nombre de la variable</string>
+    <string name="mine_launcher_var_type">Tipo</string>
+    <string name="mine_launcher_type_boolean">Booleano</string>
+    <string name="mine_launcher_type_number">Número (Int/Float)</string>
+    <string name="mine_launcher_type_custom">Personalizado</string>
+    <string name="mine_launcher_var_value">Valor</string>
+    <string name="mine_launcher_error_invalid_var_name">Nombre de variable inválido</string>
+    <string name="mine_launcher_error_invalid_number">Formato de número inválido</string>
+    <string name="mine_launcher_error_duplicate_var">La variable ya existe</string>
+
+    <string name="runtime_detection_found">Versión encontrada: %s</string>
+    <string name="runtime_detection_recommended">Versión recomendada: %s</string>
+    <string name="runtime_detection_unknown">Desconocida</string>
+    <string name="runtime_detection_none">Ninguna</string>
+
+    <string name="mine_launcher_add_game">Agregar juego</string>
+    <string name="add_game_title">Agregar juego</string>
+    <string name="add_game_choose_mode">Seleccionar instalación</string>
+    <string name="add_game_mode_renpy">Juego Ren\'Py</string>
+    <string name="add_game_mode_renpy_desc">Instala un juego Ren\'Py normal (.zip, .rar)</string>
+    <string name="add_game_mode_ddlc">Mod de DDLC</string>
+    <string name="add_game_mode_ddlc_desc">Instalar un mod de DDLC</string>
+    <string name="add_game_select_archive">Seleccionar archivo del juego</string>
+    <string name="add_game_select_mod_archive">Seleccionar archivo del mod</string>
+    <string name="add_game_select_base_ddlc">Seleccionar DDLC (ddlc-win.zip)</string>
+    <string name="add_game_title_label">Título del juego</string>
+    <string name="add_game_folder_label">Nombre de la carpeta</string>
+    <string name="add_game_install_btn">Instalar</string>
+    <string name="add_game_error_no_archive">Por favor, selecciona un archivo de juego.</string>
+    <string name="add_game_error_no_base">Por favor, selecciona el archivo ddlc-win.zip.</string>
+    <string name="add_game_error_no_folder">Por favor, indica un nombre de carpeta.</string>
+    <string name="add_game_error_hash">Archivo de DDLC no válido: discrepancia en la verificación (SHA-256).</string>
+    <string name="add_game_error_generic">Error en la instalación: %s</string>
+    <string name="add_game_error_invalid_archive">Por favor, selecciona un archivo .zip o .rar válido.</string>
+    <string name="add_game_error_invalid_base_ddlc">Por favor, selecciona un archivo ddlc-win.zip válido.</string>
+    <string name="add_game_success">¡Juego instalado!</string>
+    <string name="dialog_error_title">Error</string>
+
+    <string name="mine_launcher_cover_art_option">Portada</string>
+    <string name="mine_launcher_add_cover_art">Añadir portada</string>
+    <string name="mine_launcher_change_cover_art">Cambiar portada</string>
+    <string name="mine_launcher_remove_cover_art">Eliminar portada</string>
+    <string name="mine_launcher_cover_art_updated">Portada actualizada</string>
+    <string name="mine_launcher_cover_art_removed">Portada eliminada</string>
+    <string name="mine_launcher_cover_art_crop_title">Ajustar portada</string>
+
+    <string name="title_tc_blog">TC Blog</string>
+    <string name="tc_blog_tab_all">Todo</string>
+    <string name="tc_blog_back_to_feed">Volver</string>
+    <string name="tc_blog_retry">Reintentar</string>
+    <string name="tc_blog_no_articles">No se encontraron publicaciones</string>
+    <string name="tc_blog_pinned">FIJADO</string>
+    <string name="tc_blog_loading">Cargando...</string>
+    <string name="tc_blog_error_loading">Error al cargar. Por favor, comprueba tu conexión a internet.</string>
+    <string name="tc_blog_read_more">Leer →</string>
 </resources>

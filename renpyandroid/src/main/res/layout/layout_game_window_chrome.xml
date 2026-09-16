@@ -79,6 +79,7 @@
                     android:id="@+id/btnWindowClose"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
                     android:text="X"
                     android:textColor="@color/colorPrimary"
                     android:textSize="14sp"

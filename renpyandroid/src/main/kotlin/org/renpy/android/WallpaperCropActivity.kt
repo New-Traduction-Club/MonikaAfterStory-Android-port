@@ -337,8 +337,7 @@ class WallpaperCropActivity : BaseActivity() {
             dismissProcessingDialog()
             when (result) {
                 is WallpaperApplyResult.Success -> {
-                    window?.decorView?.rootView?.let { WallpaperManager.applyWallpaper(this@WallpaperCropActivity, it) }
-                    InAppNotifier.show(this@WallpaperCropActivity, getString(R.string.wallpaper_applied))
+                    InAppNotifier.show(this@WallpaperCropActivity, getString(R.string.wallpaper_added))
                 }
                 is WallpaperApplyResult.UserError -> {
                     InAppNotifier.show(this@WallpaperCropActivity, getString(result.messageRes), true)
@@ -361,7 +360,6 @@ class WallpaperCropActivity : BaseActivity() {
         val name = "wallpaper_${System.currentTimeMillis()}.$extension"
         WallpaperManager.saveWallpaperFromUri(this, sourceUri, name)
         WallpaperManager.setWallpaperCrop(this, name, extractNormalizedCrop(cropResult))
-        WallpaperManager.setActive(this, name)
         return WallpaperApplyResult.Success
     }
 
@@ -432,7 +430,6 @@ class WallpaperCropActivity : BaseActivity() {
         val name = "wallpaper_${System.currentTimeMillis()}.$safeExtension"
         WallpaperManager.saveWallpaperFromUri(this, sourceUri, name)
         WallpaperManager.setWallpaperCrop(this, name, extractNormalizedCrop(cropResult))
-        WallpaperManager.setActive(this, name)
         return WallpaperApplyResult.Success
     }
 
@@ -454,7 +451,6 @@ class WallpaperCropActivity : BaseActivity() {
             val name = "wallpaper_${System.currentTimeMillis()}.png"
             WallpaperManager.saveWallpaper(this, finalBitmap, name)
             WallpaperManager.clearWallpaperCrop(this, name)
-            WallpaperManager.setActive(this, name)
             return WallpaperApplyResult.Success
         } finally {
             finalBitmap.recycle()

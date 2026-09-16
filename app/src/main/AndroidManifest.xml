@@ -27,7 +27,22 @@
     
     <activity
         android:name="org.renpy.android.SetupActivity"
-        android:exported="false" />
+        android:exported="false"
+        android:screenOrientation="sensorLandscape"
+        android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+    <activity
+        android:name="org.renpy.android.UserSelectionActivity"
+        android:exported="false"
+        android:screenOrientation="sensorLandscape"
+        android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+
+    <activity
+        android:name="org.renpy.android.LogOffConfirmationActivity"
+        android:exported="false"
+        android:theme="@style/Theme.TranslucentDialogHost"
+        android:screenOrientation="sensorLandscape"
+        android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
 
     <activity
         android:name="org.renpy.android.DiscordLoginActivity"
@@ -78,6 +93,67 @@
       android:launchMode="singleTop"
       android:supportsPictureInPicture="true" />
 
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity784"
+      android:exported="false"
+      android:process=":renpy784"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity7411"
+      android:exported="false"
+      android:process=":renpy7411"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity803"
+      android:exported="false"
+      android:process=":renpy803"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity837"
+      android:exported="false"
+      android:process=":renpy837"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity841"
+      android:exported="false"
+      android:process=":renpy841"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+    <activity
+      android:name="org.renpy.android.PythonSDLActivity853"
+      android:exported="false"
+      android:process=":renpy853"
+      android:theme="@style/Theme.GameWindow"
+      android:alwaysRetainTaskState="true"
+      android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
+      android:launchMode="singleTop"
+      android:supportsPictureInPicture="true" />
+
+
 
 
     <activity android:name="org.renpy.android.UpdateWindowActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
@@ -88,8 +164,11 @@
     <activity android:name="org.renpy.android.SubmodInstallerActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.AppInfoActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.ExperimentsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.MineLauncherActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.AddGameActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.BackupsActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity android:name="org.renpy.android.WallpapersActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
+    <activity android:name="org.renpy.android.tcblog.TcBlogActivity" android:exported="false" android:theme="@style/Theme.DesktopActivityWindow"/>
     <activity
         android:name="org.renpy.android.WallpaperCropActivity"
         android:exported="false"

@@ -31,6 +31,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.work.WorkManager
 import org.renpy.android.databinding.LauncherActivityBinding
+import org.renpy.android.tcblog.TcBlogActivity
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -53,7 +54,12 @@ import android.view.animation.LinearInterpolator
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 
 
 import android.graphics.RectF
@@ -66,11 +72,12 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 class LauncherActivity : BaseActivity() {
 
     companion object {
+        const val EXTRA_FROM_LOGIN = "extra_from_login"
+        const val EXTRA_LOGGED_IN_PROFILE = "extra_logged_in_profile"
         private const val STATE_BOOT_SEQUENCE_COMPLETED = "state_boot_sequence_completed"
         private const val REQUEST_CODE_EXPORT_SAVES = 2001
         private const val REQUEST_CODE_IMPORT_SAVES = 2002
@@ -118,7 +125,6 @@ class LauncherActivity : BaseActivity() {
     private var progressText: android.widget.TextView? = null
 
     private var pendingExportUri: Uri? = null
-    private var wallpaperRotationJob: Job? = null
 
     private var selectionStartX = 0f
     private var selectionStartY = 0f
@@ -188,6 +194,12 @@ class LauncherActivity : BaseActivity() {
             "org.renpy.android.PythonSDLActivity" -> "renpy"
             "org.renpy.android.PythonSDLActivity2" -> "renpy2"
             "org.renpy.android.PythonSDLActivity3" -> "renpy3"
+            "org.renpy.android.PythonSDLActivity7411" -> "renpy7411"
+            "org.renpy.android.PythonSDLActivity784" -> "renpy784"
+            "org.renpy.android.PythonSDLActivity803" -> "renpy803"
+            "org.renpy.android.PythonSDLActivity837" -> "renpy837"
+            "org.renpy.android.PythonSDLActivity841" -> "renpy841"
+            "org.renpy.android.PythonSDLActivity853" -> "renpy853"
             else -> "renpy"
         }
         val renpyProcessName = "$packageName:$suffix"
@@ -223,7 +235,13 @@ class LauncherActivity : BaseActivity() {
         val processesToCheck = listOf(
             "org.renpy.android.PythonSDLActivity" to "renpy",
             "org.renpy.android.PythonSDLActivity2" to "renpy2",
-            "org.renpy.android.PythonSDLActivity3" to "renpy3"
+            "org.renpy.android.PythonSDLActivity3" to "renpy3",
+            "org.renpy.android.PythonSDLActivity7411" to "renpy7411",
+            "org.renpy.android.PythonSDLActivity784" to "renpy784",
+            "org.renpy.android.PythonSDLActivity803" to "renpy803",
+            "org.renpy.android.PythonSDLActivity837" to "renpy837",
+            "org.renpy.android.PythonSDLActivity841" to "renpy841",
+            "org.renpy.android.PythonSDLActivity853" to "renpy853"
         )
         var anyRemoved = false
         for ((actId, suffix) in processesToCheck) {
@@ -343,25 +361,18 @@ class LauncherActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-
-        // Check if Setup is completed
-        val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
-        if (!isSetupCompleted) {
-            startActivity(Intent(this, SetupActivity::class.java))
-            finish()
-            return
+        if (savedInstanceState == null && !intent.hasExtra(EXTRA_LOGGED_IN_PROFILE)) {
+            prefs.edit().remove("active_user_profile").apply()
+        }
+        intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
+            intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
+            prefs.edit().putString("active_user_profile", profile).apply()
+            AutoLoginHelper.recordLastUsedProfile(this, profile)
         }
 
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(NotificationWorker.WORK_TAG)
         currentLanguage = prefs.getString("language", "English") ?: "English"
         bootSequenceCompleted = savedInstanceState?.getBoolean(STATE_BOOT_SEQUENCE_COMPLETED, false) ?: false
-
-        val isFirstLaunch = prefs.getBoolean("is_first_launch", true)
-        val setupConfirmed = prefs.getBoolean("setup_language_confirmed", false)
-
-        if (isFirstLaunch && !setupConfirmed) {
-            showLanguageSelectionDialog()
-        }
 
         createLanguageFile(currentLanguage)
 
@@ -398,9 +409,6 @@ class LauncherActivity : BaseActivity() {
         startSystemClockWorker()
         setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
         setupDesktopSelection()
-
-        startBootCrtAnimations()
-
         createNotificationChannel()
 
         // Register window state broadcast receiver
@@ -443,13 +451,16 @@ class LauncherActivity : BaseActivity() {
 
         binding.btnStartMenu.setOnClickListener {
             SoundEffects.playClick(this)
-            isStartMenuExpanded = false
-            hideExpandedMenuAnimated()
             if (binding.startMenuPanel.visibility == View.VISIBLE) {
+                isStartMenuExpanded = false
+                hideExpandedMenuAnimated()
                 binding.startMenuPanel.animate()
                     .translationY(binding.startMenuPanel.height.toFloat())
                     .setDuration(220)
-                    .withEndAction { binding.startMenuPanel.visibility = View.GONE }
+                    .withEndAction {
+                        binding.startMenuPanel.visibility = View.GONE
+                        resetStartMenuState()
+                    }
                     .start()
             } else {
                 showStartMenuAnimated()
@@ -556,7 +567,24 @@ class LauncherActivity : BaseActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handleShortcutIntent(intent)
+        intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
+            intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
+            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+            prefs.edit().putString("active_user_profile", profile).apply()
+            AutoLoginHelper.recordLastUsedProfile(this, profile)
+            updateStartMenuAdapter()
+            setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
+        }
+        if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
+            intent.removeExtra(EXTRA_FROM_LOGIN)
+            resetStartMenuState()
+            lifecycleScope.launch {
+                delay(300)
+                showStartMenuAnimated()
+            }
+        }
     }
 
 
@@ -566,10 +594,7 @@ class LauncherActivity : BaseActivity() {
         super.onResume()
         if (!isUiInitialized) return
 
-        WallpaperManager.advanceOnAppToggle(this)
-        WallpaperManager.maybeAdvanceByTime(this)
-        WallpaperManager.applyWallpaper(this, binding.root)
-        startWallpaperRotation()
+        WallpaperManager.applyWallpaper(this, binding.root, WallpaperManager.getCurrentDesktopTarget(this))
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val savedLang = prefs.getString("language", "English") ?: ""
@@ -579,6 +604,24 @@ class LauncherActivity : BaseActivity() {
         }
 
         SoundEffects.initialize(this)
+
+        intent.getStringExtra(EXTRA_LOGGED_IN_PROFILE)?.let { profile ->
+            intent.removeExtra(EXTRA_LOGGED_IN_PROFILE)
+            prefs.edit().putString("active_user_profile", profile).apply()
+            AutoLoginHelper.recordLastUsedProfile(this, profile)
+            updateStartMenuAdapter()
+            setupDynamicShortcuts(prefs.getBoolean("is_setup_completed", false))
+            WallpaperManager.applyWallpaper(this, binding.root, WallpaperManager.getCurrentDesktopTarget(this))
+        }
+
+        if (intent.getBooleanExtra(EXTRA_FROM_LOGIN, false)) {
+            intent.removeExtra(EXTRA_FROM_LOGIN)
+            resetStartMenuState()
+            lifecycleScope.launch {
+                delay(300)
+                showStartMenuAnimated()
+            }
+        }
 
         if (returnFromWindow) {
             returnFromWindow = false
@@ -597,8 +640,6 @@ class LauncherActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         if (!isUiInitialized) return
-        stopWallpaperRotation()
-        WallpaperManager.advanceOnAppToggle(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -646,7 +687,8 @@ class LauncherActivity : BaseActivity() {
     }
 
     private fun setupDynamicShortcuts(isSetupCompleted: Boolean) {
-        if (!isSetupCompleted) {
+        val activeProfile = getActiveProfile()
+        if (!isSetupCompleted || activeProfile != ProfileNavigationHelper.PROFILE_MAS) {
             ShortcutManagerCompat.removeAllDynamicShortcuts(this)
             return
         }
@@ -679,28 +721,18 @@ class LauncherActivity : BaseActivity() {
 
     private var isStartMenuExpanded = false
 
+    private fun getActiveProfile(): String {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        return prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
+            ?: ProfileNavigationHelper.PROFILE_MAS
+    }
+
     private fun getPinnedItems(): List<DesktopShortcut> {
-        return listOf(
-            DesktopShortcut(R.string.launcher_start_game, android.R.drawable.ic_media_play, "start_game"),
-            DesktopShortcut(R.string.label_internal_files, R.drawable.ic_launcher_internal, "internal_files"),
-            DesktopShortcut(R.string.launcher_import_button, R.drawable.ic_launcher_import, "import"),
-            DesktopShortcut(R.string.launcher_export_button, R.drawable.ic_launcher_export, "export"),
-            DesktopShortcut(R.string.launcher_settings, R.drawable.ic_launcher_settings, "settings"),
-            DesktopShortcut(R.string.launcher_all_programs, android.R.drawable.ic_menu_sort_by_size, "toggle_expand")
-        )
+        return ProfileNavigationHelper.getPinnedItems(getActiveProfile())
     }
 
     private fun getExpandedItems(): List<DesktopShortcut> {
-        return listOf(
-            DesktopShortcut(R.string.launcher_browse_external, R.drawable.ic_launcher_external, "external_files"),
-            DesktopShortcut(R.string.launcher_update_game, R.drawable.ic_launcher_export, "update_game"),
-            DesktopShortcut(R.string.launcher_add_extra_content, android.R.drawable.ic_input_add, "extra_content"),
-            DesktopShortcut(R.string.launcher_discord_rpc, android.R.drawable.stat_notify_chat, "discord_rpc"),
-            DesktopShortcut(R.string.launcher_backups, R.drawable.ic_launcher_backup, "backups"),
-            DesktopShortcut(R.string.launcher_wallpapers, R.drawable.ic_launcher_wallpaper, "wallpapers"),
-            DesktopShortcut(R.string.title_app_info, android.R.drawable.ic_menu_info_details, "app_info"),
-            DesktopShortcut(R.string.title_experiments, android.R.drawable.ic_menu_compass, "experiments")
-        )
+        return ProfileNavigationHelper.getExpandedItems(getActiveProfile())
     }
 
     private fun updateStartMenuAdapter() {
@@ -747,11 +779,8 @@ class LauncherActivity : BaseActivity() {
         if (!bootSequenceCompleted) {
             startBootSequence()
         } else {
+            binding.bootScreenLayout.visibility = View.GONE
             ensureStartMenuVisible()
-            lifecycleScope.launch {
-                delay(300)
-                checkAndPromptMigration()
-            }
         }
     }
 
@@ -779,89 +808,211 @@ class LauncherActivity : BaseActivity() {
         val availableStorage = Formatter.formatFileSize(this, availableStorageBytes)
 
         lifecycleScope.launch {
-            delay(1_500)
+            delay(200)
 
-            val consoleBuffer = StringBuilder()
-            var cursorVisible = true
+            val consoleBuffer = SpannableStringBuilder()
 
             fun renderBootConsole() {
-                val output = if (cursorVisible) {
-                    "${consoleBuffer}_"
-                } else {
-                    consoleBuffer.toString()
-                }
-                setBootConsoleText(output)
+                setBootConsoleText(consoleBuffer)
             }
 
-            fun appendBootText(text: String) {
-                consoleBuffer.append(text)
+            fun appendKernelLine(timestamp: String, message: String) {
+                val tsStart = consoleBuffer.length
+                consoleBuffer.append("[$timestamp] ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#78909C")),
+                    tsStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                val msgStart = consoleBuffer.length
+                consoleBuffer.append(message).append("\n")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    msgStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
                 renderBootConsole()
             }
 
-            val cursorJob = launch {
-                while (true) {
-                    delay(280)
-                    cursorVisible = !cursorVisible
-                    renderBootConsole()
+            fun appendSystemdService(service: String) {
+                val b1Start = consoleBuffer.length
+                consoleBuffer.append("[ ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    b1Start,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                val okStart = consoleBuffer.length
+                consoleBuffer.append(" OK ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#44D62C")),
+                    okStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                consoleBuffer.setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    okStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                val b2Start = consoleBuffer.length
+                consoleBuffer.append("] ")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    b2Start,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+                val sStart = consoleBuffer.length
+                consoleBuffer.append(service).append("\n")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#ECEFF4")),
+                    sStart,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                renderBootConsole()
+            }
+
+            fun appendStatusLine(message: String) {
+                val start = consoleBuffer.length
+                consoleBuffer.append(message).append("\n")
+                consoleBuffer.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#88C0D0")),
+                    start,
+                    consoleBuffer.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                renderBootConsole()
+            }
+
+            delay(300)
+            appendKernelLine("    0.000000", "Linux version $kernelVersion (android $androidVersion, $arch)")
+            delay(180)
+            appendKernelLine("    0.024180", "Kernel command line: boot=UUID ro quiet splash tradclub.desktop=1")
+            delay(160)
+            appendKernelLine("    0.048310", "Hardware: $manufacturer $model ($cpuCores CPUs, SMP)")
+            delay(180)
+            appendKernelLine("    0.092100", "Memory: ${totalRamMb}MB total, zram swap enabled")
+            delay(160)
+            appendKernelLine("    0.141200", "Storage: $availableStorage free / $totalStorage total")
+            delay(180)
+            appendKernelLine(
+                "    0.189540",
+                "Display: ${screenWidth}x${screenHeight} @ 32bpp Framebuffer (GLES/Vulkan)"
+            )
+            delay(400)
+
+            appendSystemdService("Mounted Virtual Filesystem (/dev, /proc, /sys).")
+            delay(380)
+            appendSystemdService("Mounted /data/user/0/the.best.mas.port.")
+            delay(400)
+            appendSystemdService("Initialized Cryptographic Keystore & Entropy Pool.")
+            delay(380)
+            appendSystemdService("Loaded Ren'Py Engine, SDL2, OpenAL Audio Driver.")
+            delay(420)
+            appendSystemdService("Synchronized Persistent Storage & Character Data.")
+            delay(380)
+            appendSystemdService("Started Traduction Club Session Bus.")
+            delay(420)
+
+            appendSystemdService("Started Network Manager & Discovery Daemon.")
+            delay(380)
+            appendSystemdService("Started Discord RPC IPC Bridge Daemon.")
+            delay(380)
+            appendSystemdService("Reached target System Initialization.")
+            delay(400)
+            appendSystemdService("Started Desktop Display Manager.")
+            delay(420)
+            appendSystemdService("Started Window Compositor & Framebuffer Pipeline.")
+            delay(420)
+            appendSystemdService("Reached target Graphical Interface.")
+            delay(500)
+
+            bootSequenceCompleted = true
+
+            val autoProfile = AutoLoginHelper.resolveAutoLoginProfile(this@LauncherActivity)
+            if (autoProfile != null) {
+                appendStatusLine("Detected saved session credentials for user: $autoProfile")
+                delay(450)
+                appendSystemdService("Authenticated auto-login session for user '$autoProfile'.")
+                delay(500)
+                appendStatusLine("Starting Traduction Club Desktop Environment...")
+                delay(600)
+
+                val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
+                val target = ProfileNavigationHelper.determineLoginTarget(autoProfile, isSetupCompleted)
+                if (target == ProfileNavigationHelper.NavigationTarget.SETUP) {
+                    val intent = Intent(this@LauncherActivity, SetupActivity::class.java)
+                    startActivity(intent)
+                    overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
+
+                    binding.bootScreenLayout.animate()
+                        .alpha(0f)
+                        .setDuration(400)
+                        .withEndAction {
+                            binding.bootScreenLayout.visibility = View.GONE
+                            binding.bootScreenLayout.alpha = 1f
+                        }
+                        .start()
+                } else {
+                    prefs.edit().putString("active_user_profile", autoProfile).apply()
+                    AutoLoginHelper.recordLastUsedProfile(this@LauncherActivity, autoProfile)
+                    updateStartMenuAdapter()
+                    setupDynamicShortcuts(isSetupCompleted)
+                    WallpaperManager.applyWallpaper(
+                        this@LauncherActivity,
+                        binding.root,
+                        WallpaperManager.getCurrentDesktopTarget(this@LauncherActivity)
+                    )
+                    resetStartMenuState()
+
+                    binding.bootScreenLayout.animate()
+                        .alpha(0f)
+                        .setDuration(400)
+                        .withEndAction {
+                            binding.bootScreenLayout.visibility = View.GONE
+                            binding.bootScreenLayout.alpha = 1f
+                            lifecycleScope.launch {
+                                delay(300)
+                                showStartMenuAnimated()
+                            }
+                        }
+                        .start()
                 }
-            }
+            } else {
+                appendStatusLine("No auto-login profile configured. Starting Display Manager...")
+                delay(450)
+                appendSystemdService("Ready for user authentication.")
+                delay(500)
+                appendStatusLine("Waiting for graphic driver...")
+                delay(600)
 
-            val hexPhaseStart = SystemClock.elapsedRealtime()
-            val hexDurationMs = Random.nextLong(2_400L, 5_200L)
-            val hexLineIntervalMs = 100L
+                val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
+                startActivity(intent)
+                overridePendingTransition(R.anim.window_fade_in, R.anim.window_fade_out)
 
-            appendBootText("HEX DUMP START\n")
-            var offset = 0
-            while (SystemClock.elapsedRealtime() - hexPhaseStart < hexDurationMs) {
-                appendBootText("${generateHexDumpLine(offset)}\n")
-                offset += 16
-                delay(hexLineIntervalMs)
-            }
-
-            appendBootText("\nTraduction Club BIOS v0.3\n")
-            appendBootText("Kernel: $kernelVersion\n")
-            appendBootText("Board: $manufacturer $model\n")
-            appendBootText("OS: Android $androidVersion\n")
-            appendBootText("Architecture: $arch\n")
-            appendBootText("CPU Cores: $cpuCores\n")
-            appendBootText("Resolution: ${screenWidth}x${screenHeight}\n")
-            appendBootText("Storage: $totalStorage total / $availableStorage free\n")
-            appendBootText("Total RAM: ${totalRamMb}MB... OK\n\n")
-
-            appendBootText("WAIT")
-            val waitTargetEnd = hexPhaseStart + 8_000L
-            val dotCount = 10
-            repeat(dotCount) { index ->
-                val dotsRemaining = dotCount - index
-                val remainingTimeMs = (waitTargetEnd - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
-                val dotDelayMs = if (dotsRemaining > 0) remainingTimeMs / dotsRemaining else 0L
-                delay(dotDelayMs)
-                appendBootText(".")
-            }
-
-            cursorJob.cancel()
-            cursorVisible = false
-            setBootConsoleText(consoleBuffer.toString())
-            delay(450)
-
-            binding.bootScreenLayout.animate()
-                .alpha(0f)
-                .setDuration(600)
-                .withEndAction {
-                    bootSequenceCompleted = true
-                    binding.bootScreenLayout.visibility = View.GONE
-                    lifecycleScope.launch {
-                        delay(1000)
-                        showStartMenuAnimated()
-                        delay(600)
-                        checkAndPromptMigration()
+                binding.bootScreenLayout.animate()
+                    .alpha(0f)
+                    .setDuration(400)
+                    .withEndAction {
+                        binding.bootScreenLayout.visibility = View.GONE
+                        binding.bootScreenLayout.alpha = 1f
                     }
-                }
-                .start()
+                    .start()
+            }
         }
     }
 
-    private fun checkAndPromptMigration() {
+    private fun checkAndPromptMigration(): Boolean {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val isMigrated = prefs.getBoolean("user_migrated_masl", false)
         if (!isMigrated) {
@@ -869,16 +1020,9 @@ class LauncherActivity : BaseActivity() {
                 val intent = Intent(this, MigrationActivity::class.java)
                 launchActivityWindow(intent, MigrationActivity::class.java.name)
             }
+            return false
         }
-    }
-
-    private fun generateHexDumpLine(offset: Int, bytesPerLine: Int = 16): String {
-        val values = IntArray(bytesPerLine) { Random.nextInt(0, 256) }
-        val hexBytes = values.joinToString(" ") { String.format(Locale.US, "%02X", it) }
-        val asciiPreview = values.joinToString(separator = "") { value ->
-            if (value in 32..126) value.toChar().toString() else "."
-        }
-        return String.format(Locale.US, "%04X  %s  |%s|", offset, hexBytes, asciiPreview)
+        return true
     }
 
     private fun resolveScreenResolution(): Pair<Int, Int> {
@@ -896,7 +1040,7 @@ class LauncherActivity : BaseActivity() {
         return statFs.totalBytes to statFs.availableBytes
     }
 
-    private fun setBootConsoleText(text: String) {
+    private fun setBootConsoleText(text: CharSequence) {
         val console = binding.txtBiosConsole
         console.text = text
         console.doOnPreDraw {
@@ -935,25 +1079,33 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun showStartMenuAnimated() {
+    private fun resetStartMenuState() {
+        isStartMenuExpanded = false
         binding.expandedProgramsPanel.clearAnimation()
         binding.expandedProgramsPanel.visibility = View.GONE
         binding.expandedProgramsPanel.translationX = 0f
-        binding.startMenuPanel.clearAnimation()
-        binding.startMenuPanel.visibility = View.INVISIBLE
-        binding.startMenuPanel.translationY = 0f
-        binding.startMenuPanel.alpha = 1f
+        updateStartMenuAdapter()
+    }
 
-        binding.startMenuPanel.post {
-            val startHeight = binding.startMenuPanel.height.toFloat()
-            binding.startMenuPanel.translationY = startHeight
-            binding.startMenuPanel.visibility = View.VISIBLE
-            binding.startMenuPanel.animate()
-                .translationY(0f)
-                .setDuration(520)
-                .setInterpolator(DecelerateInterpolator())
-                .start()
+    private fun showStartMenuAnimated() {
+        if (binding.startMenuPanel.visibility == View.VISIBLE && binding.startMenuPanel.translationY == 0f) {
+            return
         }
+        resetStartMenuState()
+
+        binding.startMenuPanel.clearAnimation()
+        val panelHeight = binding.startMenuPanel.height.takeIf { it > 0 }
+            ?: resources.getDimensionPixelSize(R.dimen.start_menu_collapsed_height)
+        binding.startMenuPanel.translationY = panelHeight.toFloat()
+        binding.startMenuPanel.alpha = 1f
+        binding.startMenuPanel.visibility = View.VISIBLE
+        binding.startMenuPanel.bringToFront()
+
+        binding.startMenuPanel.animate()
+            .translationY(0f)
+            .setDuration(400)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
     }
 
     private fun showExpandedMenuAnimated() {
@@ -961,6 +1113,7 @@ class LauncherActivity : BaseActivity() {
         panel.clearAnimation()
         panel.visibility = View.INVISIBLE
         panel.alpha = 1f
+        binding.expandedRecyclerView.adapter?.notifyDataSetChanged()
         panel.post {
             val slideDistance = binding.startMenuPanel.width
                 .takeIf { it > 0 }
@@ -1058,10 +1211,13 @@ class LauncherActivity : BaseActivity() {
 
     private fun checkLanguageAndStartGame() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val isMigrated = prefs.getBoolean("user_migrated_masl", false)
-        if (!isMigrated) {
-            val intent = Intent(this, MigrationActivity::class.java)
-            launchActivityWindow(intent, MigrationActivity::class.java.name)
+        val isSetupCompleted = prefs.getBoolean("is_setup_completed", false)
+        if (!isSetupCompleted) {
+            startActivity(Intent(this, SetupActivity::class.java))
+            return
+        }
+
+        if (!checkAndPromptMigration()) {
             return
         }
 
@@ -1252,6 +1408,13 @@ class LauncherActivity : BaseActivity() {
                 }
             }
 
+            "tc_blog" -> {
+                val intent = Intent(this, TcBlogActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                }
+                launchActivityWindow(intent, TcBlogActivity::class.java.name)
+            }
+
             "app_info" -> {
                 val intent = Intent(this, AppInfoActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
@@ -1260,49 +1423,60 @@ class LauncherActivity : BaseActivity() {
             }
 
             "experiments" -> {
-                val intent = Intent(this, ExperimentsActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                if (getActiveProfile() == ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER) {
+                    val intent = Intent(this, MineLauncherActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    }
+                    launchActivityWindow(intent, MineLauncherActivity::class.java.name)
+                } else {
+                    val intent = Intent(this, ExperimentsActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    }
+                    launchActivityWindow(intent, ExperimentsActivity::class.java.name)
                 }
-                launchActivityWindow(intent, ExperimentsActivity::class.java.name)
+            }
+
+            "switch_user" -> {
+                if (LogOffManager.hasRunningGamesOrWindows(
+                        this,
+                        runningApps,
+                        ActiveActivityRegistry.activeActivities
+                    )
+                ) {
+                    LogOffConfirmationActivity.start(this) {
+                        LogOffManager.closeAllWindowsAndGames(this, runningApps, renpyMonitorJobs)
+                        lastFocusedAppId = null
+                        updateTaskbarApps()
+                        executeLogOff()
+                    }
+                } else {
+                    executeLogOff()
+                }
             }
         }
     }
 
-    private fun startBootCrtAnimations() {
-        val scanlineBitmap = Bitmap.createBitmap(1, 2, Bitmap.Config.ARGB_8888)
-        scanlineBitmap.setPixel(0, 0, Color.TRANSPARENT)
-        scanlineBitmap.setPixel(0, 1, Color.argb(45, 0, 0, 0))
+    private fun executeLogOff() {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        prefs.edit().remove("active_user_profile").apply()
 
-        val scanlineDrawable = BitmapDrawable(resources, scanlineBitmap)
-        scanlineDrawable.tileModeY = Shader.TileMode.REPEAT
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.crtOverlay.foreground = scanlineDrawable
-        } else {
+        resetStartMenuState()
+        binding.startMenuPanel.clearAnimation()
+        binding.startMenuPanel.visibility = View.GONE
+        binding.logOffOverlayLayout.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate().alpha(1f).setDuration(250).start()
         }
-
-        val rollingLine = binding.bootRollingLine
-        rollingLine.post {
-            val parentHeight = binding.bootScreenLayout.height.toFloat()
-            val lineAnimator = ValueAnimator.ofFloat(-200f, parentHeight + 200f)
-            lineAnimator.duration = 4000
-            lineAnimator.repeatCount = ValueAnimator.INFINITE
-            lineAnimator.interpolator = LinearInterpolator()
-            lineAnimator.addUpdateListener { animator ->
-                rollingLine.translationY = animator.animatedValue as Float
-            }
-            lineAnimator.start()
+        binding.spinnerLogOff.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            delay(2000L)
+            val intent = Intent(this@LauncherActivity, UserSelectionActivity::class.java)
+            startActivity(intent)
+            applyFadeTransition()
+            delay(500L)
+            binding.logOffOverlayLayout.visibility = View.GONE
         }
-
-        val overlay = binding.crtOverlay
-        val flickerAnimator = ValueAnimator.ofFloat(0.6f, 0.8f)
-        flickerAnimator.duration = 60
-        flickerAnimator.repeatCount = ValueAnimator.INFINITE
-        flickerAnimator.repeatMode = ValueAnimator.REVERSE
-        flickerAnimator.addUpdateListener { animator ->
-            overlay.alpha = animator.animatedValue as Float
-        }
-        flickerAnimator.start()
     }
 
     private fun startSystemClockWorker() {
@@ -1315,29 +1489,6 @@ class LauncherActivity : BaseActivity() {
         }
     }
 
-    private fun startWallpaperRotation() {
-        wallpaperRotationJob?.cancel()
-
-        val config = WallpaperManager.getSlideshowConfig(this)
-        val intervalMinutes = config.intervalMinutes
-        if (!config.enabled || intervalMinutes == null || intervalMinutes <= 0) return
-
-        val intervalMs = TimeUnit.MINUTES.toMillis(intervalMinutes.toLong())
-        wallpaperRotationJob = lifecycleScope.launch {
-            while (true) {
-                delay(intervalMs)
-                val changed = WallpaperManager.advanceWallpaper(this@LauncherActivity) != null
-                if (changed) {
-                    WallpaperManager.applyWallpaper(this@LauncherActivity, binding.root)
-                }
-            }
-        }
-    }
-
-    private fun stopWallpaperRotation() {
-        wallpaperRotationJob?.cancel()
-        wallpaperRotationJob = null
-    }
 
     private fun setupObservers() {
         viewModel.launchState.observe(this) { state ->
@@ -1493,12 +1644,7 @@ class LauncherActivity : BaseActivity() {
             }
 
             runOnUiThread {
-                val isMigrated = getSharedPreferences("app_prefs", MODE_PRIVATE).getBoolean("user_migrated_masl", false)
-                if (!isMigrated) {
-                    launchActivityWindow(
-                        Intent(this@LauncherActivity, MigrationActivity::class.java),
-                        MigrationActivity::class.java.name
-                    )
+                if (!checkAndPromptMigration()) {
                     return@runOnUiThread
                 }
 

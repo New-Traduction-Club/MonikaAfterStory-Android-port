@@ -1,10 +1,8 @@
 # MASL: An After Story Launcher (Unofficial Android Port)
 
 > [!IMPORTANT]
-> **STRICT LEGAL DISCLAIMER & IMPORTANT NOTICE**
-> 1. **NO ASSETS INCLUDED:** This repository does **not** contain any game assets, artwork, or music from *Doki Doki Literature Club!* (DDLC) or the *Monika After Story* (MAS) mod.
-> 2. **UNOFFICIAL PROJECT:** This is a strictly unofficial, fan-made Android wrapper/launcher. It is not affiliated with, endorsed by, or associated with Team Salvato or the official Monika After Story development team.
-> 3. **SCOPE:** This repository solely contains the Android project structure, the Ren'Py engine wrapper, and other tools designed to facilitate the execution of legally obtained mod files on Android devices.
+> **NO ASSETS INCLUDED:** This repository does **not** contain any game assets, artwork, or music from *Doki Doki Literature Club!* (DDLC) or *Monika After Story* (MAS) mod.
+> **UNOFFICIAL PROJECT:** This is a strictly unofficial, fan-made Android wrapper/launcher. It is not affiliated with, endorsed by, or associated with Team Salvato or the official Monika After Story development team.
 
 ---
 
@@ -14,8 +12,8 @@
 
 ## Key Features
 
-- **One-Click Installation:** Automatic download and setup of the MAS mod.
-- **Content Installers:** Built-in managers for **Spritepacks** and **Submods**.
+- **One-Click Installation:** Automatic download and setup of MAS mod.
+- **Content Installers:** Built-in installers for **Spritepacks** and **Submods**.
 - **Discord Rich Presence:** Using integrated [KizzyRPC](https://github.com/KizzyRPC). (Still working on that lol)
 - **File Explorer:** Integrated file manager to handle game files, submods, etc.
 - **Multi-Language Support:** Fully localized in English, Español, and Português.
@@ -27,11 +25,7 @@
 To use MASL, you must provide your own legally obtained copy of DDLC and the MAS mod.
 
 1. **Download DDLC:** Obtain the Windows version of Doki Doki Literature Club from [ddlc.moe](https://ddlc.moe/).
-2. **Download MAS:** Obtain the Mod version of Monika After Story (v0.12.18-Dlx Recommended) from the [official GitHub](https://github.com/Monika-After-Story/MonikaModDev/releases).
-3. **Run MASL:** Launch the app on your Android device and follow the step-by-step setup guide:
-   - Select your DDLC `.zip` file.
-   - Select your MAS `.zip` file (or use the "Automatic Download" option).
-   - Let MASL verify, extract, and configure the game for you.
+2. **Download MAS:** MASL will handle it for you, using latest release of [this MAS](https://github.com/New-Traduction-Club/MonikaModDev-Unofficial-Android/releases).
 
 ## Components
 - **Kotlin Integration:** Native Android components handle heavy lifting like ZIP extraction, RPA unpacking, Discord RPC, UI for Piano, notifications, etc.
@@ -41,16 +35,16 @@ To use MASL, you must provide your own legally obtained copy of DDLC and the MAS
 To handle Ren'Py Archive (`.rpa`) extraction natively, we developed a custom `unrpa` utility in Kotlin.
 * **Logic Attribution:** Based on the Python implementation by [Lattyware](https://github.com/Lattyware/unrpa).
 
-## Development
+# MINE
 
-### Prerequisites
-- JDK 17+.
-- Android SDK 34+.
+**MINE (MASL Is Not an Emulator)** is a multi-runtime Ren'Py game launcher and environment integrated into MASL.
 
-### Building from Source
-```bash
-./gradlew assembleDebug
-```
+MINE executes Ren'Py games natively using custom builds (except 8.4.1 & 8.5.3) of Ren'Py runtimes.
+
+Versions available:
+
+- Python 2: Ren'Py 6.99.14, 7.4.11, 7.8.4
+- Python 3: Ren'Py 8.0.3, 8.3.7, 8.4.1, 8.5.3
 
 ## Credits
 

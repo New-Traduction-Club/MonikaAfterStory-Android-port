@@ -36,6 +36,9 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
     private var isCutOperation: Boolean = false
     private val _hasClipboard = MutableLiveData<Boolean>(false)
     val hasClipboard: LiveData<Boolean> = _hasClipboard
+
+    private val _isImportingZip = MutableLiveData<Boolean>(false)
+    val isImportingZip: LiveData<Boolean> = _isImportingZip
     @Volatile
     private var activeSearchToken: Long = 0L
 
@@ -277,6 +280,7 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
     fun importZip(uri: android.net.Uri, context: android.content.Context) {
         val destDir = _currentDir.value ?: return
         
+        _isImportingZip.postValue(true)
         viewModelScope.launch(Dispatchers.IO) {
             val tempZipObj = File.createTempFile("import_temp", ".zip", context.cacheDir)
             try {
@@ -317,6 +321,7 @@ class FileExplorerViewModel(application: Application) : AndroidViewModel(applica
                 postMessage(getString(R.string.import_failed, e.message ?: ""))
             } finally {
                 if (tempZipObj.exists()) tempZipObj.delete()
+                _isImportingZip.postValue(false)
             }
         }
     }
