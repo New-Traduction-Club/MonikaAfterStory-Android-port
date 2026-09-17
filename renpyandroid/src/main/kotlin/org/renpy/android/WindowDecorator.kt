@@ -92,7 +92,7 @@ class WindowDecorator(private val activity: Activity) {
     }
 
     fun notifyState(state: String) {
-        DesktopWindowManager.notifyStateChanged(activity, activityId, activityName, state)
+        DesktopWindowManager.notifyStateChanged(activity, activityId, activityName, state, !isWindowedMode())
     }
 
     private fun getRealDisplayMetrics(): android.util.DisplayMetrics {

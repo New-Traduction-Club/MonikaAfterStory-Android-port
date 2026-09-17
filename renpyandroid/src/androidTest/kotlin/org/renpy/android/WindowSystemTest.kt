@@ -82,6 +82,17 @@ class WindowSystemTest {
             DesktopWindowManager.notifyStateChanged(context, "activity_1", "Test Activity", "DESTROYED")
             SystemClock.sleep(200)
             assertEquals("Desktop", DesktopWindowManager.getActiveWindowName())
+
+            // Simulate entering PIP
+            DesktopWindowManager.notifyStateChanged(context, "game_activity", "RenPy Game", "PIP")
+            SystemClock.sleep(200)
+            assertTrue(DesktopWindowManager.isPipActive())
+
+            // Simulate restoring from PIP
+            DesktopWindowManager.notifyStateChanged(context, "game_activity", "RenPy Game", "RUNNING")
+            SystemClock.sleep(200)
+            assertFalse(DesktopWindowManager.isPipActive())
+            assertEquals("RenPy Game", DesktopWindowManager.getActiveWindowName())
         } finally {
             DesktopWindowManager.unregisterReceiver(context)
         }

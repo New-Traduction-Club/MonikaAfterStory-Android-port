@@ -955,6 +955,13 @@ public class PythonSDLActivity extends SDLActivity {
         mPendingPictureInPictureEnter = false;
         if (isInPictureInPictureMode) {
             DiscordRpcManager.startIfEnabled(this);
+            if (mWindowDecorator != null) {
+                mWindowDecorator.notifyState("PIP");
+            }
+        } else {
+            if (mWindowDecorator != null && !mWindowDecorator.isWindowMinimizedState()) {
+                mWindowDecorator.notifyState("RUNNING");
+            }
         }
         ToolboxManager.setPipMode(this, isInPictureInPictureMode);
 
@@ -1003,6 +1010,10 @@ public class PythonSDLActivity extends SDLActivity {
                 View surfaceView = (View) mSurface;
                 surfaceView.requestFocus();
             }
+            boolean inPip = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode();
+            if (mWindowDecorator != null && !inPip && !mWindowDecorator.isWindowMinimizedState()) {
+                mWindowDecorator.notifyState("RUNNING");
+            }
         }
     }
 
@@ -1047,7 +1058,7 @@ public class PythonSDLActivity extends SDLActivity {
                 .putLong("last_session_start", start)
                 .apply();
 
-        if (mWindowDecorator != null && mWindowDecorator.isWindowedMode()) {
+        if (mWindowDecorator != null && !inPip) {
             if (!mWindowDecorator.isWindowMinimizedState()) {
                 mWindowDecorator.notifyState("RUNNING");
             }

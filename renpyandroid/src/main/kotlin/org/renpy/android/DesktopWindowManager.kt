@@ -45,18 +45,33 @@ object DesktopWindowManager {
 
     const val EXTRA_ACTIVITY_ID = "activity_id"
     const val EXTRA_ACTIVITY_NAME = "activity_name"
-    const val EXTRA_STATE = "state" // "RUNNING", "MINIMIZED", "DESTROYED"
+    const val EXTRA_STATE = "state" // "RUNNING", "MINIMIZED", "DESTROYED", "PIP"
+    const val EXTRA_IS_FULLSCREEN = "is_fullscreen"
     const val EXTRA_COMMAND = "command" // "RESTORE", "MINIMIZE", "CLOSE"
+
+    const val STATE_RUNNING = "RUNNING"
+    const val STATE_MINIMIZED = "MINIMIZED"
+    const val STATE_DESTROYED = "DESTROYED"
+    const val STATE_PIP = "PIP"
 
     const val COMMAND_RESTORE = "RESTORE"
     const val COMMAND_MINIMIZE = "MINIMIZE"
     const val COMMAND_CLOSE = "CLOSE"
 
-    fun notifyStateChanged(context: Context, activityId: String, activityName: String, state: String) {
+    @JvmStatic
+    @JvmOverloads
+    fun notifyStateChanged(
+        context: Context,
+        activityId: String,
+        activityName: String,
+        state: String,
+        isFullscreen: Boolean = false
+    ) {
         val intent = Intent(ACTION_WINDOW_STATE_CHANGED).apply {
             putExtra(EXTRA_ACTIVITY_ID, activityId)
             putExtra(EXTRA_ACTIVITY_NAME, activityName)
             putExtra(EXTRA_STATE, state)
+            putExtra(EXTRA_IS_FULLSCREEN, isFullscreen)
         }
         context.sendBroadcast(intent)
     }
@@ -73,6 +88,12 @@ object DesktopWindowManager {
     @Volatile
     private var lastFocusedAppId: String? = null
 
+    fun isPipActive(): Boolean {
+        return runningApps.values.any { it.second == STATE_PIP }
+    }
+
+    fun getLastFocusedAppId(): String? = lastFocusedAppId
+
     private val windowStateReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == ACTION_WINDOW_STATE_CHANGED) {
@@ -80,17 +101,17 @@ object DesktopWindowManager {
                 val name = intent.getStringExtra(EXTRA_ACTIVITY_NAME) ?: "App"
                 val state = intent.getStringExtra(EXTRA_STATE) ?: return
 
-                if (state == "DESTROYED") {
+                if (state == STATE_DESTROYED) {
                     runningApps.remove(id)
                     if (lastFocusedAppId == id) {
-                        lastFocusedAppId = runningApps.entries.lastOrNull { it.value.second == "RUNNING" }?.key
+                        lastFocusedAppId = runningApps.entries.lastOrNull { it.value.second == STATE_RUNNING }?.key
                     }
                 } else {
                     runningApps[id] = Pair(name, state)
-                    if (state == "RUNNING") {
+                    if (state == STATE_RUNNING) {
                         lastFocusedAppId = id
                     } else if (lastFocusedAppId == id) {
-                        lastFocusedAppId = runningApps.entries.lastOrNull { it.value.second == "RUNNING" }?.key
+                        lastFocusedAppId = runningApps.entries.lastOrNull { it.value.second == STATE_RUNNING }?.key
                     }
                 }
             }

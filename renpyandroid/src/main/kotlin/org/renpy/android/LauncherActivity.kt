@@ -171,9 +171,18 @@ class LauncherActivity : BaseActivity() {
                         lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
                     }
                 } else {
+                    val wasInPip = runningApps[id]?.state == "PIP"
                     runningApps[id] = RunningAppInfo(id, name, state)
                     if (state == "RUNNING") {
+                        if (wasInPip || id.startsWith("org.renpy.android.PythonSDLActivity")) {
+                            lastPipTransitionTime = android.os.SystemClock.uptimeMillis()
+                        }
                         lastFocusedAppId = id
+                    } else if (state == "PIP") {
+                        lastPipTransitionTime = android.os.SystemClock.uptimeMillis()
+                        if (lastFocusedAppId == id) {
+                            lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
+                        }
                     } else if (lastFocusedAppId == id) {
                         lastFocusedAppId = runningApps.keys.lastOrNull { runningApps[it]?.state == "RUNNING" }
                     }
@@ -231,7 +240,16 @@ class LauncherActivity : BaseActivity() {
         return false
     }
 
+    private var lastPipTransitionTime: Long = 0L
+
     private fun bringRunningActivitiesToFront() {
+        if (runningApps.values.any { it.state == "PIP" }) return
+        if (android.os.SystemClock.uptimeMillis() - lastPipTransitionTime < 1500) return
+
+        val focusedApp = lastFocusedAppId?.let { runningApps[it] }
+        if (focusedApp != null && focusedApp.id.startsWith("org.renpy.android.PythonSDLActivity")) {
+            return
+        }
         val processesToCheck = listOf(
             "org.renpy.android.PythonSDLActivity" to "renpy",
             "org.renpy.android.PythonSDLActivity2" to "renpy2",
@@ -319,7 +337,7 @@ class LauncherActivity : BaseActivity() {
                 gravity = android.view.Gravity.CENTER
                 setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
 
-                if (app.state == "MINIMIZED") {
+                if (app.state == "MINIMIZED" || app.state == "PIP") {
                     setTextColor(
                         androidx.core.content.ContextCompat.getColor(
                             this@LauncherActivity,
@@ -336,7 +354,7 @@ class LauncherActivity : BaseActivity() {
 
                 setOnClickListener {
                     SoundEffects.playClick(this@LauncherActivity)
-                    if (app.state == "MINIMIZED") {
+                    if (app.state == "MINIMIZED" || app.state == "PIP") {
                         lastFocusedAppId = app.id
                         DesktopWindowManager.sendCommand(this@LauncherActivity, app.id, "RESTORE")
                     } else {
