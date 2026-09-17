@@ -10,13 +10,13 @@ class AppInfoActivity : GameWindowActivity() {
 
     private lateinit var binding: ActivityAppInfoBinding
 
-    private val COMMIT_HASH = "6123d76"
+    private val COMMIT_HASH = "02d08d6"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAppInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         setTitle(R.string.title_app_info)
 
         // Set App Icon
@@ -38,7 +38,7 @@ class AppInfoActivity : GameWindowActivity() {
         setupHtmlText(binding.tvCreditsPort, getString(R.string.app_info_credits_port))
         setupHtmlText(binding.tvCreditsEs, getString(R.string.app_info_credits_es))
         setupHtmlText(binding.tvCreditsPt, getString(R.string.app_info_credits_pt))
-        
+
         setupHtmlText(binding.tvAckTeamSalvato, getString(R.string.app_info_acknowledgments_team_salvato))
         setupHtmlText(binding.tvAckMasTeam, getString(R.string.app_info_acknowledgments_mas_team))
         setupHtmlText(binding.tvAckRenpy, getString(R.string.app_info_acknowledgments_renpy))
@@ -52,10 +52,10 @@ class AppInfoActivity : GameWindowActivity() {
             startActivity(intent)
         }
     }
-    
+
     private fun setupHtmlText(textView: android.widget.TextView, htmlString: String) {
         textView.text = androidx.core.text.HtmlCompat.fromHtml(
-            htmlString, 
+            htmlString,
             androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY
         )
         textView.movementMethod = android.text.method.LinkMovementMethod.getInstance()
