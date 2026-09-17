@@ -159,11 +159,8 @@
                             android:id="@+id/ivAvatarRenpy"
                             android:layout_width="64dp"
                             android:layout_height="64dp"
-                            android:src="@drawable/ic_launcher_settings"
-                            android:padding="10dp"
-                            android:background="@drawable/bg_circle_avatar"
-                            app:tint="#FFFFFF"
-                            android:scaleType="fitCenter" />
+                            android:src="@drawable/ic_mine"
+                            android:scaleType="centerCrop" />
 
                         <TextView
                             android:id="@+id/tvTitleRenpy"
