@@ -112,31 +112,189 @@ class SettingsActivity : GameWindowActivity() {
         }
     }
 
+    private val pickCustomSoundLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            handleCustomSoundSelected(uri)
+        }
+    }
+
+    private fun handleCustomSoundSelected(uri: android.net.Uri) {
+        try {
+            contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                val size = pfd.statSize
+                if (size > 1024 * 1024) {
+                    android.widget.Toast.makeText(
+                        this,
+                        getString(R.string.settings_sound_effect_error_too_large),
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    return
+                }
+            }
+        } catch (e: Exception) {
+        }
+
+        val retriever = android.media.MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(this, uri)
+            val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+            val durationMs = durationStr?.toLongOrNull() ?: 0L
+            if (durationMs > 5000L) {
+                android.widget.Toast.makeText(
+                    this,
+                    getString(R.string.settings_sound_effect_error_too_long),
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
+        } catch (e: Exception) {
+        } finally {
+            try {
+                retriever.release()
+            } catch (e: Exception) {
+            }
+        }
+
+        val soundsDir = getExternalFilesDir("sounds") ?: File(filesDir, "sounds")
+        if (!soundsDir.exists()) {
+            soundsDir.mkdirs()
+        }
+
+        val originalName = queryFileName(uri) ?: "custom_click.ogg"
+        val extension = originalName.substringAfterLast('.', "ogg").lowercase()
+        val destFile = File(soundsDir, "custom_click.$extension")
+
+        try {
+            contentResolver.openInputStream(uri)?.use { input ->
+                java.io.FileOutputStream(destFile).use { output ->
+                    val buffer = ByteArray(8192)
+                    var bytesRead: Int
+                    var totalBytes = 0L
+                    while (input.read(buffer).also { bytesRead = it } != -1) {
+                        totalBytes += bytesRead
+                        if (totalBytes > 1024 * 1024) {
+                            destFile.delete()
+                            android.widget.Toast.makeText(
+                                this,
+                                getString(R.string.settings_sound_effect_error_too_large),
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                            return
+                        }
+                        output.write(buffer, 0, bytesRead)
+                    }
+                }
+            } ?: run {
+                android.widget.Toast.makeText(
+                    this,
+                    getString(R.string.settings_sound_effect_error_invalid),
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(
+                this,
+                getString(R.string.settings_sound_effect_error_invalid),
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
+        prefs.edit()
+            .putString("sound_effect", "custom")
+            .putString("custom_sound_path", destFile.absolutePath)
+            .putString("custom_sound_name", originalName)
+            .apply()
+
+        currentSoundEffect = "custom"
+        binding.txtCurrentSoundEffect.text = soundLabelFor("custom")
+        SoundEffects.reload(this)
+        SoundEffects.playPreview(this)
+    }
+
+    private fun queryFileName(uri: android.net.Uri): String? {
+        if (uri.scheme == "content") {
+            try {
+                contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val idx = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (idx >= 0) return cursor.getString(idx)
+                    }
+                }
+            } catch (e: Exception) {
+            }
+        }
+        return uri.path?.substringAfterLast('/')
+    }
+
     private fun showSoundEffectDialog(prefs: android.content.SharedPreferences) {
+        val hasCustomSound = prefs.getString("custom_sound_path", null)?.let { File(it).exists() } == true
+        val customOptionText = if (hasCustomSound) {
+            getString(R.string.settings_sound_effect_custom_replace)
+        } else {
+            getString(R.string.settings_sound_effect_custom_select)
+        }
+
         val options = arrayOf(
             getString(R.string.settings_sound_effect_default),
-            getString(R.string.settings_sound_effect_reimagined)
+            getString(R.string.settings_sound_effect_reimagined),
+            customOptionText,
+            getString(R.string.settings_sound_effect_none)
         )
-        val values = arrayOf("default", "reimagined")
+        val values = arrayOf("default", "reimagined", "custom", "none")
         val checkedIndex = values.indexOf(currentSoundEffect).takeIf { it >= 0 } ?: 0
 
         GameDialogBuilder(this)
             .setTitle(getString(R.string.settings_sound_effect_title))
             .setSingleChoiceItems(options, checkedIndex) { dialog, which ->
-                val chosenValue = values.getOrNull(which) ?: "default"
-                currentSoundEffect = chosenValue
-                prefs.edit().putString("sound_effect", chosenValue).apply()
-                binding.txtCurrentSoundEffect.text = soundLabelFor(chosenValue)
-                SoundEffects.initialize(this)
-                dialog.dismiss()
+                when (which) {
+                    2 -> {
+                        if (currentSoundEffect == "custom" || !hasCustomSound) {
+                            pickCustomSoundLauncher.launch("audio/*")
+                            dialog.dismiss()
+                        } else {
+                            currentSoundEffect = "custom"
+                            prefs.edit().putString("sound_effect", "custom").apply()
+                            binding.txtCurrentSoundEffect.text = soundLabelFor("custom")
+                            SoundEffects.reload(this)
+                            SoundEffects.playPreview(this)
+                            dialog.dismiss()
+                        }
+                    }
+                    else -> {
+                        val chosenValue = values.getOrNull(which) ?: "default"
+                        currentSoundEffect = chosenValue
+                        prefs.edit().putString("sound_effect", chosenValue).apply()
+                        binding.txtCurrentSoundEffect.text = soundLabelFor(chosenValue)
+                        SoundEffects.reload(this)
+                        if (chosenValue != "none") {
+                            SoundEffects.playPreview(this)
+                        }
+                        dialog.dismiss()
+                    }
+                }
             }
             .setNegativeButton(getString(R.string.cancel), null)
             .show()
     }
 
     private fun soundLabelFor(value: String): String {
+        val prefs = getSharedPreferences(BaseActivity.PREFS_NAME, MODE_PRIVATE)
+        val customName = prefs.getString("custom_sound_name", null)
         return when (value) {
             "reimagined" -> getString(R.string.settings_sound_effect_reimagined)
+            "none" -> getString(R.string.settings_sound_effect_none)
+            "custom" -> {
+                if (!customName.isNullOrEmpty()) {
+                    "${getString(R.string.settings_sound_effect_custom)} ($customName)"
+                } else {
+                    getString(R.string.settings_sound_effect_custom)
+                }
+            }
             else -> getString(R.string.settings_sound_effect_default)
         }
     }

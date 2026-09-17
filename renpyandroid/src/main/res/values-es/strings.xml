@@ -200,6 +200,13 @@
     <string name="settings_sound_effect_title">Efecto de sonido de botones</string>
     <string name="settings_sound_effect_default">Predeterminado</string>
     <string name="settings_sound_effect_reimagined">Reimaginado</string>
+    <string name="settings_sound_effect_custom">Personalizado</string>
+    <string name="settings_sound_effect_custom_select">Personalizado (seleccionar archivo)</string>
+    <string name="settings_sound_effect_custom_replace">Personalizado (reemplazar archivo)</string>
+    <string name="settings_sound_effect_none">Ninguno</string>
+    <string name="settings_sound_effect_error_too_large">El audio es demasiado grande (máximo 1 MB)</string>
+    <string name="settings_sound_effect_error_too_long">El audio es demasiado largo (máximo 5 segundos)</string>
+    <string name="settings_sound_effect_error_invalid">No se pudo cargar el archivo</string>
     <string name="settings_auto_login_title">Inicio de sesión automático</string>
     <string name="settings_auto_login_disabled">Desactivado (Preguntar siempre)</string>
     <string name="settings_auto_login_mas">Escritorio MAS</string>

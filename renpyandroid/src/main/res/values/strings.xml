@@ -207,6 +207,13 @@
     <string name="settings_sound_effect_title">Button sound effect</string>
     <string name="settings_sound_effect_default">Default</string>
     <string name="settings_sound_effect_reimagined">Reimagined</string>
+    <string name="settings_sound_effect_custom">Custom</string>
+    <string name="settings_sound_effect_custom_select">Custom (select file)</string>
+    <string name="settings_sound_effect_custom_replace">Custom (replace file)</string>
+    <string name="settings_sound_effect_none">None</string>
+    <string name="settings_sound_effect_error_too_large">Audio file is too large (maximum 1 MB)</string>
+    <string name="settings_sound_effect_error_too_long">Audio file is too long (maximum 5 seconds)</string>
+    <string name="settings_sound_effect_error_invalid">Unable to load audio file</string>
     <string name="settings_auto_login_title">Auto-Login</string>
     <string name="settings_auto_login_disabled">Disabled (Always ask)</string>
     <string name="settings_auto_login_mas">MAS Desktop</string>
