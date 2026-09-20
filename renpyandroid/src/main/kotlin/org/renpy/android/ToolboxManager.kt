@@ -327,12 +327,7 @@ object ToolboxManager {
         return listOf(
             ToolItem(R.string.tool_virtual_keyboard) { ctx ->
                 hideToolbox(activity)
-                if (VirtualKeyboardManager.isKeyboardVisible()) {
-                    VirtualKeyboardManager.hideKeyboard(activity, force = true)
-                    org.libsdl.app.SDLActivity.executeTextEditHide(activity)
-                } else {
-                    VirtualKeyboardManager.showKeyboard(activity, isManual = true)
-                }
+                VirtualKeyboardManager.showKeyboard(activity)
             },
             ToolItem(R.string.tool_window_controller) { ctx ->
                 hideToolbox(activity)

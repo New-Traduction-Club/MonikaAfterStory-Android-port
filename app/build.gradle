@@ -19,7 +19,7 @@ android {
         applicationId "com.z.mas.portby.just6889"
         minSdkVersion 21
         targetSdkVersion 37
-        versionCode 1757713336
+        versionCode 1757713337
         versionName "3.0.1"
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"

@@ -67,9 +67,6 @@ public class SDLActivity extends Activity {
     protected static ViewGroup mLayout;
     protected static SDLJoystickHandler mJoystickHandler;
 
-    public static final int TEXTEDIT_HIDE_DELAY_MS = 600;
-    protected static Runnable pendingTextEditHideRunnable = null;
-
     // This is what SDL runs in. It invokes SDL_main(), eventually
     protected static Thread mSDLThread;
 
@@ -232,8 +229,6 @@ public class SDLActivity extends Activity {
         Log.v(TAG, "onPause()");
         super.onPause();
 
-        executeTextEditHide(this);
-
         if (SDLActivity.mBrokenLibraries) {
            return;
         }
@@ -286,8 +281,6 @@ public class SDLActivity extends Activity {
     @Override
     protected void onDestroy() {
         Log.v(TAG, "onDestroy()");
-
-        executeTextEditHide(this);
 
         if (SDLActivity.mBrokenLibraries) {
            super.onDestroy();
@@ -454,25 +447,18 @@ public class SDLActivity extends Activity {
                 }
                 break;
             case COMMAND_TEXTEDIT_HIDE:
-                if (mSingleton instanceof org.renpy.android.PythonSDLActivity) {
-                    if (org.renpy.android.VirtualKeyboardManager.isManuallyOpened()) {
-                        break;
+                if (mTextEdit != null) {
+                    mTextEdit.setVisibility(View.GONE);
+
+                    if (mSingleton instanceof org.renpy.android.PythonSDLActivity) {
+                        org.renpy.android.VirtualKeyboardManager.hideKeyboard((org.renpy.android.PythonSDLActivity) mSingleton);
+                    } else {
+                        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(mTextEdit.getWindowToken(), 0);
                     }
                 }
-                if (pendingTextEditHideRunnable != null && mSingleton != null) {
-                    mSingleton.commandHandler.removeCallbacks(pendingTextEditHideRunnable);
-                }
-                pendingTextEditHideRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        pendingTextEditHideRunnable = null;
-                        executeTextEditHide(context);
-                    }
-                };
-                if (mSingleton != null) {
-                    mSingleton.commandHandler.postDelayed(pendingTextEditHideRunnable, TEXTEDIT_HIDE_DELAY_MS);
-                } else {
-                    executeTextEditHide(context);
+                if (mSurface != null) {
+                    mSurface.requestFocus();
                 }
                 break;
             case COMMAND_CHANGE_SURFACEVIEW_FORMAT:
@@ -768,50 +754,7 @@ public class SDLActivity extends Activity {
     }
 
     public static boolean isScreenKeyboardShown() {
-        if (mSingleton instanceof org.renpy.android.PythonSDLActivity) {
-            return org.renpy.android.VirtualKeyboardManager.isKeyboardVisible();
-        }
         return false;
-    }
-
-    public static void executeTextEditHide(Context context) {
-        if (pendingTextEditHideRunnable != null && mSingleton != null) {
-            mSingleton.commandHandler.removeCallbacks(pendingTextEditHideRunnable);
-            pendingTextEditHideRunnable = null;
-        }
-        if (mTextEdit != null) {
-            mTextEdit.setVisibility(View.GONE);
-
-            if (mSingleton instanceof org.renpy.android.PythonSDLActivity) {
-                org.renpy.android.VirtualKeyboardManager.hideKeyboard((org.renpy.android.PythonSDLActivity) mSingleton, false);
-            } else if (context != null) {
-                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(mTextEdit.getWindowToken(), 0);
-            }
-        }
-        if (mSurface != null) {
-            mSurface.requestFocus();
-        }
-    }
-
-    public static void initOrShowTextEdit() {
-        if (mSingleton == null) return;
-        mSingleton.commandHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (pendingTextEditHideRunnable != null) {
-                    mSingleton.commandHandler.removeCallbacks(pendingTextEditHideRunnable);
-                    pendingTextEditHideRunnable = null;
-                }
-                AbsoluteLayout.LayoutParams params = new AbsoluteLayout.LayoutParams(1, 1, 0, 0);
-                if (mTextEdit == null) {
-                    mTextEdit = new DummyEdit(mSingleton.getContext());
-                    mLayout.addView(mTextEdit, params);
-                }
-                mTextEdit.setVisibility(View.VISIBLE);
-                mTextEdit.requestFocus();
-            }
-        });
     }
 
     public static boolean isTablet() {
@@ -974,11 +917,6 @@ public class SDLActivity extends Activity {
 
         @Override
         public void run() {
-            if (pendingTextEditHideRunnable != null && mSingleton != null) {
-                mSingleton.commandHandler.removeCallbacks(pendingTextEditHideRunnable);
-                pendingTextEditHideRunnable = null;
-            }
-
             int width = Math.max(w, 1);
             int height = Math.max(h, 1);
             AbsoluteLayout.LayoutParams params = new AbsoluteLayout.LayoutParams(
