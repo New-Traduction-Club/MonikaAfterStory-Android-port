@@ -13,14 +13,14 @@ localProperties.load(new FileInputStream(localPropertiesFile))
 android {
     compileSdkVersion 37
 
-    namespace "com.z.mas.portby.just6889"
+    namespace "com.z.tdclub.mine.se"
 
     defaultConfig {
-        applicationId "com.z.mas.portby.just6889"
+        applicationId "com.z.tdclub.mine.se"
         minSdkVersion 21
         targetSdkVersion 37
-        versionCode 1757713338
-        versionName "3.0.2"
+        versionCode 1
+        versionName "1.0.2"
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
         }
