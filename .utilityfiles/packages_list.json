@@ -7,6 +7,12 @@
       "min_app_version": 1
     },
     {
+      "version": "v0.12.17-ptbr-by-bach-1.3",
+      "download_url": "https://github.com/New-Traduction-Club/MonikaModDev-Unofficial-Android/releases/download/v0.12.17-ptbr-1.3/ptbr-bach-patch1.3-0.12.17.zip",
+      "sha256": "9f93d0c2393588ac167edbf097b491184d81e2c95d3e2dc352e585e5bf17b652",
+      "min_app_version": 1
+    },
+    {
       "version": "Skip installation - No recommended",
       "download_url": "https://files.traduction-club.live/dummy.zip",
       "sha256": "cbb11873cc3b865902e5eaf07272191307f43bf4d34012b72bb5c38019f6cf98",
