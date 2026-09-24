@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MASL - An Unofficial After Story launcher</string>
+    <string name="app_name">MINE</string>
 
     <!-- Setup Screen Strings -->
-    <string name="setup_title">Bem-vindo ao MASL - An Unofficial After Story launcher</string>
+    <string name="setup_title">Bem-vindo ao MINE</string>
     <string name="setup_description">Para usar este launcher, você precisa fornecer os arquivos originais do jogo Doki Doki Literature Club e os arquivos do mod Monika After Story. Respeitamos os IP Guidelines e não podemos distribuir esses arquivos.</string>
     <string name="setup_step_1_title">Passo 1: Doki Doki Literature Club</string>
     <string name="setup_step_1_desc">Baixe a versão oficial do DDLC para Windows.</string>
@@ -389,8 +389,8 @@
     <string name="app_info_commit">Último commit: %1$s</string>
     <string name="app_info_version">Versão: %1$s</string>
     <string name="launcher_app_info_desc">Sobre este app</string>
-    <string name="documents_provider_root_title">MASL - An After Story launcher</string>
-    <string name="documents_provider_root_summary">MASL</string>
+    <string name="documents_provider_root_title">MINE</string>
+    <string name="documents_provider_root_summary">MINE</string>
     <string name="documents_provider_open_failed">Não foi possível abrir o explorador do sistema: %1$s</string>
     <string name="documents_provider_open_unavailable">Nenhum explorador de arquivos do sistema compatível está disponível.</string>
     <string name="documents_provider_open_action">Abrir no explorador do sistema</string>
