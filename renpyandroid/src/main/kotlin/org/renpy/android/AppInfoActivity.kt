@@ -36,11 +36,11 @@ class AppInfoActivity : GameWindowActivity() {
         binding.tvVersion.text = getString(R.string.app_info_version, versionName)
 
         setupHtmlText(binding.tvCreditsPort, getString(R.string.app_info_credits_port))
-        setupHtmlText(binding.tvCreditsEs, getString(R.string.app_info_credits_es))
-        setupHtmlText(binding.tvCreditsPt, getString(R.string.app_info_credits_pt))
+        //setupHtmlText(binding.tvCreditsEs, getString(R.string.app_info_credits_es))
+        //setupHtmlText(binding.tvCreditsPt, getString(R.string.app_info_credits_pt))
 
-        setupHtmlText(binding.tvAckTeamSalvato, getString(R.string.app_info_acknowledgments_team_salvato))
-        setupHtmlText(binding.tvAckMasTeam, getString(R.string.app_info_acknowledgments_mas_team))
+        //setupHtmlText(binding.tvAckTeamSalvato, getString(R.string.app_info_acknowledgments_team_salvato))
+        //setupHtmlText(binding.tvAckMasTeam, getString(R.string.app_info_acknowledgments_mas_team))
         setupHtmlText(binding.tvAckRenpy, getString(R.string.app_info_acknowledgments_renpy))
         setupHtmlText(binding.tvAckLattyware, getString(R.string.app_info_acknowledgments_lattyware))
 
