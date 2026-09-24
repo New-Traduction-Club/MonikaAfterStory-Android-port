@@ -108,11 +108,11 @@ object WallpaperManager {
     private fun cropPrefsKey(id: String): String = KEY_CROP_PREFIX + id
 
     fun getCurrentDesktopTarget(context: Context): WallpaperTarget {
-        val profile = prefs(context).getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
-        return if (profile == ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER) {
-            WallpaperTarget.MINE
-        } else {
+        val profile = prefs(context).getString("active_user_profile", ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
+        return if (profile == ProfileNavigationHelper.PROFILE_MAS) {
             WallpaperTarget.MAS
+        } else {
+            WallpaperTarget.MINE
         }
     }
 

@@ -42,12 +42,7 @@ class SettingsActivity : GameWindowActivity() {
     }
 
     private fun showAutoLoginDialog(prefs: android.content.SharedPreferences) {
-        val modes = arrayOf(
-            AutoLoginHelper.MODE_DISABLED,
-            AutoLoginHelper.MODE_MAS,
-            AutoLoginHelper.MODE_MINE,
-            AutoLoginHelper.MODE_LAST_USED
-        )
+        val modes = AutoLoginHelper.MODES
         val labels = modes.map { AutoLoginHelper.getModeLabel(this, it) }.toTypedArray()
         val currentMode = AutoLoginHelper.getAutoLoginMode(this)
         val checkedIndex = modes.indexOf(currentMode).takeIf { it >= 0 } ?: 0

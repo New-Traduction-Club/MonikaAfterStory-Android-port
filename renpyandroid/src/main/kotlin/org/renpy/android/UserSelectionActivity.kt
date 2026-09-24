@@ -173,6 +173,7 @@ class UserSelectionActivity : BaseActivity() {
         setupEdgeToEdgeInsets()
         setupProfileInteractions()
         setupLanguageSelector()
+        selectProfile(UserProfile.RENPY_LAUNCHER)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -203,7 +204,7 @@ class UserSelectionActivity : BaseActivity() {
             ?.setInterpolator(DecelerateInterpolator())
             ?.start()
 
-        val cards = listOf(cardUserMas, cardUserRenpy)
+        val cards = listOf(cardUserMas, cardUserRenpy).filter { it.visibility == View.VISIBLE }
         val distance = 30f * resources.displayMetrics.density
         for ((index, card) in cards.withIndex()) {
             card.alpha = 0f

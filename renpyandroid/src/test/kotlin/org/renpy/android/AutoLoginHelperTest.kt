@@ -9,11 +9,9 @@ class AutoLoginHelperTest {
 
     @Test
     fun testModesList() {
-        assertEquals(4, AutoLoginHelper.MODES.size)
+        assertEquals(2, AutoLoginHelper.MODES.size)
         assertTrue(AutoLoginHelper.MODES.contains(AutoLoginHelper.MODE_DISABLED))
-        assertTrue(AutoLoginHelper.MODES.contains(AutoLoginHelper.MODE_MAS))
         assertTrue(AutoLoginHelper.MODES.contains(AutoLoginHelper.MODE_MINE))
-        assertTrue(AutoLoginHelper.MODES.contains(AutoLoginHelper.MODE_LAST_USED))
     }
 
     @Test
@@ -23,9 +21,9 @@ class AutoLoginHelperTest {
     }
 
     @Test
-    fun testResolveMasMode() {
+    fun testResolveMasModeReturnsNull() {
         val result = AutoLoginHelper.resolveProfileForMode(AutoLoginHelper.MODE_MAS, ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
-        assertEquals(ProfileNavigationHelper.PROFILE_MAS, result)
+        assertNull(result)
     }
 
     @Test
@@ -35,21 +33,15 @@ class AutoLoginHelperTest {
     }
 
     @Test
-    fun testResolveLastUsedModeWithMas() {
+    fun testResolveLastUsedMode() {
         val result = AutoLoginHelper.resolveProfileForMode(AutoLoginHelper.MODE_LAST_USED, ProfileNavigationHelper.PROFILE_MAS)
-        assertEquals(ProfileNavigationHelper.PROFILE_MAS, result)
-    }
-
-    @Test
-    fun testResolveLastUsedModeWithMine() {
-        val result = AutoLoginHelper.resolveProfileForMode(AutoLoginHelper.MODE_LAST_USED, ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
         assertEquals(ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER, result)
     }
 
     @Test
-    fun testResolveLastUsedModeWithNullFallsBackToMas() {
+    fun testResolveLastUsedModeWithNullFallsBackToMine() {
         val result = AutoLoginHelper.resolveProfileForMode(AutoLoginHelper.MODE_LAST_USED, null)
-        assertEquals(ProfileNavigationHelper.PROFILE_MAS, result)
+        assertEquals(ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER, result)
     }
 
     @Test

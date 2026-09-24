@@ -10,7 +10,7 @@ class WallpapersActivity : GameWindowActivity() {
 
     private lateinit var binding: ActivityWallpapersBinding
     private lateinit var adapter: WallpapersAdapter
-    private var currentTarget: WallpaperManager.WallpaperTarget = WallpaperManager.WallpaperTarget.MAS
+    private var currentTarget: WallpaperManager.WallpaperTarget = WallpaperManager.WallpaperTarget.MINE
 
     private val pickMediaLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()

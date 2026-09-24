@@ -741,8 +741,8 @@ class LauncherActivity : BaseActivity() {
 
     private fun getActiveProfile(): String {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        return prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
-            ?: ProfileNavigationHelper.PROFILE_MAS
+        return prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
+            ?: ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER
     }
 
     private fun getPinnedItems(): List<DesktopShortcut> {

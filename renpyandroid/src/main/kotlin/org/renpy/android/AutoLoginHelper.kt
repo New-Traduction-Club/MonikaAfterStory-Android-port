@@ -13,14 +13,17 @@ object AutoLoginHelper {
 
     val MODES = arrayOf(
         MODE_DISABLED,
-        MODE_MAS,
-        MODE_MINE,
-        MODE_LAST_USED
+        MODE_MINE
     )
 
     fun getAutoLoginMode(context: Context): String {
-        return context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val mode = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .getString(PREFS_KEY_AUTO_LOGIN, MODE_DISABLED) ?: MODE_DISABLED
+        return when (mode) {
+            MODE_MAS -> MODE_DISABLED
+            MODE_LAST_USED -> MODE_MINE
+            else -> mode
+        }
     }
 
     fun setAutoLoginMode(context: Context, mode: String) {
@@ -41,15 +44,13 @@ object AutoLoginHelper {
         val mode = getAutoLoginMode(context)
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val lastUsed = prefs.getString(PREFS_KEY_LAST_USED, null)
-            ?: prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_MAS)
+            ?: prefs.getString("active_user_profile", ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER)
         return resolveProfileForMode(mode, lastUsed)
     }
 
     fun resolveProfileForMode(mode: String, lastUsedProfile: String?): String? {
         return when (mode) {
-            MODE_MAS -> ProfileNavigationHelper.PROFILE_MAS
-            MODE_MINE -> ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER
-            MODE_LAST_USED -> lastUsedProfile ?: ProfileNavigationHelper.PROFILE_MAS
+            MODE_MINE, MODE_LAST_USED -> ProfileNavigationHelper.PROFILE_RENPY_LAUNCHER
             else -> null
         }
     }
