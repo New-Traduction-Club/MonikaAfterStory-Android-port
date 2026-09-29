@@ -13,6 +13,12 @@
       "min_app_version": 1
     },
     {
+      "version": "certifi update - for submods that use internet connections",
+      "download_url": "https://github.com/New-Traduction-Club/MonikaAfterStory-Android-port/releases/download/V3.0.2/certifi-update.zip",
+      "sha256": "93335e1ae984d64935a52df0b48a3671011fd09d972d98038804b9455f5e3e6a",
+      "min_app_version": 1
+    },
+    {
       "version": "Skip installation - No recommended",
       "download_url": "https://files.traduction-club.live/dummy.zip",
       "sha256": "cbb11873cc3b865902e5eaf07272191307f43bf4d34012b72bb5c38019f6cf98",
