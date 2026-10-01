@@ -41,5 +41,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-app/src/main/assets/
+#app/src/main/assets/
 app/release/
