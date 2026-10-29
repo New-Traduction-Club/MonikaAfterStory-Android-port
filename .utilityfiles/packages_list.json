@@ -1,9 +1,9 @@
 {
   "packages": [
     {
-      "version": "[ENGLISH/ESPAÑOL] 0.12.20 - release 1.0",
-      "download_url": "https://files.traduction-club.live/MAS/new-folder/mas-0.12.20-en-es-android-unofficial-r1.zip",
-      "sha256": "27332dd99cc0e05dbc9b93cd4e67110cf67243357c3d82ffbae17381db3455e5",
+      "version": "[ENGLISH/ESPAÑOL] 0.12.20 - release 1.1",
+      "download_url": "https://files.traduction-club.live/MAS/new-folder/mas-0.12.20-en-es-android-unofficial-r1.1.zip",
+      "sha256": "36271c5c1f32af7e80c896a0ba5465dbba7a01b6aba97e07c99a21e22087e80c",
       "min_app_version": 1
     },
     {
