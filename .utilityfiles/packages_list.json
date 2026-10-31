@@ -13,6 +13,12 @@
       "min_app_version": 1
     },
     {
+      "version": "[PORTUGUÊS] Halloween Fix",
+      "download_url": "https://files.traduction-club.live/MAS/portugues-halloween-fix.zip",
+      "sha256": "bb88a99991c683b7efaeae03a845e082e0e4e45cb94e35ae9224c215ede761ac",
+      "min_app_version": 1
+    },
+    {
       "version": "OLD | v0.12.18-r1",
       "download_url": "https://github.com/New-Traduction-Club/MonikaModDev-Unofficial-Android/releases/download/v0.12.18-r1/mas-0.12.18-android-unofficial-r1.zip",
       "sha256": "1752c018acb50a2501c7e759c0c2464c7d0e3b8a0cbbd30ff08ef2404a7c2dbc",
